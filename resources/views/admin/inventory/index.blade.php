@@ -100,37 +100,46 @@
     </div>
 
     <!-- Adjust Modal -->
-    <div id="adjustModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 2rem; border-radius: 0.5rem; width: 400px; max-width: 90%;">
-            <h3 style="margin-top: 0; font-size: 1.25rem; font-weight: 600;">Adjust Stock: <span id="modalItemName"></span></h3>
-            <p style="color: #64748b; font-size: 0.9rem;">Current Stock: <span id="modalCurrentStock"></span></p>
-            
-            <form id="adjustForm" method="POST" action="">
-                @csrf
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem;">Adjustment Quantity (+ or -)</label>
-                    <input type="number" step="0.001" name="adjustment_quantity" required 
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
-                    <small style="color: #64748b;">Enter negative value to reduce stock.</small>
-                </div>
+    <div id="adjustModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 99999; overflow: auto;">
+        <div style="min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+            <div style="background: white; padding: 2rem; border-radius: 0.75rem; width: 450px; max-width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); margin: auto;">
+                <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 600; color: #1e293b;">Adjust Stock: <span id="modalItemName"></span></h3>
+                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Current Stock: <strong id="modalCurrentStock" style="color: #3b82f6;"></strong></p>
+                
+                <form id="adjustForm" method="POST" action="">
+                    @csrf
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Adjustment Quantity (+ or -)</label>
+                        <input type="number" step="0.001" name="adjustment_quantity" required 
+                            placeholder="e.g., 10 or -5"
+                            style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 0.25rem;">Enter positive to add, negative to reduce stock</small>
+                    </div>
 
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem;">Reason</label>
-                    <input type="text" name="reason" required placeholder="e.g. Spillage, Audit Correction"
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
-                </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Reason</label>
+                        <input type="text" name="reason" required placeholder="e.g., Spillage, Audit Correction, Damage"
+                            style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                    <button type="button" onclick="closeAdjustModal()" 
-                        style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; background: white; color: #374151; border-radius: 0.375rem; cursor: pointer;">
-                        Cancel
-                    </button>
-                    <button type="submit" 
-                        style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 0.375rem; cursor: pointer;">
-                        Save Adjustment
-                    </button>
-                </div>
-            </form>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                        <button type="button" onclick="closeAdjustModal()" 
+                            style="padding: 0.75rem 1.5rem; border: 2px solid #e2e8f0; background: white; color: #64748b; border-radius: 0.5rem; cursor: pointer; font-weight: 600; transition: all 0.2s;"
+                            onmouseover="this.style.backgroundColor='#f8fafc'; this.style.borderColor='#cbd5e1'" 
+                            onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e2e8f0'">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600; transition: background-color 0.2s;"
+                            onmouseover="this.style.backgroundColor='#2563eb'" 
+                            onmouseout="this.style.backgroundColor='#3b82f6'">
+                            Save Adjustment
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -139,7 +148,7 @@
             document.getElementById('modalItemName').textContent = name;
             document.getElementById('modalCurrentStock').textContent = stock;
             document.getElementById('adjustForm').action = "/admin/inventory/" + id + "/adjust";
-            document.getElementById('adjustModal').style.display = 'flex';
+            document.getElementById('adjustModal').style.display = 'block';
         }
 
         function closeAdjustModal() {

@@ -11,92 +11,100 @@
     <!-- Overview Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Staff -->
-        <div
-            class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+        <a href="{{ route('admin.staff.index') }}" class="block group">
             <div
-                class="absolute right-0 top-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-            </div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                        <i data-lucide="users" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Staff</h3>
+                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
+                <div
+                    class="absolute right-0 top-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
                 </div>
-                <div class="text-3xl font-extrabold text-gray-800">{{ $stats['total_staff'] }}</div>
-                <p class="text-xs text-gray-500 mt-1">Registered Employees</p>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Staff</h3>
+                    </div>
+                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['total_staff'] }}</div>
+                    <p class="text-xs text-gray-500 mt-1">Registered Employees</p>
+                </div>
             </div>
-        </div>
+        </a>
 
         <!-- Active Now -->
-        <div
-            class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+        <a href="{{ route('admin.attendance.index') }}" class="block group">
             <div
-                class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-            </div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                        <i data-lucide="activity" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Active Now</h3>
+                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
+                <div
+                    class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
                 </div>
-                <div class="text-3xl font-extrabold text-gray-800">{{ $stats['active_staff'] }}</div>
-                <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
-                    <span class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    Currently Clocked In
-                </p>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                            <i data-lucide="activity" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Active Now</h3>
+                    </div>
+                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['active_staff'] }}</div>
+                    <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        Currently Clocked In
+                    </p>
+                </div>
             </div>
-        </div>
+        </a>
 
         <!-- Today's Attendance -->
-        <div
-            class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+        <a href="{{ route('admin.attendance.index') }}" class="block group">
             <div
-                class="absolute right-0 top-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-            </div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
-                        <i data-lucide="calendar-check" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Today's Shift</h3>
+                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
+                <div
+                    class="absolute right-0 top-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
                 </div>
-                <div class="text-3xl font-extrabold text-gray-800">{{ $stats['today_clock_in'] }}</div>
-                <p class="text-xs text-gray-500 mt-1">
-                    <span class="font-medium text-gray-700">{{ $stats['today_clock_out'] }}</span> completed shifts
-                </p>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                            <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Today's Shift</h3>
+                    </div>
+                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['today_clock_in'] }}</div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <span class="font-medium text-gray-700">{{ $stats['today_clock_out'] }}</span> completed shifts
+                    </p>
+                </div>
             </div>
-        </div>
+        </a>
 
         <!-- Recipes & Ingredients -->
-        <div
-            class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+        <a href="{{ route('recipes.index') }}" class="block group">
             <div
-                class="absolute right-0 top-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-            </div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-purple-100 text-purple-600 rounded-lg">
-                        <i data-lucide="chef-hat" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Recipes</h3>
+                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
+                <div
+                    class="absolute right-0 top-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
                 </div>
-                <div class="text-3xl font-extrabold text-gray-800">{{ $stats['total_recipes'] }}</div>
-                @if($stats['pending_ingredients'] > 0)
-                    <p
-                        class="text-xs text-amber-600 font-bold mt-1 bg-amber-50 inline-block px-2 py-0.5 rounded-full border border-amber-100">
-                        {{ $stats['pending_ingredients'] }} Ingredients Pending
-                    </p>
-                @else
-                    <p class="text-xs text-gray-500 mt-1">All ingredients approved</p>
-                @endif
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                            <i data-lucide="chef-hat" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Recipes</h3>
+                    </div>
+                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['total_recipes'] }}</div>
+                    @if($stats['pending_ingredients'] > 0)
+                        <p
+                            class="text-xs text-amber-600 font-bold mt-1 bg-amber-50 inline-block px-2 py-0.5 rounded-full border border-amber-100">
+                            {{ $stats['pending_ingredients'] }} Ingredients Pending
+                        </p>
+                    @else
+                        <p class="text-xs text-gray-500 mt-1">All ingredients approved</p>
+                    @endif
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 
 

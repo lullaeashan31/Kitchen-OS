@@ -28,7 +28,7 @@ class PurchaseController extends Controller
     {
         $request->validate([
             'purchase_date' => 'required|date',
-            'vendor' => 'nullable|string|max:255',
+            'vendor' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.ingredient_id' => 'required|exists:ingredients,id',
             'items.*.quantity' => 'required|numeric|min:0.001',

@@ -85,27 +85,28 @@
                         </h3>
                         <p class="text-xs text-gray-500 mb-3">If this recipe produces an ingredient (sub-recipe), specify what it makes.</p>
                         
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Produces Ingredient</label>
-                            <select name="produces_ingredient_id" id="produces_ingredient_id"
-                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
-                                <option value="">No - This is a final product</option>
-                                @foreach($ingredients as $ing)
-                                    <option value="{{ $ing->id }}" {{ old('produces_ingredient_id') == $ing->id ? 'selected' : '' }}>
-                                        {{ $ing->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div id="outputSettings" class="mt-4 grid grid-cols-2 gap-4" style="display: {{ old('produces_ingredient_id') ? 'grid' : 'none' }};">
+                        <div class="grid grid-cols-3 gap-3">
                             <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Produces Ingredient</label>
+                                <select name="produces_ingredient_id" id="produces_ingredient_id"
+                                    class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white text-sm">
+                                    <option value="">No - Final product</option>
+                                    @foreach($ingredients as $ing)
+                                        <option value="{{ $ing->id }}" {{ old('produces_ingredient_id') == $ing->id ? 'selected' : '' }}>
+                                            {{ $ing->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <div id="outputQuantityField" style="display: {{ old('produces_ingredient_id') ? 'block' : 'none' }};">
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Output Quantity</label>
                                 <input type="number" name="output_quantity" step="0.001" min="0"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none"
                                     value="{{ old('output_quantity', 1) }}" placeholder="1.000">
                             </div>
-                            <div>
+                            
+                            <div id="outputUnitField" style="display: {{ old('produces_ingredient_id') ? 'block' : 'none' }};">
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Output Unit</label>
                                 <select name="output_unit"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
@@ -172,7 +173,7 @@
                 @if(auth()->user()->isAdmin())
                     <div class="mt-6 p-4 bg-gray-50 rounded-lg flex justify-between items-center border border-gray-100">
                         <span class="text-sm font-medium text-gray-600">Total Estimated Cost</span>
-                        <span class="text-xl font-bold text-gray-800">$<span id="totalCostDisplay">0.00</span></span>
+                        <span class="text-xl font-bold text-gray-800">₹<span id="totalCostDisplay">0.00</span></span>
                     </div>
                 @endif
             </div>
@@ -387,13 +388,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             addIngredientRow();
             
-            // Toggle output settings based on produces_ingredient_id
+            // Toggle output fields based on produces_ingredient_id
             const producesSelect = document.getElementById('produces_ingredient_id');
-            const outputSettings = document.getElementById('outputSettings');
+            const outputQuantityField = document.getElementById('outputQuantityField');
+            const outputUnitField = document.getElementById('outputUnitField');
             
-            if (producesSelect && outputSettings) {
+            if (producesSelect && outputQuantityField && outputUnitField) {
                 producesSelect.addEventListener('change', function() {
-                    outputSettings.style.display = this.value ? 'grid' : 'none';
+                    const display = this.value ? 'block' : 'none';
+                    outputQuantityField.style.display = display;
+                    outputUnitField.style.display = display;
                 });
             }
         });

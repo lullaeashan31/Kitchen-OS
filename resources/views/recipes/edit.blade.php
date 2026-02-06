@@ -169,7 +169,7 @@
                 @if(auth()->user()->isAdmin())
                     <div class="mt-6 p-4 bg-gray-50 rounded-lg flex justify-between items-center border border-gray-100">
                         <span class="text-sm font-medium text-gray-600">Total Estimated Cost</span>
-                        <span class="text-xl font-bold text-gray-800">$<span id="totalCostDisplay">0.00</span></span>
+                        <span class="text-xl font-bold text-gray-800">₹<span id="totalCostDisplay">0.00</span></span>
                     </div>
                 @endif
             </div>

@@ -27,6 +27,11 @@ class ExcelExportService
         return Excel::download(new RecipesExport, 'recipe_import_template.xlsx');
     }
 
+    public function downloadInventoryTemplate()
+    {
+        return Excel::download(new \App\Exports\InventoryTemplateExport, 'inventory_import_template.xlsx');
+    }
+
     public function exportCostSummary()
     {
         return Excel::download(new \App\Exports\RecipeCostExport, 'recipe_cost_summary.xlsx');

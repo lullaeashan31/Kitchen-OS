@@ -106,7 +106,7 @@
                             </td>
                             @if(auth()->user()->isAdmin())
                                 <td class="p-5">
-                                    <div class="font-mono font-bold text-gray-700">{{ number_format($recipe->total_cost, 2) }}</div>
+                                    <div class="font-mono font-bold text-gray-700">₹{{ number_format($recipe->total_cost, 2) }}</div>
                                 </td>
                             @endif
                             <td class="p-5">

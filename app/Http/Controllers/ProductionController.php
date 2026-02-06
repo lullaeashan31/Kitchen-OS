@@ -51,16 +51,22 @@ class ProductionController extends Controller
             // Normalize recipe yield 
             $requiredQty = $requiredQtyRaw / ($recipe->yields ?: 1);
 
-            try {
-                $convertedQty = $this->unitService->convert(
-                    $requiredQty,
-                    $ingredient->pivot->unit, // From
-                    $ingredient->measurement_unit // To (Stock Unit)
-                );
-            } catch (\Exception $e) {
-                // Fallback or error?
+
+            // Check if units are set before conversion
+            if (!empty($ingredient->pivot->unit) && !empty($ingredient->measurement_unit)) {
+                try {
+                    $convertedQty = $this->unitService->convert(
+                        $requiredQty,
+                        $ingredient->pivot->unit, // From
+                        $ingredient->measurement_unit // To (Stock Unit)
+                    );
+                } catch (\Exception $e) {
+                    // Fallback if conversion fails
+                    $convertedQty = $requiredQty;
+                }
+            } else {
+                // No unit conversion needed if units are not set
                 $convertedQty = $requiredQty;
-                // Maybe log warning? "Unit mismatch or conversion error"
             }
 
             if ($ingredient->current_stock < $convertedQty) {
@@ -91,13 +97,20 @@ class ProductionController extends Controller
                 $qtyPerPortion = $ingredient->pivot->quantity / ($recipe->yields ?: 1);
                 $requiredQty = $qtyPerPortion * $portions; // Total required for this batch
 
-                try {
-                    $deductAmount = $this->unitService->convert(
-                        $requiredQty,
-                        $ingredient->pivot->unit,
-                        $ingredient->measurement_unit
-                    );
-                } catch (\Exception $e) {
+
+                // Check if units are set before conversion
+                if (!empty($ingredient->pivot->unit) && !empty($ingredient->measurement_unit)) {
+                    try {
+                        $deductAmount = $this->unitService->convert(
+                            $requiredQty,
+                            $ingredient->pivot->unit,
+                            $ingredient->measurement_unit
+                        );
+                    } catch (\Exception $e) {
+                        $deductAmount = $requiredQty;
+                    }
+                } else {
+                    // No unit conversion needed if units are not set
                     $deductAmount = $requiredQty;
                 }
 
@@ -126,14 +139,20 @@ class ProductionController extends Controller
                 $outputPerYield = $recipe->output_quantity;
                 $totalOutput = $outputPerYield * $portions;
 
+
                 // Convert to ingredient's measurement unit if needed
-                try {
-                    $addAmount = $this->unitService->convert(
-                        $totalOutput,
-                        $recipe->output_unit,
-                        $producedIngredient->measurement_unit
-                    );
-                } catch (\Exception $e) {
+                if (!empty($recipe->output_unit) && !empty($producedIngredient->measurement_unit)) {
+                    try {
+                        $addAmount = $this->unitService->convert(
+                            $totalOutput,
+                            $recipe->output_unit,
+                            $producedIngredient->measurement_unit
+                        );
+                    } catch (\Exception $e) {
+                        $addAmount = $totalOutput;
+                    }
+                } else {
+                    // No unit conversion needed if units are not set
                     $addAmount = $totalOutput;
                 }
 

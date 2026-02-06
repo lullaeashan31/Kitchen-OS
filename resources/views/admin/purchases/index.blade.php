@@ -45,7 +45,7 @@
                         <td style="padding: 0.75rem 1rem; text-align: right;">
                             {{ number_format($purchase->quantity, 3) }} {{ $purchase->ingredient->measurement_unit ?? '' }}
                         </td>
-                        <td style="padding: 0.75rem 1rem; text-align: right;">{{ number_format($purchase->price, 2) }}</td>
+                        <td style="padding: 0.75rem 1rem; text-align: right;">₹{{ number_format($purchase->price, 2) }}</td>
                         <td style="padding: 0.75rem 1rem;">{{ $purchase->creator->name ?? 'System' }}</td>
                     </tr>
                 @empty

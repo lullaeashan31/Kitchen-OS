@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('excel/import', [ExcelController::class, 'import'])->name('excel.import');
     Route::get('excel/export-recipes', [ExcelController::class, 'exportRecipes'])->name('excel.export_recipes');
     Route::get('excel/template', [ExcelController::class, 'downloadTemplate'])->name('excel.template');
+    Route::get('excel/inventory-template', [ExcelController::class, 'inventoryTemplate'])->name('excel.inventory_template');
     Route::get('excel/export-cost', [ExcelController::class, 'exportCostSummary'])->name('excel.export_cost');
     Route::get('excel/errors/{id}', [ExcelController::class, 'downloadErrors'])->name('excel.download_errors');
 

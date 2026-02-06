@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ingredient;
 use App\Models\InventoryLog;
 use App\Services\ExcelImportService;
+use App\Services\PdfInventoryParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -13,10 +14,12 @@ use Illuminate\Support\Facades\Auth;
 class InventoryController extends Controller
 {
     protected $excelService;
+    protected $pdfParser;
 
-    public function __construct(ExcelImportService $excelService)
+    public function __construct(ExcelImportService $excelService, PdfInventoryParser $pdfParser)
     {
         $this->excelService = $excelService;
+        $this->pdfParser = $pdfParser;
     }
 
     public function index()
@@ -36,19 +39,100 @@ class InventoryController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv',
+            'file' => 'required|file|mimes:xlsx,xls,csv,pdf',
         ]);
 
-        $result = $this->excelService->importInventory($request->file('file'), Auth::user());
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+
+        // Handle PDF files
+        if ($extension === 'pdf') {
+            return $this->importFromPdf($file);
+        }
+
+        // Handle Excel files
+        $result = $this->excelService->importInventory($file, Auth::user());
 
         if (!empty($result['errors'])) {
-            // Simplification: dump errors to session or simple view
-            // In real app, download error Excel. For now, Flash message.
             return redirect()->route('admin.inventory.index')
                 ->with('warning', "Imported {$result['success']} items. Errors in " . count($result['errors']) . " rows.");
         }
 
         return redirect()->route('admin.inventory.index')->with('success', "Inventory imported successfully ({$result['success']} items).");
+    }
+
+    private function importFromPdf($file)
+    {
+        $items = $this->pdfParser->parsePdfToArray($file);
+
+        if (empty($items)) {
+            return redirect()->route('admin.inventory.upload')
+                ->with('error', 'Could not extract data from PDF. Please ensure the PDF contains valid inventory data or use the Excel template.');
+        }
+
+        $imported = 0;
+        $errors = [];
+
+        foreach ($items as $itemData) {
+            try {
+                DB::beginTransaction();
+
+                // Find or create category
+                $categoryId = null;
+                if (!empty($itemData['category']) && $itemData['category'] !== 'Uncategorized') {
+                    $category = \App\Models\Category::firstOrCreate(
+                        ['name' => $itemData['category']],
+                        ['status' => 'active']
+                    );
+                    $categoryId = $category->id;
+                }
+
+                // Check if item exists by name
+                $ingredient = Ingredient::where('name', $itemData['item_name'])->first();
+
+                if ($ingredient) {
+                    // Update existing
+                    $updateData = [
+                        'price' => $itemData['price_per_unit'],
+                        'current_stock' => $itemData['current_stock'],
+                    ];
+
+                    // Only update category if we found/created one
+                    if ($categoryId) {
+                        $updateData['category_id'] = $categoryId;
+                    }
+
+                    $ingredient->update($updateData);
+                } else {
+                    // Create new
+                    Ingredient::create([
+                        'name' => $itemData['item_name'],
+                        'category_id' => $categoryId,
+                        'measurement_unit' => $itemData['measurement_unit'],
+                        'purchase_unit' => $itemData['purchase_unit'],
+                        'price' => $itemData['price_per_unit'],
+                        'vendor' => $itemData['vendor'],
+                        'alert_threshold' => $itemData['minimum_stock_level'],
+                        'current_stock' => $itemData['current_stock'],
+                        'status' => 'approved',
+                    ]);
+                }
+
+                DB::commit();
+                $imported++;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $errors[] = $itemData['item_name'] . ': ' . $e->getMessage();
+            }
+        }
+
+        if (!empty($errors)) {
+            return redirect()->route('admin.inventory.index')
+                ->with('warning', "Imported {$imported} items from PDF. Errors: " . implode(', ', array_slice($errors, 0, 3)));
+        }
+
+        return redirect()->route('admin.inventory.index')
+            ->with('success', "Successfully imported {$imported} items from PDF.");
     }
 
     public function adjust(Request $request, Ingredient $ingredient)

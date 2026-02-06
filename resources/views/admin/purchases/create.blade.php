@@ -18,8 +18,8 @@
                         class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Vendor Name (Optional)</label>
-                    <input type="text" name="vendor" placeholder="e.g. Fresh Farms Ltd."
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Vendor Name</label>
+                    <input type="text" name="vendor" placeholder="e.g. Fresh Farms Ltd." required
                         class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none transition-all">
                 </div>
             </div>
@@ -54,7 +54,7 @@
 
                 <div class="mt-4 p-4 bg-gray-50 rounded-lg flex justify-end items-center border border-gray-100 gap-4">
                     <span class="text-sm font-medium text-gray-600">Total Purchase Value:</span>
-                    <span class="text-xl font-bold text-gray-800">$<span id="grandTotalDisplay">0.00</span></span>
+                    <span class="text-xl font-bold text-gray-800">₹<span id="grandTotalDisplay">0.00</span></span>
                 </div>
             </div>
 

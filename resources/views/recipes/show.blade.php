@@ -65,12 +65,12 @@
                         <div>
                             <div class="text-muted text-sm">Cost / Portion</div>
                             <div style="font-weight: 600; color: var(--secondary-color);">
-                                {{ number_format($costPerPortion, 2) }}
+                                ₹{{ number_format($costPerPortion, 2) }}
                             </div>
                         </div>
                         <div>
                             <div class="text-muted text-sm">Total Cost</div>
-                            <div style="font-weight: 500;">{{ number_format($recipe->total_cost, 2) }}</div>
+                            <div style="font-weight: 500;">₹{{ number_format($recipe->total_cost, 2) }}</div>
                         </div>
                     @endif
                 </div>
@@ -147,7 +147,14 @@
                                 <tr class="bg-gray-50 border-b border-gray-100">
                                     <td colspan="{{ (auth()->user()->isAdmin() || auth()->user()->isManager()) ? 4 : 3 }}"
                                         class="py-2 px-3 font-bold text-gray-700 uppercase text-xs tracking-wider">
-                                        {{ $group ?: 'Main Ingredients' }}
+                                        @php
+                                            $displayGroup = $group ?: 'Main Ingredients';
+                                            // If group is just a number, prepend "Set "
+                                            if (is_numeric($displayGroup)) {
+                                                $displayGroup = 'Set ' . $displayGroup;
+                                            }
+                                        @endphp
+                                        {{ $displayGroup }}
                                     </td>
                                 </tr>
                                 @foreach($items as $ri)
@@ -161,7 +168,7 @@
                                         @if(auth()->user()->isAdmin() || auth()->user()->isManager())
                                             <td class="text-right">
                                                 <span class="cost-display" data-base="{{ $ri->cost }}">
-                                                    {{ number_format($ri->cost, 2) }}
+                                                    ₹{{ number_format($ri->cost, 2) }}
                                                 </span>
                                             </td>
                                         @endif
@@ -212,7 +219,7 @@
                                 <span class="text-xs font-bold text-gray-500 uppercase">Est. Total Cost</span>
                             </div>
                             <div class="text-2xl font-bold text-green-600 mb-2">
-                                $<span id="scaledCost">{{ number_format($recipe->total_cost, 2) }}</span>
+                                ₹<span id="scaledCost">{{ number_format($recipe->total_cost, 2) }}</span>
                             </div>
                         @endif
                         <div class="text-sm text-gray-600 border-t pt-2 mt-2">

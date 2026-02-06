@@ -39,7 +39,7 @@
                         <div class="flex items-center gap-4">
                             <button type="button" onclick="adjustPortions(-1)"
                                 class="w-12 h-12 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-orange-600 hover:border-orange-300 transition-colors flex items-center justify-center text-xl font-bold">-</button>
-                            <input type="number" name="portions" id="portions" value="1" step="0.5" min="0.1"
+                            <input type="number" name="portions" id="portions" value="1" step="1" min="1"
                                 class="flex-1 text-center text-2xl font-bold bg-transparent border-none focus:ring-0 p-2"
                                 required>
                             <button type="button" onclick="adjustPortions(1)"
@@ -74,12 +74,13 @@
                             <div>
                                 <div class="font-bold text-gray-800">{{ $log->recipe->name }}</div>
                                 <div class="text-xs text-gray-400">{{ $log->created_at->diffForHumans() }} by
-                                    {{ $log->user->name }}</div>
+                                    {{ $log->user->name }}
+                                </div>
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="font-bold text-orange-600">{{ $log->portions }} pts</div>
-                            <div class="text-xs text-gray-400 font-mono">{{ number_format($log->total_cost, 2) }}</div>
+                            <div class="font-bold text-orange-600">{{ number_format($log->portions, 0) }} Portions</div>
+                            <div class="text-xs text-gray-400 font-mono">₹{{ number_format($log->total_cost, 2) }}</div>
                         </div>
                     </div>
                 @empty
@@ -92,9 +93,9 @@
     <script>
         function adjustPortions(amount) {
             const input = document.getElementById('portions');
-            let val = parseFloat(input.value) || 0;
+            let val = parseInt(input.value) || 0;
             val += amount;
-            if (val < 0.1) val = 0.1;
+            if (val < 1) val = 1;
             input.value = val;
         }
 
