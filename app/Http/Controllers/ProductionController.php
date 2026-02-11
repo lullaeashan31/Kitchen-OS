@@ -23,8 +23,10 @@ class ProductionController extends Controller
      */
     public function create()
     {
-        // Only show approved/permanent recipes for production
+        // Only show approved/permanent recipes that are SUB-RECIPES (produce an ingredient)
+        // Show all approved/permanent recipes (both sub-recipes and main dishes)
         $recipes = Recipe::where('status', \App\Enums\RecipeStatus::Permanent)
+            ->with(['producesIngredient']) // Eager load if applicable
             ->orderBy('name')
             ->get();
 
@@ -38,11 +40,17 @@ class ProductionController extends Controller
     {
         $validated = $request->validate([
             'recipe_id' => 'required|exists:recipes,id',
-            'portions' => 'required|numeric|min:0.1',
+            'quantity' => 'required|numeric|min:0.1',
+            'unit_type' => 'required|in:batches,portions',
         ]);
 
         $recipe = Recipe::with('ingredients')->findOrFail($validated['recipe_id']);
-        $portions = $validated['portions'];
+
+        // Calculate total portions
+        $portions = $validated['quantity'];
+        if ($validated['unit_type'] === 'batches') {
+            $portions = $validated['quantity'] * ($recipe->yields ?: 1);
+        }
 
         // Check Stock Availability First
         $missingStock = [];

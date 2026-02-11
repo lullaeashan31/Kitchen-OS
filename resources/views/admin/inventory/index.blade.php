@@ -12,7 +12,7 @@
     <button onclick="submitBulkDelete()" class="btn btn-danger" style="margin-right: 0.5rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.375rem; cursor: pointer; display: none;" id="bulkDeleteBtn">
         <i data-lucide="trash-2" style="width: 1rem; height: 1rem; display: inline-block;"></i> Delete Selected
     </button>
-    <a href="{{ route('admin.purchases.create') }}" class="btn btn-primary" style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border-radius: 0.375rem; text-decoration: none;">
+    <a href="{{ route('purchases.create') }}" class="btn btn-primary" style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border-radius: 0.375rem; text-decoration: none;">
         <i data-lucide="plus" style="width: 1rem; height: 1rem; display: inline-block;"></i> Add Purchase
     </a>
 @endsection
@@ -119,9 +119,14 @@
 
                     <div style="margin-bottom: 1.5rem;">
                         <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Reason</label>
-                        <input type="text" name="reason" required placeholder="e.g., Spillage, Audit Correction, Damage"
+                        <select name="reason" required
                             style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;"
                             onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                            <option value="" disabled selected>Select a reason...</option>
+                            <option value="Audit correction">Audit correction</option>
+                            <option value="Damage">Damage</option>
+                            <option value="Opening balance fix">Opening balance fix</option>
+                        </select>
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">

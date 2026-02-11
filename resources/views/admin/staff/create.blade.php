@@ -35,7 +35,7 @@
                             <i data-lucide="camera" class="w-5 h-5"></i>
                         </label>
                         <input type="file" name="profile_photo" id="profile_photo" class="hidden" accept="image/*"
-                            onchange="previewImage(this)">
+                            onchange="previewImage(this)" required>
                     </div>
                     <div class="text-center md:text-left">
                         <h2 class="text-xl font-bold text-gray-800">New Employee Profile</h2>
@@ -56,18 +56,27 @@
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
                                 <input type="text" name="name" value="{{ old('name') }}" required
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400 @error('name') border-red-500 @enderror">
+                                @error('name')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-                                <input type="email" name="email" value="{{ old('email') }}" required
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
+                                <input type="text" name="phone" value="{{ old('phone') }}" required
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400 @error('phone') border-red-500 @enderror">
+                                @error('phone')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Staff Code (Login ID)</label>
                                 <input type="text" name="staff_code" value="{{ old('staff_code') }}" required maxlength="6"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono tracking-widest text-center text-lg">
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono tracking-widest text-center text-lg @error('staff_code') border-red-500 @enderror">
+                                @error('staff_code')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                                 <p class="text-xs text-blue-500 mt-2 flex items-center gap-1 font-medium">
                                     <i data-lucide="info" class="w-3 h-3"></i> Required for Tablet Login
                                 </p>
@@ -83,7 +92,10 @@
                             <div class="bg-orange-50/50 p-6 rounded-xl border border-orange-100">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Password</label>
                                 <input type="password" name="password" required
-                                    class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none mb-4">
+                                    class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none mb-4 @error('password') border-red-500 @enderror">
+                                @error('password')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
 
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Confirm Password</label>
                                 <input type="password" name="password_confirmation" required

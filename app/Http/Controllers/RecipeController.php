@@ -70,7 +70,7 @@ class RecipeController extends Controller
 
     public function show(Recipe $recipe)
     {
-        $recipe->load(['category', 'ingredients', 'versions', 'driveFiles']);
+        $recipe->load(['category', 'ingredients.producedByRecipes', 'versions', 'driveFiles', 'producesIngredient']);
         $costPerPortion = $this->costService->calculateCostPerPortion($recipe);
 
         return view('recipes.show', compact('recipe', 'costPerPortion'));

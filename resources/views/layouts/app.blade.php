@@ -153,8 +153,8 @@
                         class="nav-link {{ request()->routeIs('admin.inventory.index') ? 'active' : '' }}">
                         <i data-lucide="package" class="nav-icon"></i> Master Inventory
                     </a>
-                    <a href="{{ route('admin.purchases.index') }}"
-                        class="nav-link {{ request()->routeIs('admin.purchases.*') ? 'active' : '' }}">
+                    <a href="{{ route('purchases.index') }}"
+                        class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
                         <i data-lucide="shopping-cart" class="nav-icon"></i> Purchases
                     </a>
                     <a href="{{ route('admin.inventory.upload') }}"

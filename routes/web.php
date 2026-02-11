@@ -43,8 +43,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('settings/location', [\App\Http\Controllers\Admin\SettingsController::class, 'location'])->name('settings.location');
     Route::get('settings/devices', [\App\Http\Controllers\Admin\SettingsController::class, 'devices'])->name('settings.devices');
 
-    // Purchases
-    Route::resource('purchases', \App\Http\Controllers\Admin\PurchaseController::class)->only(['index', 'create', 'store']);
+    // Purchases moved to main group
 
     // Inventory
     Route::get('inventory', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventory.index');
@@ -65,6 +64,10 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::middleware(['auth'])->group(function () {
+    // Password Change
+    Route::get('change-password', [LoginController::class, 'changePasswordForm'])->name('password.change_form');
+    Route::post('change-password', [LoginController::class, 'updatePassword'])->name('password.update');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -73,15 +76,25 @@ Route::middleware(['auth'])->group(function () {
     Route::post('production/cook', [\App\Http\Controllers\ProductionController::class, 'store'])->name('production.store');
 
     // Recipes
+    Route::get('recipes/{recipe}/print', [RecipeController::class, 'print'])->name('recipes.print');
     Route::resource('recipes', RecipeController::class);
     Route::delete('categories/bulk-destroy', [\App\Http\Controllers\CategoryController::class, 'bulkDestroy'])->name('categories.bulk_destroy');
     Route::resource('categories', \App\Http\Controllers\CategoryController::class);
     Route::post('recipes/{recipe}/approve', [RecipeController::class, 'approve'])->name('recipes.approve');
     Route::post('recipes/{recipe}/reject', [RecipeController::class, 'reject'])->name('recipes.reject');
+    Route::post('recipes/{recipe}/scale', [RecipeController::class, 'scale'])->name('recipes.scale');
 
 
 
+    // Purchases
+    Route::resource('purchases', \App\Http\Controllers\PurchaseController::class)->only(['index', 'create', 'store']);
+    // Admin only actions
+    Route::middleware(['admin'])->group(function () {
+        Route::post('purchases/{purchase}/approve', [\App\Http\Controllers\PurchaseController::class, 'approve'])->name('purchases.approve');
+        Route::post('purchases/{purchase}/reject', [\App\Http\Controllers\PurchaseController::class, 'reject'])->name('purchases.reject');
+    });
     // Ingredients
+    Route::post('ingredients/quick-store', [App\Http\Controllers\IngredientController::class, 'storeQuick'])->name('ingredients.storeQuick');
     Route::resource('ingredients', IngredientController::class);
     // Pending Ingredients (Admin)
     Route::get('admin/ingredients/pending', [PendingIngredientController::class, 'index'])->name('admin.ingredients.pending');
@@ -117,4 +130,15 @@ Route::middleware(['auth'])->group(function () {
 
     // Audit Logs
     Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit_logs.index');
+
+    // POS Integration
+    Route::get('pos/upload', [\App\Http\Controllers\PosController::class, 'uploadForm'])->name('pos.upload');
+    Route::post('pos/parse', [\App\Http\Controllers\PosController::class, 'parse'])->name('pos.parse');
+    Route::post('pos/process', [\App\Http\Controllers\PosController::class, 'process'])->name('pos.process');
+
+    // SOP Checklists
+    Route::get('sop', [\App\Http\Controllers\SopController::class, 'index'])->name('sop.index');
+    Route::get('sop/{checklist}/execute', [\App\Http\Controllers\SopController::class, 'execute'])->name('sop.execute');
+    Route::post('sop/{checklist}/item/{itemId}', [\App\Http\Controllers\SopController::class, 'updateItem'])->name('sop.update_item');
+    Route::get('sop/report', [\App\Http\Controllers\SopController::class, 'report'])->name('sop.report');
 });

@@ -6,6 +6,7 @@ use App\Models\Ingredient;
 use App\Models\Category;
 use App\Services\IngredientService;
 use App\Http\Requests\StoreIngredientRequest;
+use App\Http\Requests\QuickCreateIngredientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -83,5 +84,36 @@ class IngredientController extends Controller
         return response()->json(
             $this->ingredientService->search($query)
         );
+    }
+    public function storeQuick(QuickCreateIngredientRequest $request)
+    {
+        // $this->authorize('create', Ingredient::class); // Optional based on specific permission needs
+
+        $ingredient = Ingredient::create([
+            'name' => $request->name,
+            'category_id' => $request->category_id,
+            'storage_location' => $request->storage_location,
+            'measurement_unit' => $request->measurement_unit,
+            'status' => 'active', // Default status
+            'price' => 0, // Default price
+        ]);
+
+        // Notify Admin
+        \App\Models\User::all()->filter(function ($user) {
+            return $user->isAdmin();
+        })->each(function ($admin) use ($ingredient) {
+            $admin->notify(new \App\Notifications\NewIngredientCreated($ingredient));
+        });
+
+        return response()->json([
+            'success' => true,
+            'ingredient' => [
+                'id' => $ingredient->id,
+                'name' => $ingredient->name,
+                'unit' => $ingredient->measurement_unit,
+                'price' => $ingredient->price,
+            ],
+            'message' => 'Ingredient created successfully.'
+        ]);
     }
 }

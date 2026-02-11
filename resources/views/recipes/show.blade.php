@@ -40,9 +40,9 @@
             </form>
         @endcan
 
-        <button onclick="window.print()" class="btn btn-secondary">
+        <a href="{{ route('recipes.print', $recipe) }}" target="_blank" class="btn btn-secondary">
             <i data-lucide="printer"></i> Print
-        </button>
+        </a>
     </div>
 @endsection
 
@@ -159,7 +159,19 @@
                                 </tr>
                                 @foreach($items as $ri)
                                     <tr class="ingredient-row">
-                                        <td class="pl-6">{{ $ri->ingredient->name }}</td>
+                                        <td class="pl-6">
+                                            @if($ri->ingredient->producedByRecipes->isNotEmpty())
+                                                @php $subRecipe = $ri->ingredient->producedByRecipes->first(); @endphp
+                                                <a href="{{ route('recipes.show', $subRecipe) }}"
+                                                    class="text-blue-600 hover:underline flex items-center gap-2 group"
+                                                    title="View Sub-Recipe: {{ $subRecipe->name }}">
+                                                    <i data-lucide="link" class="w-3 h-3 text-blue-400 group-hover:text-blue-600"></i>
+                                                    {{ $ri->ingredient->name }}
+                                                </a>
+                                            @else
+                                                {{ $ri->ingredient->name }}
+                                            @endif
+                                        </td>
                                         <td>
                                             <span class="qty-display"
                                                 data-base="{{ $ri->quantity }}">{{ number_format($ri->quantity, 3) }}</span>
@@ -219,12 +231,25 @@
                                 <span class="text-xs font-bold text-gray-500 uppercase">Est. Total Cost</span>
                             </div>
                             <div class="text-2xl font-bold text-green-600 mb-2">
-                                ₹<span id="scaledCost">{{ number_format($recipe->total_cost, 2) }}</span>
+                                ₹<span id="scaledCostDisplay">{{ number_format($recipe->total_cost, 2) }}</span>
                             </div>
                         @endif
                         <div class="text-sm text-gray-600 border-t pt-2 mt-2">
                             <i data-lucide="clock" class="w-3 h-3 inline"></i> Prep: <span
                                 id="scaledTime">{{ $recipe->prep_time_minutes }}</span> mins
+                        </div>
+
+                        <div class="mt-4 pt-2 border-t">
+                            <form action="{{ route('recipes.scale', $recipe) }}" method="POST"
+                                onsubmit="return confirm('Create a NEW version of this recipe scaled to ' + document.getElementById('desiredPortions').value + ' portions?')">
+                                @csrf
+                                <input type="hidden" name="yield_type" value="portions">
+                                <input type="hidden" name="new_yield" id="formNewYield"
+                                    value="{{ $recipe->yield_portions ?? $recipe->yields }}">
+                                <button type="submit" class="btn btn-sm btn-primary w-full">
+                                    <i data-lucide="copy"></i> Create Scaled Version
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -315,20 +340,19 @@
             const targetPortions = parseFloat(document.getElementById('desiredPortions').value) || basePortions;
             const ratio = targetPortions / basePortions;
 
+            // Update Form Input
+            document.getElementById('formNewYield').value = targetPortions;
+
             // Update Cost Display
             const newCost = baseCost * ratio;
-            const costEl = document.getElementById('scaledCost');
+            const costEl = document.getElementById('scaledCostDisplay');
             if (costEl) {
                 costEl.innerText = newCost.toFixed(2);
             }
 
             // Update Time Display
             if (basePrepTime > 0) {
-                // Time doesn't always scale linearly, but let's assume it does for now or keep it static?
-                // Usually prep time doesn't double if you double portions. 
-                // Let's keep prep time static but maybe update weight if we had it.
-                // User requirement: "Recipes auto-scale when any of these values are changed."
-                // "Scaling affects all ingredient quantities proportionally."
+                // ...
             }
 
             // Update Ingredient Table

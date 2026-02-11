@@ -35,17 +35,36 @@
                     </div>
 
                     <div class="bg-gray-50 p-6 rounded-xl border border-gray-100">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">How many portions?</label>
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="block text-sm font-bold text-gray-700" id="qtyLabel">Quantity</label>
+                            <div class="flex bg-white rounded-lg p-1 border border-gray-200">
+                                <label
+                                    class="cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-colors bg-orange-100 text-orange-700"
+                                    id="lbl-batches">
+                                    <input type="radio" name="unit_type" value="batches" class="hidden" checked
+                                        onchange="toggleUnit('batches')">
+                                    Batches
+                                </label>
+                                <label
+                                    class="cursor-pointer px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                                    id="lbl-portions">
+                                    <input type="radio" name="unit_type" value="portions" class="hidden"
+                                        onchange="toggleUnit('portions')">
+                                    Portions
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-4">
-                            <button type="button" onclick="adjustPortions(-1)"
+                            <button type="button" onclick="adjustAmount(-1)"
                                 class="w-12 h-12 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-orange-600 hover:border-orange-300 transition-colors flex items-center justify-center text-xl font-bold">-</button>
-                            <input type="number" name="portions" id="portions" value="1" step="1" min="1"
+                            <input type="number" name="quantity" id="amount" value="1" step="0.1" min="0.1"
                                 class="flex-1 text-center text-2xl font-bold bg-transparent border-none focus:ring-0 p-2"
                                 required>
-                            <button type="button" onclick="adjustPortions(1)"
+                            <button type="button" onclick="adjustAmount(1)"
                                 class="w-12 h-12 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-orange-600 hover:border-orange-300 transition-colors flex items-center justify-center text-xl font-bold">+</button>
                         </div>
-                        <p class="text-center text-xs text-gray-400 mt-2">Enter the actual number of servings produced.</p>
+                        <p class="text-center text-xs text-gray-400 mt-2" id="helper-text">Produces 1 Batch (Base Yield)</p>
                     </div>
 
                     <button type="submit"
@@ -90,21 +109,57 @@
         </div>
     </div>
 
-    <script>
-        function adjustPortions(amount) {
-            const input = document.getElementById('portions');
-            let val = parseInt(input.value) || 0;
-            val += amount;
-            if (val < 1) val = 1;
-            input.value = val;
+        let currentUnit = 'batches';
+        let baseYield = 1;
+
+        function toggleUnit(type) {
+            currentUnit = type;
+            // Update UI styles
+            document.getElementById('lbl-batches').className = type === 'batches' ? 
+                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-colors bg-orange-100 text-orange-700' : 
+                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors';
+            
+            document.getElementById('lbl-portions').className = type === 'portions' ? 
+                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-colors bg-orange-100 text-orange-700' : 
+                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors';
+
+            updateHelperText();
+        }
+
+        function adjustAmount(delta) {
+            const input = document.getElementById('amount');
+            let val = parseFloat(input.value) || 0;
+            val += delta;
+            if (val < 0.1) val = 0.1;
+            input.value = parseFloat(val.toFixed(2));
+            updateHelperText();
+        }
+
+        function updateHelperText() {
+            const val = parseFloat(document.getElementById('amount').value) || 0;
+            const text = document.getElementById('helper-text');
+            
+            if (currentUnit === 'batches') {
+                const totalPortions = val * baseYield;
+                text.innerText = `Produces ${val} Batch(es) = ${totalPortions} Portions`;
+            } else {
+                const totalBatches = (val / baseYield).toFixed(2);
+                text.innerText = `Produces ${val} Portions = ${totalBatches} Batch(es)`;
+            }
         }
 
         document.getElementById('recipe_id').addEventListener('change', function () {
             const selected = this.options[this.selectedIndex];
-            const base = selected.getAttribute('data-yields');
-            if (base) {
-                document.getElementById('portions').value = base;
+            const yieldVal = selected.getAttribute('data-yields');
+            if (yieldVal) {
+                baseYield = parseFloat(yieldVal);
+                // Reset to 1 batch default
+                if (currentUnit === 'batches') {
+                    document.getElementById('amount').value = 1;
+                } else {
+                    document.getElementById('amount').value = baseYield;
+                }
+                updateHelperText();
             }
         });
-    </script>
 @endsection

@@ -18,19 +18,29 @@ class StoreRecipeRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'method' => 'required|string',
-            'yields' => 'required|integer|min:1',
-            'yield_portions' => 'nullable|numeric|min:0',
-            'yield_weight' => 'nullable|numeric|min:0',
-            'yield_weight_unit' => 'nullable|string',
+            // method is now optional/legacy, stages contain the method
+            'method' => 'nullable|string',
+
+            // Yield System - At least one is required
+            'yield_portions' => 'required_without_all:yield_weight,yield_volume,yield_batches|nullable|integer|min:1',
+            'yield_weight' => 'required_without_all:yield_portions,yield_volume,yield_batches|nullable|numeric|min:0',
+            'yield_weight_unit' => 'nullable|required_with:yield_weight|string|in:g,kg,oz,lb',
+            'yield_volume' => 'required_without_all:yield_portions,yield_weight,yield_batches|nullable|numeric|min:0',
+            'yield_volume_unit' => 'nullable|required_with:yield_volume|string|in:ml,l,fl_oz,cup',
+            'yield_batches' => 'required_without_all:yield_portions,yield_weight,yield_volume|nullable|integer|min:1',
             'prep_time_minutes' => 'nullable|integer|min:0',
-            'ingredients' => 'required|array|min:1',
-            'ingredients.*.name' => 'nullable|string',
-            'ingredients.*.ingredient_id' => 'required',
-            'ingredients.*.quantity' => 'required|numeric|min:0',
-            'ingredients.*.unit' => ['required', Rule::enum(Unit::class)],
-            'ingredients.*.ingredient_group' => 'nullable|string',
-            'ingredients.*.cost' => 'nullable|numeric|min:0',
+
+            'stages' => 'required|array|min:1',
+            'stages.*.name' => 'required|string|max:255',
+            'stages.*.method' => 'nullable|string',
+            'stages.*.ingredients' => 'nullable|array',
+            'stages.*.ingredients.*.name' => 'nullable|string', // For dynamic creation
+            'stages.*.ingredients.*.ingredient_id' => 'required',
+            'stages.*.ingredients.*.quantity' => 'required|numeric|min:0',
+            'stages.*.ingredients.*.unit' => ['required', Rule::enum(Unit::class)],
+            'stages.*.ingredients.*.ingredient_group' => 'nullable|string',
+            'stages.*.ingredients.*.cost' => 'nullable|numeric|min:0',
+
             'produces_ingredient_id' => 'nullable|exists:ingredients,id',
             'output_quantity' => 'nullable|numeric|min:0',
             'output_unit' => ['nullable', Rule::enum(Unit::class)],

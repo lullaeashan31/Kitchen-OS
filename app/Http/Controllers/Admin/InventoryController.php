@@ -137,10 +137,10 @@ class InventoryController extends Controller
 
     public function adjust(Request $request, Ingredient $ingredient)
     {
-        // Manual Stock Adjustment Logic
+        // restricted to: Audit correction, Damage, Opening balance fix
         $request->validate([
             'adjustment_quantity' => 'required|numeric', // Can be negative
-            'reason' => 'required|string|max:255',
+            'reason' => ['required', 'string', \Illuminate\Validation\Rule::in(['Audit correction', 'Damage', 'Opening balance fix'])],
         ]);
 
         DB::transaction(function () use ($request, $ingredient) {
@@ -159,16 +159,10 @@ class InventoryController extends Controller
                 'ingredient_id' => $ingredient->id,
                 'user_id' => Auth::id(),
                 'quantity_change' => $request->adjustment_quantity,
-                'action' => 'adjustment', // or 'manual_adjustment'
+                'action' => 'adjustment',
                 'stock_before' => $oldStock,
                 'stock_after' => $newStock,
-                // 'reason' -> Add reason to InventoryLog?
-                // Migration `inventory_logs` didn't have reason column.
-                // I should add it or put it in action string? "adjustment: reason"?
-                // Let's check migration again.
-                // It has 'action' string. I'll append reason or add column.
-                // User said "Saved to adjustment_logs: reason".
-                // I used `inventory_logs` as `adjustment_logs`. I need to add `reason` column.
+                'reason' => $request->reason,
             ]);
         });
 

@@ -27,23 +27,29 @@ class StaffController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'required|string|max:15|unique:users',
             'staff_code' => 'required|string|max:6|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'profile_photo' => 'nullable|image|max:2048', // 2MB Max
+            'profile_photo' => 'required|image|max:5120', // Mandatory 5MB
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-        $validated['role'] = \App\Enums\UserRole::Staff;
+        $createData = [
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'staff_code' => $validated['staff_code'],
+            'password' => Hash::make($validated['password']),
+            'role' => \App\Enums\UserRole::Staff,
+            'is_password_changed' => false, // Force change
+        ];
 
         if ($request->hasFile('profile_photo')) {
             $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $validated['profile_photo_path'] = $path;
+            $createData['profile_photo_path'] = $path;
         }
 
-        $user = User::create($validated);
+        $user = User::create($createData);
 
         if (!empty($request->permissions)) {
             $user->permissions()->sync($request->permissions);

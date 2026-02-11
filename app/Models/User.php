@@ -25,10 +25,12 @@ class User extends Authenticatable
         'target_latitude',
         'target_longitude',
         'target_location_name',
+        'phone',
         'email',
         'password',
         'role',
         'profile_photo_path',
+        'is_password_changed',
     ];
 
     /**
@@ -52,6 +54,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'is_password_changed' => 'boolean',
         ];
     }
 

@@ -22,13 +22,17 @@ class Recipe extends Model
         'approved_by',
         'total_cost',
         'cost_per_portion',
-        'yield_portions',
-        'yield_weight',
-        'yield_weight_unit',
+
         'prep_time_minutes',
         'produces_ingredient_id',
         'output_quantity',
         'output_unit',
+        'yield_portions',
+        'yield_weight',
+        'yield_weight_unit',
+        'yield_volume',
+        'yield_volume_unit',
+        'yield_batches',
     ];
 
     protected function casts(): array
@@ -59,8 +63,13 @@ class Recipe extends Model
     public function ingredients()
     {
         return $this->belongsToMany(Ingredient::class, 'recipe_ingredients')
-            ->withPivot('quantity', 'unit', 'cost', 'ingredient_group')
+            ->withPivot('quantity', 'unit', 'cost', 'ingredient_group', 'recipe_stage_id')
             ->withTimestamps();
+    }
+
+    public function stages()
+    {
+        return $this->hasMany(RecipeStage::class)->orderBy('sort_order');
     }
 
     public function recipeIngredients()

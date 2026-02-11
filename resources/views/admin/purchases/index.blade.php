@@ -6,7 +6,7 @@
 @endsection
 
 @section('actions')
-    <a href="{{ route('admin.purchases.create') }}" class="btn btn-primary"
+    <a href="{{ route('purchases.create') }}" class="btn btn-primary"
         style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border-radius: 0.375rem; text-decoration: none;">
         <i data-lucide="plus" style="width: 1rem; height: 1rem; display: inline-block;"></i> New Purchase
     </a>

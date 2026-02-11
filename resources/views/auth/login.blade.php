@@ -26,9 +26,10 @@
             @csrf
 
             <div class="form-group">
-                <label class="form-label">Email Address</label>
-                <input type="email" name="email" class="form-control" value="{{ old('email') }}" required autofocus>
-                @error('email')
+                <label class="form-label">Phone Number</label>
+                <input type="text" name="phone" class="form-control" value="{{ old('phone') }}" required autofocus
+                    placeholder="Enter your phone number">
+                @error('phone')
                     <span style="color: var(--danger-color); font-size: 0.8rem;">{{ $message }}</span>
                 @enderror
             </div>
