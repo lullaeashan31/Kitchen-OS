@@ -137,18 +137,6 @@
                     <a href="{{ route('attendance.tablet') }}" class="nav-link">
                         <i data-lucide="clock" class="nav-icon"></i> Time Clock
                     </a>
-                    <a href="{{ route('recipes.create') }}"
-                        class="nav-link {{ request()->routeIs('recipes.create') ? 'active' : '' }}">
-                        <i data-lucide="plus-circle" class="nav-icon"></i> New Recipe
-                    </a>
-                    <a href="{{ route('recipes.index') }}"
-                        class="nav-link {{ request()->routeIs('recipes.index') ? 'active' : '' }}">
-                        <i data-lucide="book-open" class="nav-icon"></i> My Recipes
-                    </a>
-                    <a href="{{ route('production.create') }}"
-                        class="nav-link {{ request()->routeIs('production.create') ? 'active' : '' }}">
-                        <i data-lucide="chef-hat" class="nav-icon text-red-500"></i> Cook / Production
-                    </a>
                     <a href="{{ route('sop.index') }}" class="nav-link {{ request()->routeIs('sop.*') ? 'active' : '' }}">
                         <i data-lucide="clipboard-list" class="nav-icon text-blue-500"></i> SOP Checklists
                     </a>

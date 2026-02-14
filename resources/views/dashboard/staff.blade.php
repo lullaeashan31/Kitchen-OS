@@ -19,21 +19,17 @@
             </div>
         </a>
 
-        <!-- Screen 2: Recipe Management -->
-        <a href="{{ route('recipes.create') }}" class="group block">
+        <!-- Screen 2: SOP Checklists -->
+        <a href="{{ route('sop.index') }}" class="group block">
             <div
                 class="card h-full flex flex-col items-center justify-center p-12 hover:bg-green-50 transition-colors border-2 border-transparent hover:border-green-500 cursor-pointer text-center">
                 <div class="bg-green-100 p-6 rounded-full mb-6 group-hover:scale-110 transition-transform">
-                    <i data-lucide="chef-hat" class="w-16 h-16 text-green-600"></i>
+                    <i data-lucide="clipboard-list" class="w-16 h-16 text-green-600"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Create Recipe</h2>
-                <p class="text-gray-500">Add new recipe or view my recipes</p>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">SOP Checklists</h2>
+                <p class="text-gray-500">View and complete daily checklists</p>
             </div>
         </a>
 
-    </div>
-
-    <div class="text-center mt-12 text-gray-400">
-        <p>My Contributions: {{ $myRecipesCount }} Recipes Created</p>
     </div>
 @endsection
