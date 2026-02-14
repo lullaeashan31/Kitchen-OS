@@ -72,6 +72,16 @@ class ExcelController extends Controller
         return $this->exportService->downloadInventoryTemplate();
     }
 
+    public function purchaseTemplate()
+    {
+        return $this->exportService->downloadPurchaseTemplate();
+    }
+
+    public function salesTemplate()
+    {
+        return $this->exportService->downloadSalesTemplate();
+    }
+
     public function exportCostSummary()
     {
         return $this->exportService->exportCostSummary();

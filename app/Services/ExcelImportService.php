@@ -246,4 +246,86 @@ class ExcelImportService
             'errors' => $errors,
         ];
     }
+
+    public function importSalesReport(UploadedFile $file, User $user): array
+    {
+        $data = Excel::toArray(new DataImport, $file);
+        $rows = collect($data[0] ?? []);
+
+        if ($rows->isEmpty()) {
+            return ['success' => 0, 'errors' => [['message' => 'Empty file']]];
+        }
+
+        $processed = 0;
+        $errors = [];
+
+        foreach ($rows as $index => $row) {
+            if (empty($row['item_name']))
+                continue;
+
+            try {
+                DB::beginTransaction();
+
+                $validator = Validator::make($row, [
+                    'item_name' => 'required|string',
+                    'quantity_sold' => 'required|numeric|min:0.001',
+                ]);
+
+                if ($validator->fails()) {
+                    throw new \Exception(implode(', ', $validator->errors()->all()));
+                }
+
+                $name = trim($row['item_name']);
+                $qtySold = floatval($row['quantity_sold']);
+
+                // Find ingredient by name (case-insensitive)
+                $ingredient = \App\Models\Ingredient::whereRaw('LOWER(name) = ?', [strtolower($name)])->first();
+
+                if (!$ingredient) {
+                    throw new \Exception("Item '{$name}' not found in inventory.");
+                }
+
+                $oldStock = $ingredient->current_stock;
+                $newStock = $oldStock - $qtySold;
+
+                // We allow negative stock if necessary for sales (usually) but let's check system rules.
+                // InventoryController@adjust says "Negative stock not allowed".
+                // Let's stick to that or just log warning?
+                // For sales report, maybe we should allow it but warn? 
+                // Or strictly prevent. I'll strictly prevent to match InventoryController@adjust.
+                if ($newStock < 0) {
+                    throw new \Exception("Insufficient stock for '{$name}'. adjustment would result in negative stock.");
+                }
+
+                $ingredient->current_stock = $newStock;
+                $ingredient->save();
+
+                // Log the deduction
+                \App\Models\InventoryLog::create([
+                    'ingredient_id' => $ingredient->id,
+                    'user_id' => $user->id,
+                    'quantity_change' => -$qtySold,
+                    'action' => 'sales_report',
+                    'stock_before' => $oldStock,
+                    'stock_after' => $newStock,
+                    'reason' => 'Sales Report Upload',
+                ]);
+
+                DB::commit();
+                $processed++;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $errors[] = [
+                    'row' => $index + 2,
+                    'item' => $row['item_name'] ?? 'N/A',
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return [
+            'success' => $processed,
+            'errors' => $errors,
+        ];
+    }
 }

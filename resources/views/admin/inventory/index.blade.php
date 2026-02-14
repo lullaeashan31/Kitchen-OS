@@ -6,18 +6,56 @@
 @endsection
 
 @section('actions')
-    <a href="{{ route('admin.inventory.upload') }}" class="btn btn-secondary" style="margin-right: 0.5rem; padding: 0.5rem 1rem; background: var(--secondary-color); color: white; border-radius: 0.375rem; text-decoration: none;">
-        <i data-lucide="upload" style="width: 1rem; height: 1rem; display: inline-block;"></i> Upload Excel
-    </a>
-    <button onclick="submitBulkDelete()" class="btn btn-danger" style="margin-right: 0.5rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.375rem; cursor: pointer; display: none;" id="bulkDeleteBtn">
-        <i data-lucide="trash-2" style="width: 1rem; height: 1rem; display: inline-block;"></i> Delete Selected
-    </button>
-    <a href="{{ route('purchases.create') }}" class="btn btn-primary" style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border-radius: 0.375rem; text-decoration: none;">
-        <i data-lucide="plus" style="width: 1rem; height: 1rem; display: inline-block;"></i> Add Purchase
-    </a>
+    <div class="flex gap-2">
+        <a href="{{ route('excel.purchase_template') }}" class="btn btn-secondary" style="background: #10b981; border: none;">
+            <i data-lucide="download" class="w-4 h-4 mr-1"></i> Purchase Sample
+        </a>
+        <a href="javascript:void(0)" id="salesUploadBtn" onclick="openSalesUploadModal()" class="btn btn-secondary" style="background: #8b5cf6; border: none; display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; border-radius: 0.375rem; color: white; text-decoration: none;">
+            <i data-lucide="file-up" class="w-4 h-4 mr-1"></i> Upload Sales Report
+        </a>
+        <a href="{{ route('admin.inventory.upload') }}" class="btn btn-secondary">
+            <i data-lucide="upload" class="w-4 h-4 mr-1"></i> Upload Master
+        </a>
+        <button onclick="submitBulkDelete()" class="btn btn-danger" style="display: none;" id="bulkDeleteBtn">
+            <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> Delete Selected
+        </button>
+        <a href="{{ route('purchases.create') }}" class="btn btn-primary">
+            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Add Purchase
+        </a>
+    </div>
 @endsection
 
 @section('content')
+
+    @if(session('import_errors'))
+        <div class="card mb-6" style="border-left: 4px solid #f59e0b; background: #fffbeb;">
+            <div class="flex items-center gap-2 mb-2 p-4 pb-0">
+                <i data-lucide="alert-circle" class="text-amber-600 w-5 h-5"></i>
+                <h4 class="font-bold text-amber-800">Import Errors Found:</h4>
+            </div>
+            <div class="px-4 pb-4 overflow-auto max-h-60">
+                <table class="w-full text-xs text-amber-900 border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="text-left border-b border-amber-200 py-1">Row</th>
+                            <th class="text-left border-b border-amber-200 py-1">Item</th>
+                            <th class="text-left border-b border-amber-200 py-1">Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(session('import_errors') as $error)
+                            <tr>
+                                <td class="py-1 pr-4">{{ $error['row'] }}</td>
+                                <td class="py-1 pr-4 font-bold">{{ $error['item'] }}</td>
+                                <td class="py-1">{{ $error['error'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <!-- Filter Bar -->
     <div class="card mb-6" style="margin-bottom: 1.5rem; padding: 1.25rem;">
         <form method="GET" action="{{ route('admin.inventory.index') }}" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -181,6 +219,7 @@
         </form>
     </div>
 
+@push('modals')
     <!-- Adjust Modal -->
     <div id="adjustModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 99999; overflow: auto;">
         <div style="min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 2rem;">
@@ -230,75 +269,106 @@
         </div>
     </div>
 
+    <!-- Sales Upload Sales Modal -->
+    <div id="salesUploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 99999; overflow: auto;">
+        <div style="min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+            <div style="background: white; padding: 2rem; border-radius: 0.75rem; width: 450px; max-width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); margin: auto;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1e293b;">Upload Sales Report</h3>
+                    <button onclick="closeSalesUploadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    Upload an Excel/CSV file with <code>item_name</code> and <code>quantity_sold</code> to automatically adjust stock.
+                    <br><br>
+                    <a href="{{ route('excel.sales_template') }}" class="text-indigo-600 hover:underline inline-flex items-center gap-1 font-bold">
+                        <i data-lucide="download" class="w-3 h-3"></i> Download Template
+                    </a>
+                </p>
+                
+                <form action="{{ route('admin.inventory.import_sales') }}" method="POST" enctype="multipart/form-data" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerHTML = 'Processing...';">
+                    @csrf
+                    <div style="margin-bottom: 1.5rem;">
+                        <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Select File (Excel or CSV)</label>
+                        <div class="relative">
+                            <input type="file" name="file" required 
+                                class="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 focus:outline-none transition-colors"
+                                accept=".xlsx,.xls,.csv">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                        <button type="button" onclick="closeSalesUploadModal()" 
+                            class="px-4 py-2 border-2 border-gray-200 text-gray-600 rounded-lg font-bold hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-md transition-all">
+                            Adjust Stock
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endpush
+
     <div style="padding: 1rem; border-top: 1px solid #e2e8f0;">
         {{ $inventory->links() }}
     </div>
 
     @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterForm = document.querySelector('form[action="{{ route('admin.inventory.index') }}"]');
-            
-            const tomSelectConfig = {
-                create: false,
-                allowEmptyOption: true,
-                plugins: ['remove_button'],
-                onChange: function(value) {
-                    // Auto-submit form when filter changes
-                    if (filterForm) {
-                        filterForm.submit();
-                    }
-                }
-            };
-
-            new TomSelect('#category-filter', tomSelectConfig);
-            new TomSelect('#location-filter', tomSelectConfig);
-            new TomSelect('#allergen-filter', tomSelectConfig);
-            
-            // Also auto-submit on stock status and sort by change
-            const stockStatusSelect = document.querySelector('select[name="stock_status"]');
-            const sortBySelect = document.querySelector('select[name="sort_by"]');
-            
-            if (stockStatusSelect) {
-                stockStatusSelect.addEventListener('change', function() {
-                    if (filterForm) {
-                        filterForm.submit();
-                    }
-                });
-            }
-            
-            if (sortBySelect) {
-                sortBySelect.addEventListener('change', function() {
-                    if (filterForm) {
-                        filterForm.submit();
-                    }
-                });
-            }
-            
-            // Search input - submit on Enter key
-            const searchInput = document.querySelector('input[name="search"]');
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        if (filterForm) {
-                            filterForm.submit();
-                        }
-                    }
-                });
-            }
-        });
-
         function openAdjustModal(id, name, stock) {
-            document.getElementById('modalItemName').textContent = name;
-            document.getElementById('modalCurrentStock').textContent = stock;
-            document.getElementById('adjustForm').action = "/admin/inventory/" + id + "/adjust";
-            document.getElementById('adjustModal').style.display = 'block';
+            const modal = document.getElementById('adjustModal');
+            if (modal) {
+                document.getElementById('modalItemName').textContent = name;
+                document.getElementById('modalCurrentStock').textContent = stock;
+                document.getElementById('adjustForm').action = "/admin/inventory/" + id + "/adjust";
+                modal.style.display = 'block';
+            }
         }
 
         function closeAdjustModal() {
             document.getElementById('adjustModal').style.display = 'none';
         }
+
+        function openSalesUploadModal() {
+            const modal = document.getElementById('salesUploadModal');
+            if (modal) {
+                modal.style.display = 'block';
+            } else {
+                alert('Error: Modal not found. Please refresh page.');
+            }
+        }
+
+        function closeSalesUploadModal() {
+            document.getElementById('salesUploadModal').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.querySelector('form[action="{{ route('admin.inventory.index') }}"]');
+            if (window.lucide) window.lucide.createIcons();
+
+            const tomSelectElements = ['#category-filter', '#location-filter', '#allergen-filter'];
+            tomSelectElements.forEach(selector => {
+                const el = document.querySelector(selector);
+                if (el && window.TomSelect) {
+                    new TomSelect(selector, {
+                        create: false,
+                        allowEmptyOption: true,
+                        plugins: ['remove_button'],
+                        onChange: function() { if (filterForm) filterForm.submit(); }
+                    });
+                }
+            });
+            
+            document.querySelectorAll('select[name="stock_status"], select[name="sort_by"]').forEach(el => {
+                el.addEventListener('change', () => { if (filterForm) filterForm.submit(); });
+            });
+        });
 
         function toggleSelectAll() {
             const selectAll = document.getElementById('selectAll');
@@ -310,13 +380,15 @@
         function toggleBulkBtn() {
             const checkboxes = document.querySelectorAll('.item-checkbox:checked');
             const btn = document.getElementById('bulkDeleteBtn');
-            btn.style.display = checkboxes.length > 0 ? 'inline-block' : 'none';
+            if (btn) btn.style.display = checkboxes.length > 0 ? 'inline-block' : 'none';
         }
 
         function submitBulkDelete() {
             if (confirm('Are you sure you want to delete the selected items? Items used in recipes will be skipped.')) {
-                document.getElementById('bulkDeleteForm').submit();
+                const form = document.getElementById('bulkDeleteForm');
+                if (form) form.submit();
             }
         }
+    </script>
     @endpush
 @endsection

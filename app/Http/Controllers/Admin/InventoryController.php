@@ -54,13 +54,13 @@ class InventoryController extends Controller
                     // If include_out parameter is set, also include out of stock items (stock <= 0)
                     if ($request->has('include_out') && $request->include_out == '1') {
                         // Show both low stock AND out of stock items
-                        $query->where(function($q) {
-                            $q->where(function($subQ) {
+                        $query->where(function ($q) {
+                            $q->where(function ($subQ) {
                                 // Low stock: stock > 0 but <= threshold
                                 $subQ->whereColumn('current_stock', '<=', 'alert_threshold')
-                                     ->where('current_stock', '>', 0)
-                                     ->where('alert_threshold', '>', 0);
-                            })->orWhere(function($subQ) {
+                                    ->where('current_stock', '>', 0)
+                                    ->where('alert_threshold', '>', 0);
+                            })->orWhere(function ($subQ) {
                                 // Out of stock: stock <= 0
                                 $subQ->where('current_stock', '<=', 0);
                             });
@@ -68,8 +68,8 @@ class InventoryController extends Controller
                     } else {
                         // Only low stock (excludes out of stock)
                         $query->whereColumn('current_stock', '<=', 'alert_threshold')
-                              ->where('current_stock', '>', 0)
-                              ->where('alert_threshold', '>', 0);
+                            ->where('current_stock', '>', 0)
+                            ->where('alert_threshold', '>', 0);
                     }
                     break;
                 case 'out':
@@ -78,13 +78,13 @@ class InventoryController extends Controller
                     break;
                 case 'ok':
                     // OK stock: current_stock > alert_threshold (when threshold > 0) OR alert_threshold is 0/null
-                    $query->where(function($q) {
-                        $q->where(function($subQ) {
+                    $query->where(function ($q) {
+                        $q->where(function ($subQ) {
                             $subQ->whereColumn('current_stock', '>', 'alert_threshold')
-                                 ->where('alert_threshold', '>', 0);
-                        })->orWhere(function($subQ) {
+                                ->where('alert_threshold', '>', 0);
+                        })->orWhere(function ($subQ) {
                             $subQ->where('alert_threshold', '<=', 0)
-                                 ->orWhereNull('alert_threshold');
+                                ->orWhereNull('alert_threshold');
                         });
                     });
                     break;
@@ -148,6 +148,23 @@ class InventoryController extends Controller
         }
 
         return redirect()->route('admin.inventory.index')->with('success', "Inventory imported successfully ({$result['success']} items).");
+    }
+
+    public function importSalesReport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $result = $this->excelService->importSalesReport($request->file('file'), Auth::user());
+
+        if (!empty($result['errors'])) {
+            return redirect()->route('admin.inventory.index')
+                ->with('warning', "Processed {$result['success']} sales records. Errors in " . count($result['errors']) . " rows.")
+                ->with('import_errors', $result['errors']);
+        }
+
+        return redirect()->route('admin.inventory.index')->with('success', "Sales report processed successfully. {$result['success']} items adjusted.");
     }
 
     private function importFromPdf($file)

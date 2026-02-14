@@ -382,9 +382,10 @@
             }
         });
     </script>
-    @stack('scripts')
+    @stack('modals')
     <!-- Tom Select JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    @stack('scripts')
 </body>
 
 </html>

@@ -65,6 +65,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('inventory', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventory.index');
     Route::get('inventory/upload', [\App\Http\Controllers\Admin\InventoryController::class, 'upload'])->name('inventory.upload');
     Route::post('inventory/upload', [\App\Http\Controllers\Admin\InventoryController::class, 'import'])->name('inventory.import');
+    Route::post('inventory/import-sales', [\App\Http\Controllers\Admin\InventoryController::class, 'importSalesReport'])->name('inventory.import_sales');
     Route::post('inventory/{ingredient}/adjust', [\App\Http\Controllers\Admin\InventoryController::class, 'adjust'])->name('inventory.adjust');
     Route::get('inventory/{ingredient}/history', [\App\Http\Controllers\Admin\InventoryController::class, 'show'])->name('inventory.show');
     Route::delete('inventory/bulk-destroy', [\App\Http\Controllers\Admin\InventoryController::class, 'bulkDestroy'])->name('inventory.bulk_destroy');
@@ -143,6 +144,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('excel/export-recipes', [ExcelController::class, 'exportRecipes'])->name('excel.export_recipes');
     Route::get('excel/template', [ExcelController::class, 'downloadTemplate'])->name('excel.template');
     Route::get('excel/inventory-template', [ExcelController::class, 'inventoryTemplate'])->name('excel.inventory_template');
+    Route::get('excel/purchase-template', [ExcelController::class, 'purchaseTemplate'])->name('excel.purchase_template');
+    Route::get('excel/sales-template', [ExcelController::class, 'salesTemplate'])->name('excel.sales_template');
     Route::get('excel/export-cost', [ExcelController::class, 'exportCostSummary'])->name('excel.export_cost');
     Route::get('excel/errors/{id}', [ExcelController::class, 'downloadErrors'])->name('excel.download_errors');
 
