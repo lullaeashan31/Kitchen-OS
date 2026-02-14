@@ -137,7 +137,7 @@ class Recipe extends Model
 
     public function isSubRecipe(): bool
     {
-        return !is_null($this->produces_ingredient_id);
+        return (bool) $this->is_sub_recipe || !is_null($this->produces_ingredient_id);
     }
 
     public function canBeEditedBy(User $user): bool

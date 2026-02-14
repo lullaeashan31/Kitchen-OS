@@ -92,104 +92,239 @@
 
 
 
-                <h3>Ingredients</h3>
-                <div class="table-container" style="margin-top: 1rem;">
-                    @php
-                        $groupedIngredients = $recipe->recipeIngredients->groupBy('ingredient_group');
-                        // Handle ungrouped items
-                        $ungrouped = $groupedIngredients->get('');
-                        if ($ungrouped) {
-                            $groupedIngredients->forget('');
-                            $groupedIngredients->put('Main', $ungrouped);
-                        }
-                        // Handle null key if any
-                        $nullGroup = $groupedIngredients->get(null);
-                        if ($nullGroup) {
-                            $groupedIngredients->forget(null);
-                            // Merge with Main if exists, or create Main
-                            if ($groupedIngredients->has('Main')) {
-                                $groupedIngredients['Main'] = $groupedIngredients['Main']->merge($nullGroup);
-                            } else {
-                                $groupedIngredients->put('Main', $nullGroup);
-                            }
-                        }
-                    @endphp
-
-                    <table class="table" id="recipeTable">
-                        <thead>
-                            <tr>
-                                <th class="w-5/12">Ingredient</th>
-                                <th class="w-3/12">Quantity (Base)</th>
-                                <th class="w-2/12">Unit</th>
-                                @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-                                    <th class="w-2/12 text-right">Cost</th>
-                                @endif
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($groupedIngredients as $group => $items)
-                                <tr class="bg-gray-50 border-b border-gray-100">
-                                    <td colspan="{{ (auth()->user()->isAdmin() || auth()->user()->isManager()) ? 4 : 3 }}"
-                                        class="py-2 px-3 font-bold text-gray-700 uppercase text-xs tracking-wider">
-                                        @php
-                                            $displayGroup = $group ?: 'Main Ingredients';
-                                            // If group is just a number, prepend "Set "
-                                            if (is_numeric($displayGroup)) {
-                                                $displayGroup = 'Set ' . $displayGroup;
-                                            }
-                                        @endphp
-                                        {{ $displayGroup }}
-                                    </td>
-                                </tr>
-                                @foreach($items as $ri)
-                                    <tr class="ingredient-row">
-                                        <td class="pl-6">
-                                            @if($ri->ingredient->producedByRecipes->isNotEmpty())
-                                                @php $subRecipe = $ri->ingredient->producedByRecipes->first(); @endphp
-                                                <a href="{{ route('recipes.show', $subRecipe) }}"
-                                                    class="text-blue-600 hover:underline flex items-center gap-2 group"
-                                                    title="View Sub-Recipe: {{ $subRecipe->name }}">
-                                                    <i data-lucide="link" class="w-3 h-3 text-blue-400 group-hover:text-blue-600"></i>
-                                                    {{ $ri->ingredient->name }}
-                                                </a>
-                                            @else
-                                                {{ $ri->ingredient->name }}
+                @if($recipe->stages->isNotEmpty())
+                    @foreach($recipe->stages as $stage)
+                        <div class="mb-8">
+                            <h3 class="flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">{{ $loop->iteration }}</span>
+                                {{ $stage->name }}
+                            </h3>
+                            
+                            <div class="table-container mt-4">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th class="w-5/12">Ingredient</th>
+                                            <th class="w-3/12">Quantity (Base)</th>
+                                            <th class="w-2/12">Unit</th>
+                                            @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+                                                <th class="w-2/12 text-right">Cost</th>
                                             @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($stage->ingredients as $ri)
+                                            <tr class="ingredient-row">
+                                                <td class="pl-6">
+                                                    @if($ri->ingredient->producedByRecipes->isNotEmpty())
+                                                        @php $subRecipe = $ri->ingredient->producedByRecipes->first(); @endphp
+                                                        <div class="flex items-center justify-between group/sub">
+                                                            <a href="{{ route('recipes.show', $subRecipe) }}"
+                                                                class="text-blue-600 hover:underline flex items-center gap-2"
+                                                                title="View Sub-Recipe: {{ $subRecipe->name }}">
+                                                                <i data-lucide="link" class="w-3 h-3 text-blue-400"></i>
+                                                                <span class="font-medium">{{ $ri->ingredient->name }}</span>
+                                                                @if($subRecipe->status->value === 'draft')
+                                                                    <span class="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold ml-1 uppercase tracking-tighter">Draft</span>
+                                                                @endif
+                                                            </a>
+                                                            <div class="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                                                @if($subRecipe->isDraft() && auth()->user()->canApproveRecipes())
+                                                                    <form action="{{ route('recipes.approve', $subRecipe) }}" method="POST" class="inline" onsubmit="return confirm('Approve sub-recipe: {{ $subRecipe->name }}?')">
+                                                                        @csrf
+                                                                        <button type="submit" class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors" title="Approve Sub-Recipe">
+                                                                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                    <form action="{{ route('recipes.reject', $subRecipe) }}" method="POST" class="inline" onsubmit="return confirm('Reject sub-recipe: {{ $subRecipe->name }}?')">
+                                                                        @csrf
+                                                                        <button type="submit" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="Reject Sub-Recipe">
+                                                                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
+                                                                <a href="{{ route('recipes.print', $subRecipe) }}" target="_blank" class="p-1 text-gray-500 hover:bg-gray-100 rounded transition-colors" title="Print Sub-Recipe">
+                                                                    <i data-lucide="printer" class="w-4 h-4"></i>
+                                                                </a>
+                                                                @can('update', $subRecipe)
+                                                                    <a href="{{ route('recipes.edit', $subRecipe) }}" class="p-1 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit Sub-Recipe">
+                                                                        <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                                                    </a>
+                                                                @endcan
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        {{ $ri->ingredient->name }}
+                                                    @endif
 
-                                            @if($ri->ingredient->allergen_tags && count($ri->ingredient->allergen_tags) > 0)
-                                                <div class="flex flex-wrap gap-1 mt-1">
-                                                    @foreach($ri->ingredient->allergen_tags as $tag)
-                                                        <span
-                                                            class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">
-                                                            {{ $tag }}
+                                                    @if($ri->ingredient->allergen_tags && count($ri->ingredient->allergen_tags) > 0)
+                                                        <div class="flex flex-wrap gap-1 mt-1">
+                                                            @foreach($ri->ingredient->allergen_tags as $tag)
+                                                                <span
+                                                                    class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">
+                                                                    {{ $tag }}
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span class="qty-display"
+                                                        data-base="{{ $ri->quantity }}">{{ number_format($ri->quantity, 3) }}</span>
+                                                </td>
+                                                <td>{{ $ri->unit }}</td>
+                                                @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+                                                    <td class="text-right">
+                                                        <span class="cost-display" data-base="{{ $ri->cost }}">
+                                                            ₹{{ number_format($ri->cost, 2) }}
                                                         </span>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="qty-display"
-                                                data-base="{{ $ri->quantity }}">{{ number_format($ri->quantity, 3) }}</span>
-                                        </td>
-                                        <td>{{ $ri->unit }}</td>
-                                        @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-                                            <td class="text-right">
-                                                <span class="cost-display" data-base="{{ $ri->cost }}">
-                                                    ₹{{ number_format($ri->cost, 2) }}
-                                                </span>
-                                            </td>
-                                        @endif
-                                    </tr>
-                                @endforeach
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                                                    </td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
 
-                <h3 style="margin-top: 2rem;">Method</h3>
-                <div style="white-space: pre-wrap; margin-top: 1rem; line-height: 1.8; color: var(--text-main);">
-                    {{ $recipe->method }}
-                </div>
+                            @if($stage->method)
+                                <div class="mt-4 p-4 bg-indigo-50/30 border border-indigo-100 rounded-xl">
+                                    <h4 class="text-indigo-900 font-bold mb-2 flex items-center gap-2">
+                                        <i data-lucide="info" class="w-4 h-4"></i>
+                                        Instructions for {{ $stage->name }}
+                                    </h4>
+                                    <div class="text-sm leading-relaxed text-indigo-800/80 whitespace-pre-wrap">{{ $stage->method }}</div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                @else
+                    <h3>Ingredients</h3>
+                    <div class="table-container" style="margin-top: 1rem;">
+                        @php
+                            $groupedIngredients = $recipe->recipeIngredients->groupBy('ingredient_group');
+                            // Handle ungrouped items
+                            $ungrouped = $groupedIngredients->get('');
+                            if ($ungrouped) {
+                                $groupedIngredients->forget('');
+                                $groupedIngredients->put('Main', $ungrouped);
+                            }
+                            $nullGroup = $groupedIngredients->get(null);
+                            if ($nullGroup) {
+                                $groupedIngredients->forget(null);
+                                if ($groupedIngredients->has('Main')) {
+                                    $groupedIngredients['Main'] = $groupedIngredients['Main']->merge($nullGroup);
+                                } else {
+                                    $groupedIngredients->put('Main', $nullGroup);
+                                }
+                            }
+                        @endphp
+
+                        <table class="table" id="recipeTable">
+                            <thead>
+                                <tr>
+                                    <th class="w-5/12">Ingredient</th>
+                                    <th class="w-3/12">Quantity (Base)</th>
+                                    <th class="w-2/12">Unit</th>
+                                    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+                                        <th class="w-2/12 text-right">Cost</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($groupedIngredients as $group => $items)
+                                    <tr class="bg-gray-50 border-b border-gray-100">
+                                        <td colspan="{{ (auth()->user()->isAdmin() || auth()->user()->isManager()) ? 4 : 3 }}"
+                                            class="py-2 px-3 font-bold text-gray-700 uppercase text-xs tracking-wider">
+                                            @php
+                                                $displayGroup = $group ?: 'Main Ingredients';
+                                                if (is_numeric($displayGroup)) {
+                                                    $displayGroup = 'Set ' . $displayGroup;
+                                                }
+                                            @endphp
+                                            {{ $displayGroup }}
+                                        </td>
+                                    </tr>
+                                    @foreach($items as $ri)
+                                        <tr class="ingredient-row">
+                                            <td class="pl-6">
+                                                @if($ri->ingredient->producedByRecipes->isNotEmpty())
+                                                    @php $subRecipe = $ri->ingredient->producedByRecipes->first(); @endphp
+                                                    <div class="flex items-center justify-between group/sub">
+                                                        <a href="{{ route('recipes.show', $subRecipe) }}"
+                                                            class="text-blue-600 hover:underline flex items-center gap-2"
+                                                            title="View Sub-Recipe: {{ $subRecipe->name }}">
+                                                            <i data-lucide="link" class="w-3 h-3 text-blue-400"></i>
+                                                            <span class="font-medium">{{ $ri->ingredient->name }}</span>
+                                                            @if($subRecipe->status->value === 'draft')
+                                                                <span class="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold ml-1 uppercase tracking-tighter">Draft</span>
+                                                            @endif
+                                                        </a>
+                                                        <div class="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                                            @if($subRecipe->isDraft() && auth()->user()->canApproveRecipes())
+                                                                <form action="{{ route('recipes.approve', $subRecipe) }}" method="POST" class="inline" onsubmit="return confirm('Approve sub-recipe: {{ $subRecipe->name }}?')">
+                                                                    @csrf
+                                                                    <button type="submit" class="p-1 text-green-600 hover:bg-green-50 rounded transition-colors" title="Approve Sub-Recipe">
+                                                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                                                    </button>
+                                                                </form>
+                                                                <form action="{{ route('recipes.reject', $subRecipe) }}" method="POST" class="inline" onsubmit="return confirm('Reject sub-recipe: {{ $subRecipe->name }}?')">
+                                                                    @csrf
+                                                                    <button type="submit" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="Reject Sub-Recipe">
+                                                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                            <a href="{{ route('recipes.print', $subRecipe) }}" target="_blank" class="p-1 text-gray-500 hover:bg-gray-100 rounded transition-colors" title="Print Sub-Recipe">
+                                                                <i data-lucide="printer" class="w-4 h-4"></i>
+                                                            </a>
+                                                            @can('update', $subRecipe)
+                                                                <a href="{{ route('recipes.edit', $subRecipe) }}" class="p-1 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit Sub-Recipe">
+                                                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                                                </a>
+                                                            @endcan
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    {{ $ri->ingredient->name }}
+                                                @endif
+
+                                                @if($ri->ingredient->allergen_tags && count($ri->ingredient->allergen_tags) > 0)
+                                                    <div class="flex flex-wrap gap-1 mt-1">
+                                                        @foreach($ri->ingredient->allergen_tags as $tag)
+                                                            <span
+                                                                class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">
+                                                                {{ $tag }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="qty-display"
+                                                    data-base="{{ $ri->quantity }}">{{ number_format($ri->quantity, 3) }}</span>
+                                            </td>
+                                            <td>{{ $ri->unit }}</td>
+                                            @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+                                                <td class="text-right">
+                                                    <span class="cost-display" data-base="{{ $ri->cost }}">
+                                                        ₹{{ number_format($ri->cost, 2) }}
+                                                    </span>
+                                                </td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+
+                @if($recipe->method)
+                    <h3 style="margin-top: 2rem;">Recipe Overview / Description</h3>
+                    <div style="white-space: pre-wrap; margin-top: 1rem; line-height: 1.8; color: var(--text-main); font-size: 1.1rem;" class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                        {{ $recipe->method }}
+                    </div>
+                @endif
 
                 @if(count($recipe->allergens) > 0)
                     <div class="mt-8 p-4 bg-red-50 border border-red-100 rounded-xl">

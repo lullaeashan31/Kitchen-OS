@@ -138,20 +138,9 @@
                             </div>
                         </div>
 
-                        <div id="subRecipeFields" class="hidden space-y-4 pt-4 border-t border-indigo-100 mt-2">
-                            <div>
-                                <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Produces
-                                    Ingredient</label>
-                                <select name="produces_ingredient_id" id="produces_ingredient_id"
-                                    class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
-                                    <option value="">Select Item...</option>
-                                    @foreach($ingredients as $ing)
-                                        <option value="{{ $ing->id }}" {{ old('produces_ingredient_id') == $ing->id ? 'selected' : '' }}>
-                                            {{ $ing->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                        <input type="hidden" name="is_sub_recipe" id="is_sub_recipe" value="{{ old('is_sub_recipe', 0) }}">
+
+                        <div id="subRecipeFields" class="{{ old('is_sub_recipe') ? '' : 'hidden' }} space-y-4 pt-4 border-t border-indigo-100 mt-2">
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output
@@ -884,6 +873,7 @@
             const fields = document.getElementById('subRecipeFields');
             const bg = document.getElementById('subRecipeToggleBg');
             const dot = document.getElementById('subRecipeToggleDot');
+            const input = document.getElementById('is_sub_recipe');
 
             const isHidden = fields.classList.contains('hidden');
             const newState = forceState !== null ? forceState : isHidden;
@@ -894,12 +884,14 @@
                 bg.classList.add('bg-indigo-500');
                 dot.classList.add('translate-x-4');
                 dot.classList.remove('translate-x-0');
+                input.value = "1";
             } else {
                 fields.classList.add('hidden');
                 bg.classList.remove('bg-indigo-500');
                 bg.classList.add('bg-gray-200');
                 dot.classList.remove('translate-x-4');
                 dot.classList.add('translate-x-0');
+                input.value = "0";
 
                 // Clear values if hiding
                 if (forceState === null) {

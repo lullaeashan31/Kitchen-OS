@@ -47,6 +47,10 @@ class RecipeController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->boolean('is_sub_recipe')) {
+            $query->where('is_sub_recipe', true);
+        }
+
         $recipes = $query->latest()->paginate(10);
         $categories = Category::all();
 
@@ -94,7 +98,17 @@ class RecipeController extends Controller
 
     public function show(Recipe $recipe)
     {
-        $recipe->load(['category', 'ingredients.producedByRecipes', 'versions', 'driveFiles', 'producesIngredient']);
+        $recipe->load([
+            'category',
+            'ingredients.producedByRecipes',
+            'versions',
+            'driveFiles',
+            'producesIngredient',
+            'stages' => function ($query) {
+                $query->orderBy('sort_order');
+            },
+            'stages.ingredients.ingredient'
+        ]);
         $costPerPortion = $this->costService->calculateCostPerPortion($recipe);
 
         return view('recipes.show', compact('recipe', 'costPerPortion'));
@@ -110,10 +124,10 @@ class RecipeController extends Controller
 
             // Fetch Sub-Recipes: Show all recipes that produce an ingredient
             // This includes recipes marked as sub-recipes OR recipes that have produces_ingredient_id
-            $subRecipes = Recipe::where(function($query) {
-                    $query->where('is_sub_recipe', true)
-                          ->orWhereNotNull('produces_ingredient_id');
-                })
+            $subRecipes = Recipe::where(function ($query) {
+                $query->where('is_sub_recipe', true)
+                    ->orWhereNotNull('produces_ingredient_id');
+            })
                 ->whereNotNull('produces_ingredient_id')
                 ->with('producesIngredient')
                 ->orderBy('name')
@@ -129,10 +143,10 @@ class RecipeController extends Controller
             // Load relationships safely
             $recipe->load([
                 'category',
-                'stages' => function($query) {
+                'stages' => function ($query) {
                     $query->orderBy('sort_order');
                 },
-                'stages.ingredients' => function($query) {
+                'stages.ingredients' => function ($query) {
                     $query->orderBy('id');
                 },
                 'stages.ingredients.ingredient',
@@ -145,7 +159,7 @@ class RecipeController extends Controller
                 'recipe_id' => $recipe->id,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return redirect()->route('recipes.index')
                 ->with('error', 'Failed to load recipe for editing: ' . $e->getMessage());
         }

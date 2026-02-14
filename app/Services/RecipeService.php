@@ -44,10 +44,25 @@ class RecipeService
                 'status' => RecipeStatus::Draft,
                 'created_by' => $user->id,
                 'version' => 1,
+                'is_sub_recipe' => $data['is_sub_recipe'] ?? false,
                 'produces_ingredient_id' => $data['produces_ingredient_id'] ?? null,
                 'output_quantity' => $data['output_quantity'] ?? null,
                 'output_unit' => $data['output_unit'] ?? null,
             ]);
+
+            // Auto-create ingredient if sub-recipe mode is on and no ingredient linked
+            if ($recipe->is_sub_recipe && !$recipe->produces_ingredient_id) {
+                $ingredient = \App\Models\Ingredient::firstOrCreate(
+                    ['name' => $recipe->name],
+                    [
+                        'status' => 'approved', // Auto-approved for sub-recipes
+                        'price' => 0,
+                        'measurement_unit' => $recipe->output_unit ?? 'pcs',
+                        'category_id' => $recipe->category_id,
+                    ]
+                );
+                $recipe->update(['produces_ingredient_id' => $ingredient->id]);
+            }
 
             $this->syncStages($recipe, $data['stages'] ?? []);
 
@@ -92,10 +107,25 @@ class RecipeService
                 'yield_volume_unit' => $data['yield_volume_unit'] ?? $recipe->yield_volume_unit,
                 'yield_batches' => $data['yield_batches'] ?? $recipe->yield_batches,
                 'prep_time_minutes' => $data['prep_time_minutes'] ?? $recipe->prep_time_minutes,
+                'is_sub_recipe' => $data['is_sub_recipe'] ?? $recipe->is_sub_recipe,
                 'produces_ingredient_id' => $data['produces_ingredient_id'] ?? $recipe->produces_ingredient_id,
                 'output_quantity' => $data['output_quantity'] ?? $recipe->output_quantity,
                 'output_unit' => $data['output_unit'] ?? $recipe->output_unit,
             ]);
+
+            // Auto-create/update ingredient if sub-recipe mode is on
+            if ($recipe->is_sub_recipe && !$recipe->produces_ingredient_id) {
+                $ingredient = \App\Models\Ingredient::firstOrCreate(
+                    ['name' => $recipe->name],
+                    [
+                        'status' => 'approved',
+                        'price' => 0,
+                        'measurement_unit' => $recipe->output_unit ?? 'pcs',
+                        'category_id' => $recipe->category_id,
+                    ]
+                );
+                $recipe->update(['produces_ingredient_id' => $ingredient->id]);
+            }
 
             $this->syncStages($recipe, $data['stages'] ?? []);
 
@@ -259,7 +289,7 @@ class RecipeService
         try {
             // 1. Recalculate Costs using Latest Avg Cost
             $recipe->load('recipeIngredients.ingredient');
-            
+
             foreach ($recipe->recipeIngredients as $recipeIngredient) {
                 $ingredient = $recipeIngredient->ingredient;
                 if (!$ingredient) {
@@ -343,7 +373,7 @@ class RecipeService
                 'user_id' => $user->id,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             throw $e; // Re-throw to show proper error
         }
     }

@@ -203,8 +203,12 @@
                         <i data-lucide="chef-hat" class="nav-icon text-red-500"></i> Cook / Production
                     </a>
                     <a href="{{ route('recipes.index') }}"
-                        class="nav-link {{ request()->routeIs('recipes.*') ? 'active' : '' }}">
+                        class="nav-link {{ request()->routeIs('recipes.*') && !request()->has('is_sub_recipe') ? 'active' : '' }}">
                         <i data-lucide="book-open" class="nav-icon"></i> All Recipes
+                    </a>
+                    <a href="{{ route('recipes.index', ['is_sub_recipe' => 1]) }}"
+                        class="nav-link {{ request()->query('is_sub_recipe') == 1 ? 'active' : '' }}">
+                        <i data-lucide="component" class="nav-icon"></i> Sub-Recipes
                     </a>
                     <a href="{{ route('recipes.create') }}"
                         class="nav-link {{ request()->routeIs('recipes.create') ? 'active' : '' }}">

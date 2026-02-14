@@ -42,6 +42,7 @@ class StoreRecipeRequest extends FormRequest
             'stages.*.ingredients.*.cost' => 'nullable|numeric|min:0',
 
             'produces_ingredient_id' => 'nullable|exists:ingredients,id',
+            'is_sub_recipe' => 'nullable|boolean',
             'output_quantity' => 'nullable|numeric|min:0',
             'output_unit' => ['nullable', Rule::enum(Unit::class)],
         ];

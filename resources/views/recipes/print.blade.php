@@ -148,10 +148,15 @@
                     @endforeach
                 </tbody>
             </table>
-        @endforeach
 
-        <!-- Ungrouped/Leftover items if any? Usually stages cover all. -->
-        <!-- Logic to check for non-staged items could be here, but assuming strict staging if stages exist. -->
+            @if($stage->method)
+                <div
+                    style="margin-top: 10px; padding: 10px; background: #f0f4f8; border-left: 4px solid #3b82f6; font-size: 0.9em;">
+                    <strong>Instructions for {{ $stage->name }}:</strong><br>
+                    {{ $stage->method }}
+                </div>
+            @endif
+        @endforeach
     @else
         <!-- Flat List / Grouped -->
         <h3 class="section-title">Ingredients</h3>
@@ -190,8 +195,11 @@
         </table>
     @endif
 
-    <h3 class="section-title">Method / Procedure</h3>
-    <div class="method">{{ $recipe->method }}</div>
+    @if($recipe->method)
+        <h3 class="section-title">Recipe Overview / Description</h3>
+        <div class="method" style="background: #fafafa; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+            {{ $recipe->method }}</div>
+    @endif
 
 </body>
 

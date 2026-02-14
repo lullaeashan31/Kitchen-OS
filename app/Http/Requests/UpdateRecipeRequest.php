@@ -39,6 +39,10 @@ class UpdateRecipeRequest extends FormRequest
             'stages.*.ingredients.*.unit' => ['required', Rule::enum(Unit::class)],
             'stages.*.ingredients.*.ingredient_group' => 'nullable|string',
             'stages.*.ingredients.*.cost' => 'nullable|numeric|min:0',
+            'is_sub_recipe' => 'nullable|boolean',
+            'produces_ingredient_id' => 'nullable|exists:ingredients,id',
+            'output_quantity' => 'nullable|numeric|min:0',
+            'output_unit' => ['nullable', Rule::enum(Unit::class)],
         ];
     }
 }
