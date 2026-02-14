@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateRecipeRequest;
 use App\Enums\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Log;
 
 class RecipeController extends Controller
 {
@@ -38,11 +39,11 @@ class RecipeController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->has('category_id')) {
+        if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        if ($request->has('status') && $request->status !== '') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -56,8 +57,26 @@ class RecipeController extends Controller
     {
         $categories = Category::all();
         $units = Unit::cases();
-        $ingredients = \App\Models\Ingredient::where('status', 'approved')->orderBy('name')->get();
-        return view('recipes.create', compact('categories', 'units', 'ingredients'));
+
+        // Fetch Sub-Recipes: Show all recipes that produce an ingredient
+        // This includes recipes marked as sub-recipes OR recipes that have produces_ingredient_id
+        $subRecipes = Recipe::where(function($query) {
+                $query->where('is_sub_recipe', true)
+                      ->orWhereNotNull('produces_ingredient_id');
+            })
+            ->whereNotNull('produces_ingredient_id')
+            ->with('producesIngredient')
+            ->orderBy('name')
+            ->get();
+        $producedIngredientIds = $subRecipes->pluck('produces_ingredient_id')->toArray();
+
+        // Raw Ingredients: All ingredients (not just approved) and NOT produced by any sub-recipe
+        // Users should be able to use any ingredient in recipes, even if pending approval
+        $ingredients = \App\Models\Ingredient::whereNotIn('id', $producedIngredientIds)
+            ->orderBy('name')
+            ->get();
+
+        return view('recipes.create', compact('categories', 'units', 'ingredients', 'subRecipes'));
     }
 
     public function store(StoreRecipeRequest $request)
@@ -65,7 +84,7 @@ class RecipeController extends Controller
         $recipe = $this->recipeService->createRecipe($request->validated(), $request->user());
 
         return redirect()->route('recipes.show', $recipe)
-            ->with('success', 'Recipe draft created successfully.');
+            ->with('success', 'Recipe draft created successfully and saved to Google Drive.');
     }
 
     public function show(Recipe $recipe)
@@ -80,11 +99,51 @@ class RecipeController extends Controller
     {
         $this->authorize('update', $recipe);
 
-        $categories = Category::all();
-        $units = Unit::cases();
-        $recipe->load('ingredients');
+        try {
+            $categories = Category::all();
+            $units = Unit::cases();
 
-        return view('recipes.edit', compact('recipe', 'categories', 'units'));
+            // Fetch Sub-Recipes: Show all recipes that produce an ingredient
+            // This includes recipes marked as sub-recipes OR recipes that have produces_ingredient_id
+            $subRecipes = Recipe::where(function($query) {
+                    $query->where('is_sub_recipe', true)
+                          ->orWhereNotNull('produces_ingredient_id');
+                })
+                ->whereNotNull('produces_ingredient_id')
+                ->with('producesIngredient')
+                ->orderBy('name')
+                ->get();
+            $producedIngredientIds = $subRecipes->pluck('produces_ingredient_id')->toArray();
+
+            // Raw Ingredients: All ingredients (not just approved) and NOT produced by any sub-recipe
+            // Users should be able to use any ingredient in recipes, even if pending approval
+            $ingredients = \App\Models\Ingredient::whereNotIn('id', $producedIngredientIds)
+                ->orderBy('name')
+                ->get();
+
+            // Load relationships safely
+            $recipe->load([
+                'category',
+                'stages' => function($query) {
+                    $query->orderBy('sort_order');
+                },
+                'stages.ingredients' => function($query) {
+                    $query->orderBy('id');
+                },
+                'stages.ingredients.ingredient',
+                'recipeIngredients.ingredient'
+            ]);
+
+            return view('recipes.edit', compact('recipe', 'categories', 'units', 'ingredients', 'subRecipes'));
+        } catch (\Exception $e) {
+            \Log::error('Recipe edit failed: ' . $e->getMessage(), [
+                'recipe_id' => $recipe->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('recipes.index')
+                ->with('error', 'Failed to load recipe for editing: ' . $e->getMessage());
+        }
     }
 
     public function update(UpdateRecipeRequest $request, Recipe $recipe)
@@ -94,7 +153,7 @@ class RecipeController extends Controller
         $this->recipeService->updateRecipe($recipe, $request->validated(), $request->user());
 
         return redirect()->route('recipes.show', $recipe)
-            ->with('success', 'Recipe updated successfully.');
+            ->with('success', 'Recipe updated successfully and saved to Google Drive.');
     }
 
     public function destroy(Recipe $recipe)
@@ -123,5 +182,54 @@ class RecipeController extends Controller
         $recipe->update(['status' => \App\Enums\RecipeStatus::Rejected]);
 
         return back()->with('success', 'Recipe rejected.');
+    }
+
+    public function print(Recipe $recipe, Request $request)
+    {
+        // Load necessary relationships
+        $recipe->load(['category', 'ingredients', 'stages.ingredients.ingredient', 'recipeIngredients.ingredient']);
+
+        if ($request->has('download') && $request->download == 'pdf') {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('recipes.print', compact('recipe'));
+            return $pdf->download('recipe-' . $recipe->id . '.pdf');
+        }
+
+        return view('recipes.print', compact('recipe'));
+    }
+
+    public function export(Request $request, $type)
+    {
+        // Get filtered recipes based on current filters
+        $query = Recipe::with(['category', 'creator', 'stages.ingredients.ingredient', 'recipeIngredients.ingredient']);
+
+        // RESTRICTION: Staff can only see their own recipes
+        if ($request->user()->isStaff()) {
+            $query->where('created_by', $request->user()->id);
+        }
+
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $recipes = $query->latest()->get();
+
+        switch ($type) {
+            case 'full-cards':
+                return \App\Exports\FullRecipeCardsExport::export($recipes);
+            case 'procurement':
+                return \App\Exports\ProcurementListExport::export($recipes);
+            case 'cost-breakdown':
+                return \App\Exports\CostBreakdownExport::export($recipes);
+            default:
+                return redirect()->route('recipes.index')->with('error', 'Invalid export type.');
+        }
     }
 }

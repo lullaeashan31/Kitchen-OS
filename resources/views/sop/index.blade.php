@@ -1,69 +1,64 @@
 @extends('layouts.app')
 
 @section('header')
-    <h1 class="text-2xl font-bold text-gray-800">SOP Checklists</h1>
-    <p class="text-sm text-gray-500">Daily operational checklists for today: {{ date('D, M d Y') }}.</p>
+    <h2 class="text-xl font-semibold">My SOP Checklists</h2>
+    <p class="text-sm text-gray-500">
+        {{ auth()->user()->shift ? ucfirst(auth()->user()->shift) : 'No' }} Shift |
+        {{ auth()->user()->role->label() }}
+    </p>
 @endsection
 
 @section('content')
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach($checklists as $checklist)
+        @forelse($checklists as $checklist)
             @php
-                $status = 'pending';
-                if ($checklist->todayLog) {
-                    $itemCount = $checklist->items->count();
-                    $completedCount = $checklist->todayLog->itemLogs->where('is_completed', true)->count();
-                    $status = ($completedCount >= $itemCount && $itemCount > 0) ? 'completed' : 'in_progress';
-                }
-                $deadline = $checklist->deadline_time ? \Carbon\Carbon::parse($checklist->deadline_time) : null;
-                $isLate = $deadline && now()->gt($deadline) && $status !== 'completed';
+                $isCompleted = $checklist->todayRun && $checklist->todayRun->status === 'approved';
             @endphp
-
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
-                                    {{ $checklist->shift === 'morning' ? 'bg-yellow-100 text-yellow-700' : '' }}
-                                    {{ $checklist->shift === 'closing' ? 'bg-gray-100 text-gray-700' : '' }}
-                                    {{ $checklist->shift === 'mid' ? 'bg-blue-100 text-blue-700' : '' }}">
-                            {{ ucfirst($checklist->shift) }}
+            <div
+                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden {{ $isCompleted ? 'opacity-75' : '' }}">
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-3">
+                        <span
+                            class="px-2 py-0.5 rounded-full text-xs font-bold {{ $isCompleted ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700' }}">
+                            {{ $isCompleted ? 'Completed' : 'Today\'s Task' }}
                         </span>
-                        @if($status === 'completed')
-                            <i data-lucide="check-circle" class="text-green-500 w-6 h-6"></i>
-                        @elseif($isLate)
-                            <i data-lucide="alert-circle" class="text-red-500 w-6 h-6" title="Late!"></i>
-                        @else
-                            <i data-lucide="circle" class="text-gray-300 w-6 h-6"></i>
+                        @if($checklist->assignments->isNotEmpty())
+                            <span class="text-xs text-gray-500 flex items-center gap-1">
+                                <i data-lucide="clock" class="w-3 h-3"></i>
+                                By {{ Carbon\Carbon::parse($checklist->assignments->first()->deadline_time)->format('g:i A') }}
+                            </span>
                         @endif
                     </div>
 
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">{{ $checklist->name }}</h3>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $checklist->name }}</h3>
+                    <p class="text-sm text-gray-500 mb-4">{{ Str::limit($checklist->description, 80) }}</p>
 
-                    @if($checklist->deadline_time)
-                        <div
-                            class="text-sm {{ $isLate ? 'text-red-600 font-bold' : 'text-gray-500' }} mb-4 flex items-center gap-1">
-                            <i data-lucide="clock" class="w-4 h-4"></i>
-                            Deadline: {{ \Carbon\Carbon::parse($checklist->deadline_time)->format('h:i A') }}
-                        </div>
-                    @endif
-
-                    <div class="w-full bg-gray-100 rounded-full h-2 mb-4">
-                        @php
-                            $perc = 0;
-                            if ($checklist->todayLog && $checklist->items->count() > 0) {
-                                $perc = ($checklist->todayLog->itemLogs->where('is_completed', true)->count() / $checklist->items->count()) * 100;
-                            }
-                        @endphp
-                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $perc }}%"></div>
+                    <div class="flex items-center justify-between mt-4">
+                        <span class="text-xs font-medium text-gray-500">
+                            {{ $checklist->items_count }} Steps to complete
+                        </span>
+                        @if($isCompleted)
+                            <div class="text-green-600 flex items-center gap-1 text-sm font-bold">
+                                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                Done
+                            </div>
+                        @else
+                            <a href="{{ route('sop.execute', $checklist) }}"
+                                class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-md shadow-blue-100 hover:bg-blue-600 transition-colors">
+                                Start Checklist
+                            </a>
+                        @endif
                     </div>
-
-                    <a href="{{ route('sop.execute', $checklist) }}"
-                        class="block w-full text-center py-2 rounded-lg border 
-                                {{ $status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' : 'border-blue-200 bg-blue-50 text-blue-700 host:bg-blue-100' }}">
-                        {{ $status === 'completed' ? 'Review Checklist' : 'Start Checklist' }}
-                    </a>
                 </div>
             </div>
-        @endforeach
+        @empty
+            <div class="col-span-full py-16 text-center bg-white rounded-xl border border-gray-200">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="clipboard-check" class="w-8 h-8 text-gray-300"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No Checklists Assigned</h3>
+                <p class="text-gray-500">You don't have any checklists assigned to your current shift or role today.</p>
+            </div>
+        @endforelse
     </div>
 @endsection

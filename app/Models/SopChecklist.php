@@ -2,22 +2,42 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class SopChecklist extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'shift', 'deadline_time'];
+    protected $fillable = ['name', 'description', 'shift_id', 'shift', 'role', 'deadline_time', 'status'];
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class);
+    }
 
     public function items()
     {
-        return $this->hasMany(SopItem::class, 'checklist_id')->orderBy('sort_order');
+        return $this->hasMany(SopChecklistItem::class, 'checklist_id')->orderBy('sort_order');
     }
 
-    public function todayLog()
+    public function runs()
     {
-        return $this->hasOne(SopLog::class, 'checklist_id')->where('log_date', today());
+        return $this->hasMany(SopDailyRun::class, 'checklist_id');
+    }
+
+    public function assignments()
+    {
+        return $this->hasMany(SopChecklistAssignment::class, 'checklist_id');
+    }
+
+    public function todayRun()
+    {
+        return $this->hasOne(SopDailyRun::class, 'checklist_id')->whereDate('date', today());
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 }

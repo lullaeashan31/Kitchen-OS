@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
@@ -47,13 +48,26 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        if ($category->recipes()->exists()) {
-            return back()->with('error', 'Cannot delete category with associated recipes.');
+        try {
+            if ($category->recipes()->exists()) {
+                return back()->with('error', 'Cannot delete category with associated recipes.');
+            }
+
+            if ($category->ingredients()->exists()) {
+                return back()->with('error', 'Cannot delete category with associated ingredients.');
+            }
+
+            $category->delete();
+
+            return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Category delete failed: ' . $e->getMessage(), [
+                'category_id' => $category->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
         }
-
-        $category->delete();
-
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }
 
     public function bulkDestroy(Request $request)
@@ -69,8 +83,12 @@ class CategoryController extends Controller
 
         foreach ($ids as $id) {
             $category = Category::find($id);
-            // Skip deletion if used in recipes
-            if ($category->recipes()->exists()) {
+            if (!$category) {
+                continue;
+            }
+            
+            // Skip deletion if used in recipes or ingredients
+            if ($category->recipes()->exists() || $category->ingredients()->exists()) {
                 $skippedCount++;
                 continue;
             }

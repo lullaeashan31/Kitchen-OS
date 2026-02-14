@@ -9,6 +9,7 @@ use App\Http\Requests\StoreIngredientRequest;
 use App\Http\Requests\QuickCreateIngredientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Log;
 
 class IngredientController extends Controller
 {
@@ -46,10 +47,39 @@ class IngredientController extends Controller
     {
         $this->authorize('create', Ingredient::class);
 
-        Ingredient::create($request->validated());
+        try {
+            $data = $request->validated();
+            
+            // Set default values for optional fields that might be empty
+            $data['current_stock'] = isset($data['current_stock']) ? $data['current_stock'] : 0;
+            $data['alert_threshold'] = isset($data['alert_threshold']) && $data['alert_threshold'] !== '' ? $data['alert_threshold'] : 0;
+            $data['status'] = $data['status'] ?? 'pending';
+            $data['price'] = $data['price'] ?? 0;
+            $data['purchase_unit'] = $data['purchase_unit'] ?? null;
+            $data['vendor'] = $data['vendor'] ?? null;
+            $data['storage_location'] = $data['storage_location'] ?? null;
+            
+            // Handle allergen_tags - ensure it's properly formatted as array or null
+            if (isset($data['allergen_tags']) && is_array($data['allergen_tags']) && !empty($data['allergen_tags'])) {
+                $data['allergen_tags'] = array_values(array_filter($data['allergen_tags']));
+            } else {
+                $data['allergen_tags'] = null;
+            }
 
-        return redirect()->route('ingredients.index')
-            ->with('success', 'Ingredient created successfully.');
+            Ingredient::create($data);
+
+            return redirect()->route('ingredients.index')
+                ->with('success', 'Ingredient created successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Ingredient creation failed: ' . $e->getMessage(), [
+                'data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to create ingredient. Please check all required fields are filled.']);
+        }
     }
 
     public function edit(Ingredient $ingredient)

@@ -33,6 +33,8 @@ class Recipe extends Model
         'yield_volume',
         'yield_volume_unit',
         'yield_batches',
+        'is_sub_recipe',
+        'drive_file_id',
     ];
 
     protected function casts(): array
@@ -41,6 +43,7 @@ class Recipe extends Model
             'status' => RecipeStatus::class,
             'total_cost' => 'decimal:2',
             'cost_per_portion' => 'decimal:2',
+            'is_sub_recipe' => 'boolean',
         ];
     }
 

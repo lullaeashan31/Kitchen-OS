@@ -12,6 +12,7 @@ class DriveFile extends Model
     protected $fillable = [
         'name',
         'drive_url',
+        'path', // Added path
         'file_id',
         'linked_type',
         'linked_id',
@@ -32,11 +33,32 @@ class DriveFile extends Model
     // Accessors
     public function getPreviewUrlAttribute()
     {
+        if ($this->path) {
+            $disk = config('filesystems.default');
+            if (config("filesystems.disks.{$disk}.driver") === 's3') {
+                return \Illuminate\Support\Facades\Storage::disk($disk)->temporaryUrl(
+                    $this->path,
+                    now()->addMinutes(30)
+                );
+            }
+            return \Illuminate\Support\Facades\Storage::disk($disk)->url($this->path);
+        }
         return "https://drive.google.com/file/d/{$this->file_id}/preview";
     }
 
     public function getDownloadUrlAttribute()
     {
+        if ($this->path) {
+            $disk = config('filesystems.default');
+            if (config("filesystems.disks.{$disk}.driver") === 's3') {
+                return \Illuminate\Support\Facades\Storage::disk($disk)->temporaryUrl(
+                    $this->path,
+                    now()->addMinutes(30),
+                    ['ResponseContentDisposition' => 'attachment']
+                );
+            }
+            return \Illuminate\Support\Facades\Storage::disk($disk)->url($this->path);
+        }
         return "https://drive.google.com/uc?export=download&id={$this->file_id}";
     }
 

@@ -35,22 +35,55 @@
     <!-- Tom Select CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <style>
-        /* Custom Overrides if needed */
         /* Custom Overrides */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f8fafc;
+        }
+
         .sidebar {
             width: 310px;
             background-color: white;
             border-right: 1px solid #e2e8f0;
+            position: fixed;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+            padding: 1.5rem;
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
         }
 
         .main-content {
             margin-left: 310px;
+            flex: 1;
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 2rem 0 !important;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            background-color: white;
+            position: sticky;
+            top: 0;
+            z-index: 30;
         }
 
         .nav-link.active {
             background-color: #eff6ff;
             color: #3b82f6;
             border-right: 3px solid #3b82f6;
+            font-weight: 600;
         }
 
         .nav-link {
@@ -60,6 +93,9 @@
             color: #64748b;
             transition: all 0.2s;
             font-size: 0.85rem;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
         }
 
         .nav-link:hover {
@@ -112,6 +148,9 @@
                     <a href="{{ route('production.create') }}"
                         class="nav-link {{ request()->routeIs('production.create') ? 'active' : '' }}">
                         <i data-lucide="chef-hat" class="nav-icon text-red-500"></i> Cook / Production
+                    </a>
+                    <a href="{{ route('sop.index') }}" class="nav-link {{ request()->routeIs('sop.*') ? 'active' : '' }}">
+                        <i data-lucide="clipboard-list" class="nav-icon text-blue-500"></i> SOP Checklists
                     </a>
 
                 @else
@@ -213,10 +252,34 @@
                             class="nav-link {{ request()->routeIs('audit_logs.*') ? 'active' : '' }}">
                             <i data-lucide="shield-alert" class="nav-icon"></i> Audit Logs
                         </a>
-                        <a href="#" class="nav-link">
+                        <a href="https://drive.google.com" target="_blank" class="nav-link">
                             <i data-lucide="hard-drive" class="nav-icon"></i> Google Drive
                         </a>
                     @endif
+
+                    <!-- SOP Management Section -->
+                    <div
+                        style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                        Operations (SOP)
+                    </div>
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.sop.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.sop.index') ? 'active' : '' }}">
+                            <i data-lucide="settings" class="nav-icon"></i> Manage Checklists
+                        </a>
+                        <a href="{{ route('admin.shifts.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
+                            <i data-lucide="clock" class="nav-icon text-indigo-500"></i> Manage Shifts
+                        </a>
+                        <a href="{{ route('admin.shifts.assignments.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.shifts.assignments.*') ? 'active' : '' }}">
+                            <i data-lucide="user-plus" class="nav-icon text-purple-500"></i> Daily Assignments
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.sop.reviews.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.sop.reviews.*') ? 'active' : '' }}">
+                        <i data-lucide="check-square" class="nav-icon text-green-500"></i> Review SOPs
+                    </a>
 
                 @endif
 

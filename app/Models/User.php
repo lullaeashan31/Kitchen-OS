@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'shift',
         'profile_photo_path',
         'is_password_changed',
     ];
@@ -143,5 +144,10 @@ class User extends Authenticatable
     public function auditLogs()
     {
         return $this->hasMany(AuditLog::class, 'user_id');
+    }
+
+    public function shiftAssignments()
+    {
+        return $this->hasMany(ShiftAssignment::class);
     }
 }

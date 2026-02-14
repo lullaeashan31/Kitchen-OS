@@ -6,9 +6,14 @@
             <h1 class="text-3xl font-bold text-gray-800">Recipe Book</h1>
             <p class="text-sm text-gray-500">Manage kitchen recipes and approvals</p>
         </div>
-        <a href="{{ route('recipes.create') }}" class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center gap-2 px-6 py-3 rounded-xl">
-            <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Recipe
-        </a>
+        <div class="flex items-center gap-3">
+            <button onclick="openExportModal()" class="bg-green-600 hover:bg-green-700 text-white shadow-lg flex items-center gap-2 px-6 py-3 rounded-xl transition-colors">
+                <i data-lucide="download" class="w-5 h-5"></i> Export
+            </button>
+            <a href="{{ route('recipes.create') }}" class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center gap-2 px-6 py-3 rounded-xl">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Recipe
+            </a>
+        </div>
     </div>
 @endsection
 
@@ -29,7 +34,7 @@
                 
                 <div class="w-48">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
-                    <select name="category_id" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
+                    <select name="category_id" id="category-filter" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
@@ -38,6 +43,23 @@
                         @endforeach
                     </select>
                 </div>
+
+                @push('scripts')
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        new TomSelect('#category-filter', {
+                            create: false,
+                            sortField: {
+                                field: "text",
+                                direction: "asc"
+                            },
+                            placeholder: "All Categories",
+                            plugins: ['remove_button'],
+                            allowEmptyOption: true,
+                        });
+                    });
+                </script>
+                @endpush
 
                 <div class="w-48">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
@@ -171,6 +193,76 @@
         </div>
     </div>
     
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="export-modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeExportModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="bg-white px-6 pt-6 pb-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-green-100 rounded-xl">
+                                <i data-lucide="download" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900" id="export-modal-title">Export Recipes</h3>
+                        </div>
+                        <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                            <i data-lucide="x" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-6">Choose an export format to download recipe data</p>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Full Recipe Cards -->
+                        <a href="{{ route('recipes.export', ['type' => 'full-cards']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
+                           class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                            <div class="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                                <i data-lucide="file-text" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-gray-900 mb-1">Full Recipe Cards</h4>
+                                <p class="text-sm text-gray-600">Each recipe in separate Excel sheet with ingredients, sub-recipes, method, and allergens</p>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-blue-600"></i>
+                        </a>
+                        
+                        <!-- Procurement List -->
+                        <a href="{{ route('recipes.export', ['type' => 'procurement']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
+                           class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group">
+                            <div class="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                                <i data-lucide="shopping-cart" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-gray-900 mb-1">Procurement List</h4>
+                                <p class="text-sm text-gray-600">Consolidated list of ingredients grouped by name with summed quantities and recipes</p>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-green-600"></i>
+                        </a>
+                        
+                        <!-- Cost Breakdown -->
+                        <a href="{{ route('recipes.export', ['type' => 'cost-breakdown']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
+                           class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all group">
+                            <div class="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                                <i data-lucide="dollar-sign" class="w-6 h-6 text-purple-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-gray-900 mb-1">Cost Breakdown</h4>
+                                <p class="text-sm text-gray-600">Summary sheet and per-recipe costing with margin calculations</p>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-purple-600"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 flex justify-end">
+                    <button onclick="closeExportModal()" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Scale Recipe Modal -->
     <div id="scaleRecipeModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -234,6 +326,14 @@
 
         function closeScaleModal() {
             document.getElementById('scaleRecipeModal').classList.add('hidden');
+        }
+
+        function openExportModal() {
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
         }
     </script>
 @endsection

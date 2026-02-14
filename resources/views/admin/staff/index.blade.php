@@ -45,7 +45,7 @@
                                     </div>
                                     <div>
                                         <div class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">{{ $user->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $user->email }}</div>
+                                        <div class="text-sm text-gray-500">{{ $user->phone ?? 'N/A' }}</div>
                                     </div>
                                 </div>
                             </td>

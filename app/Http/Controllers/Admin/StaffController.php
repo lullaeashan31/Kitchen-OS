@@ -30,7 +30,7 @@ class StaffController extends Controller
             'phone' => 'required|string|max:15|unique:users',
             'staff_code' => 'required|string|max:6|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'profile_photo' => 'required|image|max:5120', // Mandatory 5MB
+            'profile_photo' => 'nullable|image|max:5120', // Optional 5MB max
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
@@ -71,10 +71,10 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'phone' => 'required|string|max:15|unique:users,phone,' . $id,
             'staff_code' => 'required|string|max:6|unique:users,staff_code,' . $id,
             'password' => 'nullable|string|min:8|confirmed',
-            'profile_photo' => 'nullable|image|max:2048',
+            'profile_photo' => 'nullable|image|max:5120',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);

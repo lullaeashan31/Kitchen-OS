@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DriveFile;
 use App\Services\DriveFileService;
 use App\Http\Requests\StoreDriveFileRequest;
+use App\Enums\LinkedType;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -23,16 +24,27 @@ class DriveFileController extends Controller
     {
         $this->authorize('create', DriveFile::class);
 
-        $linkedType = $request->input('linked_type');
-        $modelClass = $linkedType::modelClass();
+        $linkedType = LinkedType::from($request->input('linked_type'));
+        $modelClass = $linkedType->modelClass();
         $linkedModel = $modelClass::findOrFail($request->input('linked_id'));
 
-        $this->driveFileService->attachFile(
-            $linkedModel,
-            $request->input('drive_url'),
-            $request->input('name'),
-            $request->user()
-        );
+        if ($request->has('drive_url') && $request->filled('drive_url')) {
+            $this->driveFileService->attachUrl(
+                $linkedModel,
+                $request->input('drive_url'),
+                $request->input('name'),
+                $request->user()
+            );
+        } elseif ($request->hasFile('file')) {
+            $this->driveFileService->attachFile(
+                $linkedModel,
+                $request->file('file'),
+                $request->input('name'),
+                $request->user()
+            );
+        } else {
+            return back()->with('error', 'Please provide a file or a Google Drive link.');
+        }
 
         return back()->with('success', 'File attached successfully.');
     }

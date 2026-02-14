@@ -16,36 +16,36 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Users
+        // Users - All with password: admin123
         User::create([
-            'name' => 'Admin Chef',
+            'name' => 'Admin User',
             'email' => 'admin@kitchen.com',
             'phone' => '9999999999',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('admin123'),
             'role' => UserRole::Admin,
             'is_password_changed' => true,
         ]);
 
         User::create([
-            'name' => 'Manager John',
+            'name' => 'Manager User',
             'email' => 'manager@kitchen.com',
             'phone' => '8888888888',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('admin123'),
             'role' => UserRole::Manager,
             'is_password_changed' => true,
         ]);
 
         User::create([
-            'name' => 'Staff Alice',
+            'name' => 'Staff User',
             'email' => 'staff@kitchen.com',
             'phone' => '7777777777',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('admin123'),
             'role' => UserRole::Staff,
             'staff_code' => '123456',
             'target_latitude' => 28.6139,
             'target_longitude' => 77.2090, // Example location
             'target_location_name' => 'Main Kitchen',
-            'is_password_changed' => false, // Force change for staff
+            'is_password_changed' => true,
         ]);
 
         // Categories

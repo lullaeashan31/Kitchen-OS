@@ -116,10 +116,10 @@
 
     @if($recipe->stages->count() > 0)
         <!-- Staged Ingredients -->
-        <h3 class="section-title">Ingredients by Stage</h3>
+        <h3 class="section-title">Ingredients by Set</h3>
 
         @foreach($recipe->stages as $stage)
-            <div class="stage-header">Stage {{ $loop->iteration }}: {{ $stage->name }}</div>
+            <div class="stage-header">Set {{ $loop->iteration }}: {{ $stage->name }}</div>
 
             <table>
                 <thead>
@@ -131,9 +131,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($stage->recipeIngredients as $ri)
+                    @foreach($stage->ingredients as $ri)
                         <tr>
-                            <td>{{ $ri->ingredient->name }}</td>
+                            <td>
+                                {{ $ri->ingredient->name }}
+                                @if($ri->ingredient->allergen_tags && count($ri->ingredient->allergen_tags) > 0)
+                                    <span style="font-size: 0.8em; color: #d32f2f; font-weight: bold; margin-left: 5px;">
+                                        [{{ implode(', ', $ri->ingredient->allergen_tags) }}]
+                                    </span>
+                                @endif
+                            </td>
                             <td>{{ $ri->ingredient->storage_location ?? '-' }}</td>
                             <td class="text-right">{{ number_format($ri->quantity, 3) }}</td>
                             <td>{{ $ri->unit }}</td>

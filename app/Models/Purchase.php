@@ -10,7 +10,10 @@ class Purchase extends Model
     use HasFactory;
 
     protected $fillable = [
-        'vendor',
+        'vendor', // Keep for backward compatibility or remove? Requirement says "Vendor free text field remove".
+        // But we should keep it until migration is fully verified. 
+        // Actually, let's keep it for now and deprecate later.
+        'vendor_id',
         'ingredient_id',
         'quantity',
         'unit_price',
@@ -32,6 +35,11 @@ class Purchase extends Model
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
     ];
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class);
+    }
 
     public function ingredient()
     {
@@ -56,5 +64,51 @@ class Purchase extends Model
     public function isApproved(): bool
     {
         return $this->status === 'approved';
+    }
+
+    public function getInvoiceUrlAttribute()
+    {
+        if (!$this->invoice_photo_path) {
+            return null;
+        }
+
+        $disk = config('filesystems.default');
+
+        // Check if file actually exists before generating URL
+        if (!\Illuminate\Support\Facades\Storage::disk($disk)->exists($this->invoice_photo_path)) {
+            return null;
+        }
+
+        if (config("filesystems.disks.{$disk}.driver") === 's3') {
+            return \Illuminate\Support\Facades\Storage::disk($disk)->temporaryUrl(
+                $this->invoice_photo_path,
+                now()->addMinutes(30)
+            );
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk($disk)->url($this->invoice_photo_path);
+    }
+
+    public function getGoodsUrlAttribute()
+    {
+        if (!$this->goods_photo_path) {
+            return null;
+        }
+
+        $disk = config('filesystems.default');
+
+        // Check if file actually exists before generating URL
+        if (!\Illuminate\Support\Facades\Storage::disk($disk)->exists($this->goods_photo_path)) {
+            return null;
+        }
+
+        if (config("filesystems.disks.{$disk}.driver") === 's3') {
+            return \Illuminate\Support\Facades\Storage::disk($disk)->temporaryUrl(
+                $this->goods_photo_path,
+                now()->addMinutes(30)
+            );
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk($disk)->url($this->goods_photo_path);
     }
 }

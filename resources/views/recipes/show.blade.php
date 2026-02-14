@@ -70,7 +70,7 @@
                         </div>
                         <div>
                             <div class="text-muted text-sm">Total Cost</div>
-                            <div style="font-weight: 500;">₹{{ number_format($recipe->total_cost, 2) }}</div>
+                            <div style="font-weight: 500;">₹{{ number_format((float) $recipe->total_cost, 2) }}</div>
                         </div>
                     @endif
                 </div>
@@ -90,23 +90,7 @@
                     </div>
                 @endif
 
-                @if(count($recipe->allergens) > 0)
-                    <div
-                        style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
-                        <div
-                            style="font-weight: 600; color: #991b1b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <i data-lucide="alert-triangle" style="width: 16px;"></i> Contains Allergens
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                            @foreach($recipe->allergens as $allergen)
-                                <span
-                                    style="background-color: white; border: 1px solid #fecaca; color: #b91c1c; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
-                                    {{ App\Enums\Allergen::tryFrom($allergen)?->label() ?? ucfirst($allergen) }}
-                                </span>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+
 
                 <h3>Ingredients</h3>
                 <div class="table-container" style="margin-top: 1rem;">
@@ -171,6 +155,17 @@
                                             @else
                                                 {{ $ri->ingredient->name }}
                                             @endif
+
+                                            @if($ri->ingredient->allergen_tags && count($ri->ingredient->allergen_tags) > 0)
+                                                <div class="flex flex-wrap gap-1 mt-1">
+                                                    @foreach($ri->ingredient->allergen_tags as $tag)
+                                                        <span
+                                                            class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">
+                                                            {{ $tag }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="qty-display"
@@ -195,6 +190,24 @@
                 <div style="white-space: pre-wrap; margin-top: 1rem; line-height: 1.8; color: var(--text-main);">
                     {{ $recipe->method }}
                 </div>
+
+                @if(count($recipe->allergens) > 0)
+                    <div class="mt-8 p-4 bg-red-50 border border-red-100 rounded-xl">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
+                            <h4 class="font-bold text-red-700">Allergen Information</h4>
+                        </div>
+                        <p class="text-sm text-red-600 mb-3">This recipe contains the following allergens:</p>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($recipe->allergens as $allergen)
+                                <span
+                                    class="bg-white text-red-600 border border-red-200 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-sm">
+                                    {{ App\Enums\Allergen::tryFrom($allergen)?->label() ?? ucfirst($allergen) }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -231,7 +244,7 @@
                                 <span class="text-xs font-bold text-gray-500 uppercase">Est. Total Cost</span>
                             </div>
                             <div class="text-2xl font-bold text-green-600 mb-2">
-                                ₹<span id="scaledCostDisplay">{{ number_format($recipe->total_cost, 2) }}</span>
+                                ₹<span id="scaledCostDisplay">{{ number_format((float) $recipe->total_cost, 2) }}</span>
                             </div>
                         @endif
                         <div class="text-sm text-gray-600 border-t pt-2 mt-2">
@@ -265,7 +278,7 @@
                         <div class="flex flex-col gap-2">
                             @foreach($recipe->driveFiles as $file)
                                 <div class="flex justify-between items-center p-2 border rounded bg-white">
-                                    <a href="{{ $file->drive_url }}" target="_blank"
+                                    <a href="{{ $file->preview_url ?? $file->drive_url }}" target="_blank"
                                         class="flex items-center gap-2 text-sm text-blue-600 hover:underline">
                                         <i data-lucide="file"></i> {{ $file->name }}
                                     </a>
@@ -285,20 +298,23 @@
                     @endif
 
                     @can('create', App\Models\DriveFile::class)
-                        <form action="{{ route('drive_files.store') }}" method="POST" style="margin-top: 1rem;">
-                            @csrf
-                            <input type="hidden" name="linked_type" value="recipe">
-                            <input type="hidden" name="linked_id" value="{{ $recipe->id }}">
-                            <div class="form-group">
-                                <input type="text" name="name" class="form-control" placeholder="File Name" required
-                                    style="font-size: 0.8rem; padding: 0.4rem;">
-                            </div>
-                            <div class="form-group">
-                                <input type="url" name="drive_url" class="form-control" placeholder="Google Drive Link" required
-                                    style="font-size: 0.8rem; padding: 0.4rem;">
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-secondary w-full">Attach File</button>
-                        </form>
+                        @can('create', App\Models\DriveFile::class)
+                            <form action="{{ route('drive_files.store') }}" method="POST" enctype="multipart/form-data"
+                                style="margin-top: 1rem;">
+                                @csrf
+                                <input type="hidden" name="linked_type" value="recipe">
+                                <input type="hidden" name="linked_id" value="{{ $recipe->id }}">
+                                <div class="form-group">
+                                    <input type="text" name="name" class="form-control" placeholder="File Name" required
+                                        style="font-size: 0.8rem; padding: 0.4rem;">
+                                </div>
+                                <div class="form-group">
+                                    <input type="file" name="file" class="form-control" required
+                                        style="font-size: 0.8rem; padding: 0.4rem;">
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-secondary w-full">Upload File</button>
+                            </form>
+                        @endcan
                     @endcan
                 </div>
             </div>

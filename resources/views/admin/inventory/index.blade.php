@@ -18,6 +18,88 @@
 @endsection
 
 @section('content')
+    <!-- Filter Bar -->
+    <div class="card mb-6" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+        <form method="GET" action="{{ route('admin.inventory.index') }}" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <!-- Search -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-gray-500 uppercase">Search Item</label>
+                <input type="text" name="search" class="form-control" placeholder="Name..." value="{{ request('search') }}">
+            </div>
+
+            <!-- Category -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-gray-500 uppercase">Category</label>
+                <select name="category_id" id="category-filter" class="form-control">
+                    <option value="">All Categories</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Storage Location -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-gray-500 uppercase">Location</label>
+                <select name="storage_location" id="location-filter" class="form-control">
+                    <option value="">All Locations</option>
+                    @foreach($storageLocations as $location)
+                        <option value="{{ $location }}" {{ request('storage_location') == $location ? 'selected' : '' }}>
+                            {{ $location }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Allergen -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-gray-500 uppercase">Allergen</label>
+                <select name="allergen" id="allergen-filter" class="form-control">
+                    <option value="">All Allergens</option>
+                    @foreach($allergens as $allergen)
+                        <option value="{{ $allergen->value }}" {{ request('allergen') == $allergen->value ? 'selected' : '' }}>
+                            {{ $allergen->label() }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Stock Status -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-gray-500 uppercase">Stock Status</label>
+                <select name="stock_status" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="ok" {{ request('stock_status') == 'ok' ? 'selected' : '' }}>OK</option>
+                    <option value="low" {{ request('stock_status') == 'low' ? 'selected' : '' }}>Low Stock</option>
+                    <option value="out" {{ request('stock_status') == 'out' ? 'selected' : '' }}>Out of Stock</option>
+                </select>
+            </div>
+
+            <!-- Sort & Actions -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-gray-500 uppercase">Sort By</label>
+                <div class="flex gap-2">
+                    <select name="sort_by" class="form-control flex-1">
+                        <option value="name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Name</option>
+                        <option value="current_stock" {{ request('sort_by') == 'current_stock' ? 'selected' : '' }}>Stock</option>
+                        <option value="price" {{ request('sort_by') == 'price' ? 'selected' : '' }}>Price</option>
+                        <option value="category_name" {{ request('sort_by') == 'category_name' ? 'selected' : '' }}>Category</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary p-2">
+                        <i data-lucide="filter" class="w-4 h-4"></i>
+                    </button>
+                    @if(request()->anyFilled(['search', 'category_id', 'storage_location', 'allergen', 'stock_status', 'sort_by']))
+                        <a href="{{ route('admin.inventory.index') }}" class="btn btn-secondary p-2" title="Clear Filters">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div style="background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
         <form id="bulkDeleteForm" action="{{ route('admin.inventory.bulk_destroy') }}" method="POST">
             @csrf
@@ -148,7 +230,65 @@
         </div>
     </div>
 
+    <div style="padding: 1rem; border-top: 1px solid #e2e8f0;">
+        {{ $inventory->links() }}
+    </div>
+
+    @push('scripts')
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.querySelector('form[action="{{ route('admin.inventory.index') }}"]');
+            
+            const tomSelectConfig = {
+                create: false,
+                allowEmptyOption: true,
+                plugins: ['remove_button'],
+                onChange: function(value) {
+                    // Auto-submit form when filter changes
+                    if (filterForm) {
+                        filterForm.submit();
+                    }
+                }
+            };
+
+            new TomSelect('#category-filter', tomSelectConfig);
+            new TomSelect('#location-filter', tomSelectConfig);
+            new TomSelect('#allergen-filter', tomSelectConfig);
+            
+            // Also auto-submit on stock status and sort by change
+            const stockStatusSelect = document.querySelector('select[name="stock_status"]');
+            const sortBySelect = document.querySelector('select[name="sort_by"]');
+            
+            if (stockStatusSelect) {
+                stockStatusSelect.addEventListener('change', function() {
+                    if (filterForm) {
+                        filterForm.submit();
+                    }
+                });
+            }
+            
+            if (sortBySelect) {
+                sortBySelect.addEventListener('change', function() {
+                    if (filterForm) {
+                        filterForm.submit();
+                    }
+                });
+            }
+            
+            // Search input - submit on Enter key
+            const searchInput = document.querySelector('input[name="search"]');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (filterForm) {
+                            filterForm.submit();
+                        }
+                    }
+                });
+            }
+        });
+
         function openAdjustModal(id, name, stock) {
             document.getElementById('modalItemName').textContent = name;
             document.getElementById('modalCurrentStock').textContent = stock;
@@ -178,5 +318,5 @@
                 document.getElementById('bulkDeleteForm').submit();
             }
         }
-    </script>
+    @endpush
 @endsection

@@ -22,12 +22,12 @@ class StoreRecipeRequest extends FormRequest
             'method' => 'nullable|string',
 
             // Yield System - At least one is required
-            'yield_portions' => 'required_without_all:yield_weight,yield_volume,yield_batches|nullable|integer|min:1',
-            'yield_weight' => 'required_without_all:yield_portions,yield_volume,yield_batches|nullable|numeric|min:0',
+            'yield_portions' => 'required_without:yield_batches|nullable|integer|min:1',
+            'yield_batches' => 'required_without:yield_portions|nullable|integer|min:1',
+            'yield_weight' => 'nullable|numeric|min:0',
             'yield_weight_unit' => 'nullable|required_with:yield_weight|string|in:g,kg,oz,lb',
-            'yield_volume' => 'required_without_all:yield_portions,yield_weight,yield_batches|nullable|numeric|min:0',
+            'yield_volume' => 'nullable|numeric|min:0',
             'yield_volume_unit' => 'nullable|required_with:yield_volume|string|in:ml,l,fl_oz,cup',
-            'yield_batches' => 'required_without_all:yield_portions,yield_weight,yield_volume|nullable|integer|min:1',
             'prep_time_minutes' => 'nullable|integer|min:0',
 
             'stages' => 'required|array|min:1',

@@ -22,13 +22,102 @@ class InventoryController extends Controller
         $this->pdfParser = $pdfParser;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $inventory = Ingredient::query()
-            ->orderBy('name')
-            ->get();
+        $query = Ingredient::query()->with('category');
 
-        return view('admin.inventory.index', compact('inventory'));
+        // Search by name
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by category
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Filter by storage location
+        if ($request->filled('storage_location')) {
+            $query->where('storage_location', $request->storage_location);
+        }
+
+        // Filter by allergen
+        if ($request->filled('allergen')) {
+            $query->whereJsonContains('allergen_tags', $request->allergen);
+        }
+
+        // Filter by stock status
+        if ($request->filled('stock_status')) {
+            switch ($request->stock_status) {
+                case 'low':
+                    // Low stock: current_stock <= alert_threshold AND current_stock > 0 AND alert_threshold > 0
+                    // If include_out parameter is set, also include out of stock items (stock <= 0)
+                    if ($request->has('include_out') && $request->include_out == '1') {
+                        // Show both low stock AND out of stock items
+                        $query->where(function($q) {
+                            $q->where(function($subQ) {
+                                // Low stock: stock > 0 but <= threshold
+                                $subQ->whereColumn('current_stock', '<=', 'alert_threshold')
+                                     ->where('current_stock', '>', 0)
+                                     ->where('alert_threshold', '>', 0);
+                            })->orWhere(function($subQ) {
+                                // Out of stock: stock <= 0
+                                $subQ->where('current_stock', '<=', 0);
+                            });
+                        });
+                    } else {
+                        // Only low stock (excludes out of stock)
+                        $query->whereColumn('current_stock', '<=', 'alert_threshold')
+                              ->where('current_stock', '>', 0)
+                              ->where('alert_threshold', '>', 0);
+                    }
+                    break;
+                case 'out':
+                    // Out of stock: current_stock <= 0
+                    $query->where('current_stock', '<=', 0);
+                    break;
+                case 'ok':
+                    // OK stock: current_stock > alert_threshold (when threshold > 0) OR alert_threshold is 0/null
+                    $query->where(function($q) {
+                        $q->where(function($subQ) {
+                            $subQ->whereColumn('current_stock', '>', 'alert_threshold')
+                                 ->where('alert_threshold', '>', 0);
+                        })->orWhere(function($subQ) {
+                            $subQ->where('alert_threshold', '<=', 0)
+                                 ->orWhereNull('alert_threshold');
+                        });
+                    });
+                    break;
+            }
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortDir = $request->get('sort_dir', 'asc');
+
+        $allowedSorts = ['name', 'current_stock', 'price', 'category_name'];
+        if (in_array($sortBy, $allowedSorts)) {
+            if ($sortBy === 'category_name') {
+                $query->leftJoin('categories', 'ingredients.category_id', '=', 'categories.id')
+                    ->select('ingredients.*')
+                    ->orderBy('categories.name', $sortDir);
+            } else {
+                $query->orderBy($sortBy, $sortDir);
+            }
+        }
+
+        $inventory = $query->paginate(50)->withQueryString();
+
+        // Data for filters
+        $categories = \App\Models\Category::orderBy('name')->get();
+        $storageLocations = Ingredient::whereNotNull('storage_location')
+            ->distinct()
+            ->pluck('storage_location')
+            ->sort()
+            ->values();
+        $allergens = \App\Enums\Allergen::cases();
+
+        return view('admin.inventory.index', compact('inventory', 'categories', 'storageLocations', 'allergens'));
     }
 
     public function upload()

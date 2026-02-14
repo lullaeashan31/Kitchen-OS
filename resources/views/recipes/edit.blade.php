@@ -32,7 +32,116 @@
                         <input type="text" name="name"
                             class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                             required value="{{ old('name', $recipe->name) }}">
+                        @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select name="category_id" required id="category-select"
+                                class="w-full px-4 py-2 rounded-lg border {{ $errors->has('category_id') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all appearance-none">
+                                <option value="" disabled>Select Category</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id', $recipe->category_id) == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @error('category_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    @push('scripts')
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            new TomSelect('#category-select', {
+                                create: false,
+                                sortField: {
+                                    field: "text",
+                                    direction: "asc"
+                                },
+                                placeholder: "Search Category...",
+                            });
+                        });
+                    </script>
+                        <!-- Sub-Recipe Modal [NEW] -->
+    <div id="addSubRecipeModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i data-lucide="component" class="w-6 h-6 text-indigo-500"></i>
+                    Add Sub-Recipe
+                </h3>
+                <button type="button" onclick="closeSubRecipeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-8 space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Select Sub-Recipe</label>
+                    <select id="sub-recipe-selector" class="w-full">
+                        <option value="">Search Sub-Recipes...</option>
+                        @foreach($subRecipes as $sub)
+                            <option value="{{ $sub->id }}" 
+                                data-name="{{ $sub->name }}"
+                                data-ing-id="{{ $sub->produces_ingredient_id }}"
+                                data-unit="{{ $sub->producesIngredient->measurement_unit ?? 'pcs' }}"
+                                data-price="{{ $sub->producesIngredient->latest_price ?? $sub->producesIngredient->price ?? 0 }}">
+                                {{ $sub->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Quantity</label>
+                        <input type="number" id="sub-recipe-qty" step="any" value="1"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-center text-lg font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Unit</label>
+                        <input type="text" id="sub-recipe-unit-display" disabled
+                            class="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 text-gray-500 text-center text-lg font-medium">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-gray-50 flex gap-3">
+                <button type="button" onclick="closeSubRecipeModal()"
+                    class="flex-1 py-3 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-all">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmAddSubRecipe()"
+                    class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="plus" class="w-5 h-5"></i> Add to Recipe
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pre-load existing sub-recipes from "Sub-Recipes" stage
+        @php
+            $subRecipeStage = $recipe->stages->where('name', 'Sub-Recipes')->first();
+            $existingSubData = [];
+            if ($subRecipeStage) {
+                foreach($subRecipeStage->ingredients as $ing) {
+                    $existingSubData[] = [
+                        'ingId' => $ing->ingredient_id,
+                        'name' => $ing->ingredient->name,
+                        'qty' => (float)$ing->quantity,
+                        'unit' => $ing->unit,
+                        'price' => (float)($ing->ingredient->latest_price ?? $ing->ingredient->price ?? 0)
+                    ];
+                }
+            }
+        @endphp
+        window.initialSubRecipes = @json($existingSubData);
+        window.subRecipeStageId = {{ $subRecipeStage->id ?? 'null' }};
+    </script>
+@endpush
 
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-3">Yields (Fill at least
@@ -40,55 +149,26 @@
                         <div class="grid grid-cols-2 gap-4">
                             <!-- Row 1 -->
                             <div>
-                                <label class="block text-xs text-gray-400 mb-1">Portions</label>
-                                <input type="number" name="yield_portions"
+                                <label class="block text-xs text-gray-400 mb-1">Portions <span class="text-red-500">*</span></label>
+                                <input type="number" name="yield_portions" id="yield_portions"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none font-bold text-gray-800"
-                                    min="1" step="0.1" value="{{ old('yield_portions', $recipe->yield_portions) }}"
-                                    placeholder="e.g. 10">
+                                    min="1" step="1" value="{{ old('yield_portions', $recipe->yield_portions) }}"
+                                    placeholder="e.g. 10" oninput="updateScaling()">
+                                @error('yield_portions') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-400 mb-1">Batches</label>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-xs text-gray-400">Batches</label>
+                                    <button type="button" onclick="resetScaling()" class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
+                                </div>
                                 <input type="number" name="yield_batches"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none"
                                     min="1" step="1" value="{{ old('yield_batches', $recipe->yield_batches) }}"
                                     placeholder="e.g. 1">
+                                @error('yield_batches') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
 
-                            <!-- Row 2 -->
-                            <div class="col-span-2 grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Weight</label>
-                                    <div class="flex gap-1">
-                                        <input type="number" name="yield_weight"
-                                            class="w-2/3 px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none"
-                                            step="0.01" min="0" placeholder="0.00"
-                                            value="{{ old('yield_weight', $recipe->yield_weight) }}">
-                                        <select name="yield_weight_unit"
-                                            class="w-1/3 px-2 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white text-xs">
-                                            <option value="g" {{ (old('yield_weight_unit', $recipe->yield_weight_unit) == 'g') ? 'selected' : '' }}>g</option>
-                                            <option value="kg" {{ (old('yield_weight_unit', $recipe->yield_weight_unit) == 'kg') ? 'selected' : '' }}>kg</option>
-                                            <option value="oz" {{ (old('yield_weight_unit', $recipe->yield_weight_unit) == 'oz') ? 'selected' : '' }}>oz</option>
-                                            <option value="lb" {{ (old('yield_weight_unit', $recipe->yield_weight_unit) == 'lb') ? 'selected' : '' }}>lb</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Volume</label>
-                                    <div class="flex gap-1">
-                                        <input type="number" name="yield_volume"
-                                            class="w-2/3 px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none"
-                                            step="0.01" min="0" placeholder="0.00"
-                                            value="{{ old('yield_volume', $recipe->yield_volume) }}">
-                                        <select name="yield_volume_unit"
-                                            class="w-1/3 px-2 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white text-xs">
-                                            <option value="ml" {{ (old('yield_volume_unit', $recipe->yield_volume_unit) == 'ml') ? 'selected' : '' }}>ml</option>
-                                            <option value="l" {{ (old('yield_volume_unit', $recipe->yield_volume_unit) == 'l') ? 'selected' : '' }}>l</option>
-                                            <option value="fl_oz" {{ (old('yield_volume_unit', $recipe->yield_volume_unit) == 'fl_oz') ? 'selected' : '' }}>fl oz</option>
-                                            <option value="cup" {{ (old('yield_volume_unit', $recipe->yield_volume_unit) == 'cup') ? 'selected' : '' }}>cup</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Weight & Volume Hidden -->
                         </div>
                     </div>
 
@@ -109,45 +189,56 @@
 
         <!-- Right Column: Ingredients -->
         <div class="w-full lg:w-2/3">
-            <!-- Recipe Stages Section -->
+            <!-- Recipe Sets Section -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <i data-lucide="layers" class="w-5 h-5 text-blue-500"></i>
-                        Recipe Stages
+                        Recipe Sets
                     </h2>
                     <button type="button" onclick="addStage()"
                         class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium transition-colors flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i>
-                        Add Stage
+                        Add Set
                     </button>
                 </div>
 
                 <div id="stages-container" class="space-y-8">
-                    @foreach($recipe->stages as $index => $stage)
+                    @php
+                        $stages = old('stages') ?? $recipe->stages ?? collect([]);
+                        // Ensure stages is a collection
+                        if (!($stages instanceof \Illuminate\Support\Collection)) {
+                            $stages = collect($stages);
+                        }
+                    @endphp
+
+                    @foreach($stages->where('name', '!=', 'Sub-Recipes') as $index => $stage)
                         <div class="stage-block border border-gray-200 rounded-xl p-6 bg-gray-50/50 relative group transition-all hover:border-blue-200 hover:shadow-sm"
                             data-stage-index="{{ $index }}">
 
-                            <input type="hidden" name="stages[{{ $index }}][id]" value="{{ $stage->id }}">
+                            <input type="hidden" name="stages[{{ $index }}][id]" value="{{ data_get($stage, 'id') }}">
 
                             <button type="button" onclick="removeStage(this)"
                                 class="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Remove Stage">
+                                title="Remove Set">
                                 <i data-lucide="trash-2" class="w-5 h-5"></i>
                             </button>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div class="col-span-1">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">Stage Name</label>
-                                    <input type="text" name="stages[{{ $index }}][name]" value="{{ $stage->name }}" required
-                                        class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none transition-colors"
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Set Name</label>
+                                    <input type="text" name="stages[{{ $index }}][name]" value="{{ data_get($stage, 'name') }}"
+                                        required
+                                        class="w-full px-4 py-2 rounded-lg border {{ $errors->has('stages.'.$index.'.name') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none transition-colors"
                                         placeholder="e.g., Marination, Sauce, Assembly">
+                                    @error('stages.' . $index . '.name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Method & Instructions</label>
                                     <textarea name="stages[{{ $index }}][method]" rows="3"
                                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 outline-none transition-colors resize-y"
-                                        placeholder="Describe the steps for this stage...">{{ $stage->method }}</textarea>
+                                        placeholder="Describe the steps for this stage...">{{ data_get($stage, 'method') }}</textarea>
                                 </div>
                             </div>
 
@@ -157,19 +248,16 @@
                                         <thead class="bg-gray-50 border-b border-gray-200">
                                             <tr>
                                                 <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[35%]">
-                                                    Ingredient</th>
+                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50%]">
+                                                    Item</th>
                                                 <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
+                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                                     Quantity</th>
                                                 <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
+                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                                     Unit</th>
                                                 <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
-                                                    Group (Opt)</th>
-                                                <th
-                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
+                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
                                                     Cost</th>
                                                 <th
                                                     class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
@@ -177,51 +265,121 @@
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-100 stage-ingredients-body">
-                                            @foreach($stage->ingredients as $rIngredient)
+                                            @php
+                                                // Safely get ingredients - handle both model and array
+                                                $stageIngredients = [];
+                                                try {
+                                                    if (is_object($stage)) {
+                                                        // Handle Eloquent model
+                                                        if (isset($stage->ingredients)) {
+                                                            $stageIngredients = $stage->ingredients;
+                                                            // Convert collection to array if needed
+                                                            if ($stageIngredients instanceof \Illuminate\Support\Collection) {
+                                                                $stageIngredients = $stageIngredients->all();
+                                                            }
+                                                        }
+                                                    } elseif (is_array($stage)) {
+                                                        $stageIngredients = $stage['ingredients'] ?? [];
+                                                    }
+                                                    
+                                                    // Ensure it's iterable
+                                                    if (!is_iterable($stageIngredients)) {
+                                                        $stageIngredients = [];
+                                                    }
+                                                } catch (\Exception $e) {
+                                                    $stageIngredients = [];
+                                                }
+                                            @endphp
+                                            @foreach($stageIngredients as $ingIndex => $rIngredient)
+                                                @php
+                                                    // Safely extract data
+                                                    $rIngId = null;
+                                                    $rName = 'Unknown';
+                                                    $rUnit = 'pcs';
+                                                    $rQty = 0;
+                                                    $rGroup = '';
+                                                    $rCost = 0;
+                                                    $rPrice = 0;
+                                                    $rMeasUnit = 'pcs';
+
+                                                    if (is_object($rIngredient)) {
+                                                        $rIngId = $rIngredient->ingredient_id ?? $rIngredient->id ?? null;
+                                                        $rUnit = $rIngredient->unit ?? 'pcs';
+                                                        $rQty = $rIngredient->quantity ?? 0;
+                                                        $rGroup = $rIngredient->ingredient_group ?? '';
+                                                        $rCost = $rIngredient->cost ?? 0;
+                                                        
+                                                        // Safely access ingredient relationship
+                                                        if (isset($rIngredient->ingredient) && is_object($rIngredient->ingredient)) {
+                                                            $rName = $rIngredient->ingredient->name ?? 'Unknown';
+                                                            $rPrice = $rIngredient->ingredient->latest_price ?? $rIngredient->ingredient->price ?? 0;
+                                                            $rMeasUnit = $rIngredient->ingredient->measurement_unit ?? 'pcs';
+                                                        } else {
+                                                            $rName = 'Unknown Ingredient';
+                                                            $rPrice = 0;
+                                                            $rMeasUnit = 'pcs';
+                                                        }
+                                                    } elseif (is_array($rIngredient)) {
+                                                        $rIngId = $rIngredient['ingredient_id'] ?? $rIngredient['id'] ?? null;
+                                                        $rUnit = $rIngredient['unit'] ?? 'pcs';
+                                                        $rQty = $rIngredient['quantity'] ?? 0;
+                                                        $rGroup = $rIngredient['ingredient_group'] ?? '';
+                                                        $rCost = $rIngredient['cost'] ?? 0;
+                                                        
+                                                        // Safely access ingredient data
+                                                        if (isset($rIngredient['ingredient']) && is_array($rIngredient['ingredient'])) {
+                                                            $rName = $rIngredient['ingredient']['name'] ?? 'Unknown';
+                                                            $rPrice = $rIngredient['ingredient']['latest_price'] ?? $rIngredient['ingredient']['price'] ?? 0;
+                                                            $rMeasUnit = $rIngredient['ingredient']['measurement_unit'] ?? 'pcs';
+                                                        } else {
+                                                            $rName = $rIngredient['name'] ?? 'Unknown Ingredient';
+                                                            $rPrice = 0;
+                                                            $rMeasUnit = 'pcs';
+                                                        }
+                                                    }
+                                                @endphp
                                                 <tr class="group hover:bg-blue-50/30 transition-colors ingredient-row">
                                                     <td class="px-4 py-3">
+                                                        <div class="w-full {{ $errors->has('stages.'.$index.'.ingredients.'.$ingIndex.'.ingredient_id') ? 'border border-red-500 rounded-lg' : '' }}">
                                                         <select class="ingredient-select w-full"
-                                                            name="stages[{{ $index }}][ingredients][{{ $loop->index }}][ingredient_id]"
+                                                            name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][ingredient_id]"
                                                             required>
-                                                            <option value="{{ $rIngredient->ingredient_id }}" selected
-                                                                data-price="{{ $rIngredient->ingredient->latest_price ?? $rIngredient->ingredient->price }}"
-                                                                data-unit="{{ $rIngredient->ingredient->measurement_unit }}">
-                                                                {{ $rIngredient->ingredient->name }}
-                                                                ({{ $rIngredient->ingredient->measurement_unit }})
+                                                            <option value="{{ $rIngId }}" selected data-price="{{ $rPrice }}"
+                                                                data-unit="{{ $rMeasUnit }}">
+                                                                {{ $rName }}
+                                                                @if($rMeasUnit) ({{ $rMeasUnit }}) @endif
                                                             </option>
                                                             <!-- Other options injected via JS or fallback -->
                                                         </select>
-                                                        <input type="hidden"
-                                                            name="stages[{{ $index }}][ingredients][{{ $loop->index }}][name]"
-                                                            class="ingredient-name-hidden"
-                                                            value="{{ $rIngredient->ingredient->name }}">
+                                                        </div>
+                                                    <td class="px-4 py-3">
+                                                            <input type="number" step="any"
+                                                                name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][quantity]"
+                                                                value="{{ $rQty }}" required
+                                                                data-base-qty="{{ $rQty }}"
+                                                                class="quantity-input w-full h-[44px] px-3 rounded-xl border-2 {{ $errors->has('stages.'.$index.'.ingredients.'.$ingIndex.'.quantity') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-base text-gray-900 transition-all bg-white">
+                                                        @error('stages.' . $index . '.ingredients.' . $ingIndex . '.quantity') <p
+                                                        class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                                     </td>
                                                     <td class="px-4 py-3">
-                                                        <input type="number" step="any"
-                                                            name="stages[{{ $index }}][ingredients][{{ $loop->index }}][quantity]"
-                                                            value="{{ $rIngredient->quantity }}" required
-                                                            class="quantity-input w-full px-2 py-1.5 rounded border border-gray-200 focus:border-blue-500 outline-none">
-                                                    </td>
-                                                    <td class="px-4 py-3">
-                                                        <select name="stages[{{ $index }}][ingredients][{{ $loop->index }}][unit]"
+                                                        <select name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][unit]"
                                                             required
-                                                            class="unit-select w-full px-2 py-1.5 rounded border border-gray-200 focus:border-blue-500 outline-none bg-white">
+                                                            class="unit-select w-full h-[44px] px-3 rounded-xl border-2 {{ $errors->has('stages.'.$index.'.ingredients.'.$ingIndex.'.unit') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none bg-white font-bold text-base text-gray-900 appearance-none transition-all">
                                                             @foreach(\App\Enums\Unit::cases() as $unit)
-                                                                <option value="{{ $unit->value }}" {{ $rIngredient->unit == $unit->value ? 'selected' : '' }}>
+                                                                <option value="{{ $unit->value }}" {{ $rUnit == $unit->value ? 'selected' : '' }}>
                                                                     {{ $unit->label() }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
+                                                        @error('stages.' . $index . '.ingredients.' . $ingIndex . '.unit') <p
+                                                        class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                                     </td>
-                                                    <td class="px-4 py-3">
-                                                        <input type="text"
-                                                            name="stages[{{ $index }}][ingredients][{{ $loop->index }}][ingredient_group]"
-                                                            value="{{ $rIngredient->ingredient_group }}"
-                                                            class="w-full px-2 py-1.5 rounded border border-gray-200 focus:border-blue-500 outline-none"
-                                                            placeholder="e.g. For Sauce">
-                                                    </td>
+                                                    <!-- Hidden field to preserve data, not shown in UI -->
+                                                    <input type="hidden"
+                                                        name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][ingredient_group]"
+                                                        value="{{ $rGroup }}">
                                                     <td class="px-4 py-3 text-right font-medium text-gray-700 cost-display">
-                                                        {{ number_format($rIngredient->cost, 2) }}
+                                                        {{ number_format((float) $rCost, 2) }}
                                                     </td>
                                                     <td class="px-4 py-3 text-center">
                                                         <button type="button" onclick="removeRow(this)"
@@ -248,6 +406,28 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+
+                <!-- Sub-Recipes Used Section [NEW] -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6 overflow-hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i data-lucide="component" class="w-5 h-5 text-indigo-500"></i>
+                            Sub-Recipes Used
+                        </h2>
+                        <button type="button" onclick="openSubRecipeModal()"
+                            class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 font-medium transition-colors flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Add Sub-Recipe
+                        </button>
+                    </div>
+                    
+                    <div id="sub-recipes-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Sub-recipe cards will be injected here -->
+                        <div id="no-sub-recipes-msg" class="col-span-full py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-400">
+                            No sub-recipes added yet.
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -294,7 +474,6 @@
                             @endforeach
                         </select>
                     </div>
-
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Storage Location</label>
                         <select name="storage_location" id="quick_storage_location" required
@@ -342,13 +521,13 @@
             class="stage-block border border-gray-200 rounded-xl p-6 bg-gray-50/50 relative group transition-all hover:border-blue-200 hover:shadow-sm">
             <button type="button" onclick="removeStage(this)"
                 class="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove Stage">
+                title="Remove Set">
                 <i data-lucide="trash-2" class="w-5 h-5"></i>
             </button>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="col-span-1">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Stage Name</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Set Name</label>
                     <input type="text" name="stages[STAGE_INDEX][name]" value="Main" required
                         class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none transition-colors"
                         placeholder="e.g., Marination, Sauce, Assembly">
@@ -357,7 +536,7 @@
                     <label class="block text-sm font-bold text-gray-700 mb-2">Method & Instructions</label>
                     <textarea name="stages[STAGE_INDEX][method]" rows="3"
                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 outline-none transition-colors resize-y"
-                        placeholder="Describe the steps for this stage..."></textarea>
+                        placeholder="Describe the steps for this set..."></textarea>
                 </div>
             </div>
 
@@ -367,19 +546,16 @@
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[35%]">
-                                    Ingredient</th>
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50%]">
+                                    Item</th>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                     Quantity</th>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                     Unit</th>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
-                                    Group (Opt)</th>
-                                <th
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">
+                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
                                     Cost</th>
                                 <th
                                     class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
@@ -413,26 +589,22 @@
                     required>
                     <option value="">Select Ingredient...</option>
                 </select>
-                <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][name]"
-                    class="ingredient-name-hidden">
             </td>
             <td class="px-4 py-3">
                 <input type="number" step="any" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][quantity]" required
-                    class="quantity-input w-full px-2 py-1.5 rounded border border-gray-200 focus:border-blue-500 outline-none">
+                    data-base-qty=""
+                    class="quantity-input w-full h-[44px] px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-base text-gray-900 transition-all bg-white">
             </td>
             <td class="px-4 py-3">
                 <select name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" required
-                    class="unit-select w-full px-2 py-1.5 rounded border border-gray-200 focus:border-blue-500 outline-none bg-white">
+                    class="unit-select w-full h-[44px] px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none bg-white font-bold text-base text-gray-900 appearance-none transition-all">
                     @foreach(\App\Enums\Unit::cases() as $unit)
                         <option value="{{ $unit->value }}">{{ $unit->label() }}</option>
                     @endforeach
                 </select>
             </td>
-            <td class="px-4 py-3">
-                <input type="text" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_group]"
-                    class="w-full px-2 py-1.5 rounded border border-gray-200 focus:border-blue-500 outline-none"
-                    placeholder="e.g. For Sauce">
-            </td>
+            <!-- Hidden field to preserve data, not shown in UI -->
+            <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_group]" value="">
             <td class="px-4 py-3 text-right font-medium text-gray-700 cost-display">
                 0.00
             </td>
@@ -444,6 +616,16 @@
             </td>
         </tr>
     </template>
+    <!-- Hidden Sub-Recipe Options -->
+        <div id="subRecipeOptions" style="display: none;">
+            @foreach($subRecipes as $sub)
+                <option value="{{ $sub->produces_ingredient_id }}"
+                        data-price="{{ $sub->producesIngredient->latest_price ?? $sub->producesIngredient->price ?? 0 }}"
+                        data-unit="{{ $sub->producesIngredient->measurement_unit }}">
+                    {{ $sub->name }} ({{ $sub->producesIngredient->measurement_unit }})
+                </option>
+            @endforeach
+        </div>
 @endsection
 
 @push('scripts')
@@ -459,48 +641,139 @@
             margin: 0 !important;
             opacity: 0 !important;
         }
+
+        /* Unit Select Styling - High Visibility & Mobile Friendly */
+        .unit-select {
+            min-height: 44px !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #111827 !important;
+            background-color: #ffffff !important;
+            cursor: pointer !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23111827' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem !important;
+        }
+
+        .unit-select:focus {
+            outline: none;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+        }
+
+        .unit-select option {
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #111827 !important;
+            padding: 0.75rem !important;
+        }
+
+        /* Ensure equal visual weight with quantity input */
+        .quantity-input {
+            min-height: 44px !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+        }
     </style>
     <script>
-        let stageCount = {{ $recipe->stages->count() }};
+        let stageCount = {{ count(old('stages') ?? $recipe->stages) }};
         let activeSelect = null; // Track which select triggered the modal
         const ingredientOptionsHTML = document.getElementById('ingredientOptions').innerHTML;
+        const UNIT_FACTORS = { 'g': 1, 'kg': 1000, 'ml': 1, 'l': 1000, 'tbsp': 15, 'tsp': 5, 'cup': 240, 'pcs': 1, 'oz': 28.35, 'lb': 453.6 };
+        
+        let subRecipeSelector = null;
+        window.addedSubRecipes = window.initialSubRecipes || [];
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize TomSelect on existing rows
+            // Initialize existing rows
             document.querySelectorAll('.ingredient-row').forEach(row => {
-                const select = row.querySelector('.ingredient-select');
-                if (select) {
-                    const currentValue = select.value;
-                    // Reset options to include all (hidden list) + selected
-                    // Note: In Edit mode, the server-rendered option is just the selected one.
-                    // We inject the full list then re-select.
-
-                    // However, to avoid value loss, we save the selected value/data first.
-                    const selectedOpt = select.querySelector('option[selected]');
-
-                    // We simply append the other options or replace HTML if needed.
-                    // For simplicity, let's just make sure the full list is available.
-
-                    // Better approach:
-                    // 1. Keep the selected option.
-                    // 2. Append the rest from ingredientOptionsHTML (which excludes the selected one ideally, or duplication is handled by browser/TomSelect).
-                    // Actually, simple string injection works because duplicate values are usually handled or we can filter.
-                    // But to be clean:
-                    select.innerHTML = ingredientOptionsHTML;
-                    select.value = currentValue; // Restore selection
-
-                    initTomSelect(select, row);
-
-                    // Init listeners for existing inputs
-                    const qtyInput = row.querySelector('.quantity-input');
-                    const unitSelect = row.querySelector('.unit-select');
-                    if (qtyInput) qtyInput.addEventListener('input', () => calculateRowCost(row));
-                    if (unitSelect) unitSelect.addEventListener('change', () => calculateRowCost(row));
-                }
+                initRow(row);
             });
-
             calculateTotal();
-            setTimeout(updateIngredientAvailability, 500);
+
+            // Set initial base portions from recipe
+            window.basePortions = {{ $recipe->yield_portions ?? 10 }};
+
+            // Initialize Sub-Recipe Selector
+            const subSelEl = document.getElementById('sub-recipe-selector');
+            if (subSelEl) {
+                subRecipeSelector = new TomSelect(subSelEl, {
+                    create: false,
+                    sortField: { field: "text", direction: "asc" },
+                    placeholder: 'Search for a sub-recipe...',
+                    plugins: ['dropdown_input'],
+                    onChange: function(val) {
+                        const opt = this.options[val];
+                        const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
+                        if (opt || originalOpt) {
+                            const unitDisplay = document.getElementById('sub-recipe-unit-display');
+                            if (unitDisplay) {
+                                unitDisplay.value = originalOpt?.dataset?.unit || opt?.dataset?.unit || 'pcs';
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Pre-load existing cards
+            renderSubRecipeCards();
+
+            // Form Submit Override
+            const form = document.getElementById('recipeForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // Inject Sub-Recipes as a special stage if any exist
+                    if (window.addedSubRecipes.length > 0) {
+                        const stageIdx = 999;
+                        const container = document.createElement('div');
+                        container.style.display = 'none';
+                        
+                        const nameInput = document.createElement('input');
+                        nameInput.type = 'hidden';
+                        nameInput.name = `stages[${stageIdx}][name]`;
+                        nameInput.value = 'Sub-Recipes';
+                        container.appendChild(nameInput);
+                        
+                        const methodInput = document.createElement('input');
+                        methodInput.type = 'hidden';
+                        methodInput.name = `stages[${stageIdx}][method]`;
+                        methodInput.value = 'Included sub-recipes';
+                        container.appendChild(methodInput);
+
+                        window.addedSubRecipes.forEach((sub, idx) => {
+                            const idInput = document.createElement('input');
+                            idInput.type = 'hidden';
+                            idInput.name = `stages[${stageIdx}][ingredients][${idx}][ingredient_id]`;
+                            idInput.value = sub.ingId;
+                            container.appendChild(idInput);
+                            
+                            const qtyInput = document.createElement('input');
+                            qtyInput.type = 'hidden';
+                            qtyInput.name = `stages[${stageIdx}][ingredients][${idx}][quantity]`;
+                            qtyInput.value = sub.qty;
+                            container.appendChild(qtyInput);
+                            
+                            const unitInput = document.createElement('input');
+                            unitInput.type = 'hidden';
+                            unitInput.name = `stages[${stageIdx}][ingredients][${idx}][unit]`;
+                            unitInput.value = sub.unit;
+                            container.appendChild(unitInput);
+
+                            const groupInput = document.createElement('input');
+                            groupInput.type = 'hidden';
+                            groupInput.name = `stages[${stageIdx}][ingredients][${idx}][ingredient_group]`;
+                            groupInput.value = 'Sub-Recipe';
+                            container.appendChild(groupInput);
+                        });
+                        form.appendChild(container);
+                    }
+                });
+            }
         });
 
         function addStage() {
@@ -555,75 +828,178 @@
             // Generate unique row ID/Index for unique naming
             const rowIndex = Date.now() + Math.random().toString(36).substr(2, 5);
 
-            const inputs = tr.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                if (input.name) {
-                    input.name = input.name.replace('STAGE_INDEX', stageIndex).replace('ROW_INDEX', rowIndex);
-                }
+            tr.querySelectorAll('[name*="STAGE_INDEX"]').forEach(el => {
+                el.name = el.name.replace('STAGE_INDEX', stageIndex).replace('ROW_INDEX', rowIndex);
             });
 
-            // Populate Select
-            const select = tr.querySelector('.ingredient-select');
-            select.innerHTML += ingredientOptionsHTML;
+            // Populate Select (only ingredients, no sub-recipes)
+            const ingSelect = tr.querySelector('.ingredient-select');
+            ingSelect.innerHTML += ingredientOptionsHTML;
 
             tbody.appendChild(tr);
-
-            initTomSelect(select, tr);
-
-            // Listeners
-            const qtyInput = tr.querySelector('.quantity-input');
-            const unitSelect = tr.querySelector('.unit-select');
-            qtyInput.addEventListener('input', () => calculateRowCost(tr));
-            unitSelect.addEventListener('change', () => calculateRowCost(tr));
-
+            initRow(tr);
             lucide.createIcons();
         }
 
-        function initTomSelect(select, row) {
-            new TomSelect(select, {
-                create: true,
-                sortField: { field: "text", direction: "asc" },
-                placeholder: 'Search ingredient...',
-                plugins: ['dropdown_input'],
-                render: {
-                    option_create: function (data, escape) {
-                        return '<div class="create">Add <strong>' + escape(data.input) + '</strong>...</div>';
-                    },
-                    no_results: function (data, escape) {
-                        return '<div class="no-results">No results found for "' + escape(data.input) + '"</div>';
-                    }
-                },
-                create: function (input) {
-                    activeSelect = select;
-                    openIngredientModal(input);
-                    return false;
-                },
-                onChange: function (value) {
-                    calculateRowCost(row);
-                    updateIngredientAvailability();
-                },
-                onInitialize: function () {
-                    // small check
-                }
+        // --- Sub-Recipe Modal & Logic ---
+        function openSubRecipeModal() {
+            document.getElementById('addSubRecipeModal').classList.remove('hidden');
+            if (subRecipeSelector) subRecipeSelector.focus();
+        }
+
+        function closeSubRecipeModal() {
+            document.getElementById('addSubRecipeModal').classList.add('hidden');
+            if (subRecipeSelector) subRecipeSelector.clear();
+            document.getElementById('sub-recipe-qty').value = 1;
+            document.getElementById('sub-recipe-unit-display').value = '';
+        }
+
+        function confirmAddSubRecipe() {
+            const val = subRecipeSelector.getValue();
+            if (!val) return alert('Please select a sub-recipe');
+            
+            const qty = parseFloat(document.getElementById('sub-recipe-qty').value);
+            if (isNaN(qty) || qty <= 0) return alert('Please enter a valid quantity');
+            
+            const opt = subRecipeSelector.options[val];
+            const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
+            
+            const subData = {
+                id: val,
+                name: originalOpt?.dataset?.name || opt?.text || 'Unknown',
+                ingId: originalOpt?.dataset?.ingId || val,
+                qty: qty,
+                unit: originalOpt?.dataset?.unit || opt?.dataset?.unit || 'pcs',
+                price: parseFloat(originalOpt?.dataset?.price || opt?.dataset?.price || 0)
+            };
+            
+            window.addedSubRecipes.push(subData);
+            renderSubRecipeCards();
+            calculateTotal();
+            closeSubRecipeModal();
+        }
+
+        function renderSubRecipeCards() {
+            const container = document.getElementById('sub-recipes-container');
+            const msg = document.getElementById('no-sub-recipes-msg');
+            
+            if (!container) return;
+
+            // Clear existing (except msg)
+            container.querySelectorAll('.sub-recipe-card').forEach(el => el.remove());
+            
+            if (window.addedSubRecipes.length === 0) {
+                msg.classList.remove('hidden');
+                return;
+            }
+            
+            msg.classList.add('hidden');
+            
+            window.addedSubRecipes.forEach((sub, index) => {
+                const cost = (sub.qty * sub.price).toFixed(2);
+                const card = document.createElement('div');
+                card.className = 'sub-recipe-card bg-indigo-50/30 border border-indigo-100 rounded-xl p-4 flex justify-between items-center group hover:bg-indigo-50 transition-colors animate-fade-in-up';
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="p-2 bg-white rounded-lg shadow-sm text-indigo-500">
+                            <i data-lucide="component" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">${sub.name}</h4>
+                            <p class="text-xs text-gray-500 font-medium">${sub.qty} ${sub.unit} • ₹${cost}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeSubRecipe(${index})" 
+                        class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                    <span class="cost-val hidden">${cost}</span>
+                `;
+                container.appendChild(card);
             });
+            
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function removeSubRecipe(index) {
+            window.addedSubRecipes.splice(index, 1);
+            renderSubRecipeCards();
+            calculateTotal();
+        }
+        
+        // Override calculateTotal to include sub-recipes
+        const originalCalculateTotal = calculateTotal;
+        calculateTotal = function() {
+            let total = 0;
+            // Raw ingredients
+            document.querySelectorAll('.cost-display').forEach(el => {
+                let val = parseFloat(el.textContent.replace(/,/g, ''));
+                if (!isNaN(val)) total += val;
+            });
+            // Sub-recipes
+            document.querySelectorAll('.cost-val').forEach(el => {
+                let val = parseFloat(el.textContent.replace(/,/g, ''));
+                if (!isNaN(val)) total += val;
+            });
+            
+            const display = document.getElementById('totalCostDisplay');
+            if(display) display.textContent = total.toFixed(2);
+        };
+
+        function initRow(row) {
+            const ingSelect = row.querySelector('.ingredient-select');
+            if (ingSelect) {
+                new TomSelect(ingSelect, {
+                    create: true,
+                    sortField: { field: "text", direction: "asc" },
+                    placeholder: 'Type to search...',
+                    plugins: ['dropdown_input'],
+                    render: {
+                        option_create: (data, escape) => `<div class="create text-blue-600 p-2">Create <strong>${escape(data.input)}</strong>...</div>`
+                    },
+                    create: function(input) {
+                        activeSelect = ingSelect;
+                        openIngredientModal(input);
+                        return false;
+                    },
+                    onChange: () => calculateRowCost(row)
+                });
+            }
+
+            const qty = row.querySelector('.quantity-input');
+            if (qty) {
+                // Initialize base quantity if not set
+                if (!qty.dataset.baseQty || qty.dataset.baseQty === '') {
+                    const currentValue = qty.value || '';
+                    if (currentValue) {
+                        qty.dataset.baseQty = currentValue;
+                    }
+                }
+                
+                qty.addEventListener('input', () => {
+                    // Manual Edit Highlight: When user manually edits the field
+                    if (document.activeElement === qty) {
+                        // Mark as manually edited
+                        qty.dataset.manuallyEdited = 'true';
+                        // Update base quantity to current value (so future scaling uses this as base)
+                        qty.dataset.baseQty = qty.value;
+                        // Apply manual edit visual state (Light Blue)
+                        qty.classList.remove('bg-amber-100');
+                        qty.classList.add('bg-blue-100');
+                    }
+                    calculateRowCost(row);
+                });
+            }
+            const unit = row.querySelector('.unit-select');
+            if(unit) unit.addEventListener('change', () => calculateRowCost(row));
+
+            calculateRowCost(row);
         }
 
         function removeRow(btn) {
             btn.closest('tr').remove();
             calculateTotal();
-            updateIngredientAvailability();
         }
-
-        const UNIT_FACTORS = {
-            'g': 1,
-            'kg': 1000,
-            'ml': 1,
-            'l': 1000,
-            'tbsp': 15,
-            'tsp': 5,
-            'cup': 240,
-            'pcs': 1
-        };
 
         function calculateRowCost(row) {
             const select = row.querySelector('.ingredient-select');
@@ -631,69 +1007,102 @@
             const unitSelect = row.querySelector('.unit-select');
             const costDisplay = row.querySelector('.cost-display');
 
-            if (!costDisplay) return; // Not admin
+            if (!costDisplay || !select) return; 
 
-            // Remove any existing formula tooltip or info
+            const opt = select.options[select.selectedIndex];
+
+            if (!opt || !opt.dataset.price) {
+                costDisplay.textContent = '0.00';
+                calculateTotal();
+                return;
+            }
+
+            const price = parseFloat(opt.dataset.price); 
+            const invUnit = opt.dataset.unit;
+            const qty = parseFloat(qtyInput.value) || 0;
+            const useUnit = unitSelect.value;
+
+            const priceFactor = UNIT_FACTORS[invUnit] || 1;
+            const useFactor = UNIT_FACTORS[useUnit] || 1;
+
+            let finalCost = 0;
+
+            if(invUnit === useUnit) {
+                finalCost = price * qty;
+            } else {
+                 const basePrice = price / priceFactor;
+                 const baseQty = qty * useFactor;
+                 finalCost = basePrice * baseQty;
+            }
+
+            costDisplay.textContent = finalCost.toFixed(2);
+
+            // Add Formula Tooltip/Text
             const existingInfo = row.querySelector('.cost-formula');
             if(existingInfo) existingInfo.remove();
 
-            if (!select.value || !qtyInput.value || !unitSelect.value) {
-                costDisplay.textContent = '0.00';
-                calculateTotal();
-                return;
-            }
-
-            const selectedOption =  Array.from(select.options).find(opt => opt.value === select.value);
-            
-            if(!selectedOption) {
-                costDisplay.textContent = '0.00';
-                calculateTotal();
-                return;
-            }
-
-            const price = parseFloat(selectedOption.dataset.price || 0);
-            const inventoryUnit = selectedOption.dataset.unit; 
-            const quantity = parseFloat(qtyInput.value);
-            const recipeUnit = unitSelect.value;
-
-            let cost = 0;
-
-            const inventoryFactor = UNIT_FACTORS[inventoryUnit] || 1;
-            const recipeFactor = UNIT_FACTORS[recipeUnit] || 1;
-            
-            if (inventoryUnit === 'pcs' || recipeUnit === 'pcs') {
-                if (inventoryUnit === recipeUnit) {
-                    cost = price * quantity;
-                } else {
-                     cost = 0;
-                }
-            } else {
-                 const pricePerBase = price / inventoryFactor;
-                 const qtyInBase = quantity * recipeFactor;
-                 cost = pricePerBase * qtyInBase;
-            }
-
-            costDisplay.textContent = cost.toFixed(2);
-             // Add Formula Tooltip/Text
-            if (cost > 0) {
+            if (finalCost > 0) {
                  const info = document.createElement('div');
                  info.className = 'cost-formula text-xs text-gray-400 mt-1';
                  info.style.fontSize = '0.7rem';
-                 info.textContent = `${quantity} ${recipeUnit} @ ${price}/${inventoryUnit}`;
+                 info.textContent = `${qty} ${useUnit} @ ${price}/${invUnit}`;
                  costDisplay.appendChild(info);
             }
             calculateTotal();
         }
 
-        function calculateTotal() {
-            let total = 0;
-            document.querySelectorAll('.cost-display').forEach(el => {
-                total += parseFloat(el.textContent || 0);
+        // --- Scaling Logic ---
+        function updateScaling() {
+            const yieldInput = document.getElementById('yield_portions');
+            if (!yieldInput) return;
+
+            const currentPortions = parseFloat(yieldInput.value) || 0;
+            if (currentPortions <= 0) return;
+
+            const ratio = currentPortions / (window.basePortions || 10);
+
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                // Skip manually edited fields - they should remain blue
+                if (input.dataset.manuallyEdited === 'true') {
+                    return;
+                }
+
+                const baseQty = parseFloat(input.dataset.baseQty);
+                if (!isNaN(baseQty) && baseQty > 0) {
+                    const newQty = baseQty * ratio;
+                    input.value = newQty.toFixed(3);
+                    
+                    // Visual Highlight: Scaled (Amber background)
+                    input.classList.remove('bg-blue-100');
+                    if (ratio !== 1) {
+                        input.classList.add('bg-amber-100');
+                    } else {
+                        // If ratio is 1, remove amber (back to original white)
+                        input.classList.remove('bg-amber-100');
+                    }
+                }
             });
-            // No total display in this UI design currently or it's remove?
-            // If there is one, update it.
-            const totalEl = document.getElementById('totalCostDisplay'); // if exists
-            if (totalEl) totalEl.textContent = total.toFixed(2);
+            
+            // Recalculate all row costs
+            document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
+        }
+
+        function resetScaling() {
+            const yieldInput = document.getElementById('yield_portions');
+            if (yieldInput) yieldInput.value = window.basePortions;
+
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                const baseQty = input.dataset.baseQty;
+                if (baseQty !== undefined && baseQty !== '') {
+                    input.value = baseQty;
+                }
+                // Reset visual states to original (white background)
+                input.classList.remove('bg-amber-100', 'bg-blue-100');
+                // Clear manually edited flag
+                input.removeAttribute('data-manually-edited');
+            });
+
+            document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
         }
 
         function openIngredientModal(name = '') {
@@ -709,8 +1118,7 @@
 
         function submitQuickIngredient() {
             const form = document.getElementById('quickIngredientForm');
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
+            const data = Object.fromEntries(new FormData(form).entries());
 
             if (!data.name || !data.category_id || !data.storage_location || !data.measurement_unit) {
                 alert('Please fill all fields');
@@ -729,16 +1137,15 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
+                        const newOpt = { value: result.ingredient.id, text: result.ingredient.name + ' (' + result.ingredient.unit + ')', price: result.ingredient.price, unit: result.ingredient.unit };
+
                         document.querySelectorAll('.ingredient-select').forEach(select => {
                             if (select.tomselect) {
-                                select.tomselect.addOption({
-                                    value: result.ingredient.id,
-                                    text: result.ingredient.name + ' (' + result.ingredient.unit + ')',
-                                    price: result.ingredient.price,
-                                    unit: result.ingredient.unit
-                                });
+                                select.tomselect.addOption(newOpt);
                             }
                         });
+
+                        // Add to HTML buffer
                         const option = document.createElement('option');
                         option.value = result.ingredient.id;
                         option.dataset.price = result.ingredient.price;

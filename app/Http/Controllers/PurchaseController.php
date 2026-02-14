@@ -17,7 +17,7 @@ class PurchaseController extends Controller
     use AuthorizesRequests;
     public function index()
     {
-        $query = Purchase::with(['ingredient', 'creator', 'approver']);
+        $query = Purchase::with(['ingredient', 'creator', 'approver', 'vendor']);
 
         // Staff can only see their own purchases? Or all? Usually safer to see own.
         // User request doesn't specify visibility, but "Purchase & Inventory" usually implies transparency or role-based.
@@ -32,8 +32,9 @@ class PurchaseController extends Controller
 
     public function create()
     {
-        $ingredients = Ingredient::where('status', 'approved')
-            ->orderBy('name')
+        // Show all ingredients regardless of status for purchase form
+        // Users can purchase any ingredient, even if it's pending approval
+        $ingredients = Ingredient::orderBy('name')
             ->get()
             ->map(function ($ingredient) {
                 // Get last approved purchase price if available
@@ -47,14 +48,16 @@ class PurchaseController extends Controller
                 return $ingredient;
             });
 
-        return view('admin.purchases.create', compact('ingredients'));
+        $vendors = \App\Models\Vendor::orderBy('name')->get();
+
+        return view('admin.purchases.create', compact('ingredients', 'vendors'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'purchase_date' => 'required|date',
-            'vendor' => 'required|string|max:255',
+            'vendor_id' => 'required|exists:vendors,id',
             'invoice_photo' => 'required|image|max:4096', // 4MB
             'goods_photo' => 'required|image|max:4096',
             'items' => 'required|array|min:1',
@@ -65,92 +68,81 @@ class PurchaseController extends Controller
             'items.*.unit' => 'required|string',
         ]);
 
-        // Upload Photos
-        $invoicePath = $request->file('invoice_photo')->store('purchases/invoices', 'public');
-        $goodsPath = $request->file('goods_photo')->store('purchases/goods', 'public');
+        $uploadedFiles = [];
 
-        // Unit Service (Since it's not injected in method)
-        $unitService = app(\App\Services\UnitConversionService::class);
+        try {
+            $disk = config('filesystems.default');
 
-        DB::transaction(function () use ($request, $invoicePath, $goodsPath, $unitService) {
-            foreach ($request->items as $item) {
-                $ingredient = Ingredient::findOrFail($item['ingredient_id']);
-                $inputQty = $item['quantity'];
-                $inputUnit = $item['unit'];
+            // Upload Photos
+            $invoicePath = $request->file('invoice_photo')->store('purchases/invoices', $disk);
+            if (!$invoicePath)
+                throw new \Exception('Failed to upload invoice photo.');
+            $uploadedFiles[] = $invoicePath;
 
-                // Use provided unit_price or fetch from ingredient
-                $inputUnitPrice = isset($item['unit_price']) ? $item['unit_price'] : ($ingredient->price ?? 0);
+            $goodsPath = $request->file('goods_photo')->store('purchases/goods', $disk);
+            if (!$goodsPath)
+                throw new \Exception('Failed to upload goods photo.');
+            $uploadedFiles[] = $goodsPath;
 
-                // Calculate Total Price (Input Qty * Input Unit Price)
-                $totalPrice = $inputQty * $inputUnitPrice;
+            // Unit Service
+            $unitService = app(\App\Services\UnitConversionService::class);
 
-                // Normalize Quantity to Ingredient's Base Unit
-                try {
-                    $normalizedQty = $unitService->convert($inputQty, $inputUnit, $ingredient->measurement_unit);
-                } catch (\Exception $e) {
-                    // Fallback: If conversion fails (unlikely due to UI grouping), use input qty but this is dangerous. 
-                    // Assume 1:1 if fails? Or throw error? 
-                    // Better to log error and fallback.
-                    $normalizedQty = $inputQty;
+            DB::transaction(function () use ($request, $invoicePath, $goodsPath, $unitService) {
+                foreach ($request->items as $item) {
+                    $ingredient = Ingredient::findOrFail($item['ingredient_id']);
+                    $inputQty = $item['quantity'];
+                    $inputUnit = $item['unit'];
+
+                    // Use provided unit_price or fetch from ingredient
+                    $inputUnitPrice = isset($item['unit_price']) ? $item['unit_price'] : ($ingredient->price ?? 0);
+
+                    // Calculate Total Price (Input Qty * Input Unit Price)
+                    $totalPrice = $inputQty * $inputUnitPrice;
+
+                    // Normalize Quantity to Ingredient's Base Unit
+                    // Skip conversion if ingredient has no unit or units match
+                    if (!$ingredient->measurement_unit || $inputUnit === $ingredient->measurement_unit) {
+                        $normalizedQty = $inputQty;
+                    } else {
+                        try {
+                            $normalizedQty = $unitService->convert($inputQty, $inputUnit, $ingredient->measurement_unit);
+                        } catch (\Exception $e) {
+                            // Log error and fallback (or throw to rollback)
+                            // For data integrity, it is safer to fail than to store wrong units.
+                            throw new \Exception("Unit conversion failed for {$ingredient->name}: " . $e->getMessage());
+                        }
+                    }
+
+                    // Calculate Normalized Unit Price (Total / Normalized Qty)
+                    $normalizedUnitPrice = $normalizedQty > 0 ? ($totalPrice / $normalizedQty) : 0;
+
+                    // Create Purchase Record - Stores NORMALIZED values
+                    Purchase::create([
+                        'ingredient_id' => $ingredient->id,
+                        'quantity' => $normalizedQty,
+                        'unit_price' => $normalizedUnitPrice,
+                        'total_price' => $totalPrice, // Total price remains same regardless of unit
+                        'purchase_date' => $request->purchase_date,
+                        'vendor_id' => $request->vendor_id,
+                        'vendor' => \App\Models\Vendor::find($request->vendor_id)->name, // Keep for legacy/display compatibility if views use it
+                        'created_by' => Auth::id(),
+                        'invoice_photo_path' => $invoicePath,
+                        'goods_photo_path' => $goodsPath,
+                        'status' => 'pending',
+                    ]);
                 }
+            });
 
-                // Calculate Normalized Unit Price (Total / Normalized Qty)
-                // Avoid division by zero
-                $normalizedUnitPrice = $normalizedQty > 0 ? ($totalPrice / $normalizedQty) : 0;
+            return redirect()->route('purchases.index')->with('success', 'Purchase recorded successfully.');
 
-                // Create Purchase Record - Stores NORMALIZED values
-                $purchase = Purchase::create([
-                    'ingredient_id' => $ingredient->id,
-                    'quantity' => $normalizedQty,
-                    'unit_price' => $normalizedUnitPrice,
-                    'total_price' => $totalPrice,
-                    'purchase_date' => $request->purchase_date,
-                    'vendor' => $request->vendor,
-                    'created_by' => Auth::id(),
-                    'invoice_photo_path' => $invoicePath,
-                    'goods_photo_path' => $goodsPath,
-                    'status' => 'approved', // Auto-approved
-                    'approved_by' => Auth::id(),
-                    'approved_at' => now(),
-                ]);
-
-                // Update Stock & Price Immediately
-                $oldStock = $ingredient->current_stock;
-                $newStock = $oldStock + $normalizedQty;
-
-                // Weighted Average Cost Calculation
-                $currentAvgCost = $ingredient->avg_cost ?? 0;
-                if ($newStock > 0) {
-                    // If old stock was negative, we treat it as 0 for weighted avg to avoid skewing, 
-                    // or we just do simple math. Math: (OldValue + NewValue) / NewQty
-                    // OldValue = OldStock * OldAvg. If OldStock < 0, this might be weird.
-                    // Let's assume standard logic:
-                    $oldValue = ($oldStock > 0 ? $oldStock : 0) * $currentAvgCost;
-                    $newAvgCost = ($oldValue + $totalPrice) / ($normalizedQty + ($oldStock > 0 ? $oldStock : 0));
-                } else {
-                    $newAvgCost = $normalizedUnitPrice;
-                }
-
-                $ingredient->update([
-                    'current_stock' => $newStock,
-                    'avg_cost' => $newAvgCost,
-                    'price' => $normalizedUnitPrice, // Update latest price
-                ]);
-
-                // Log Inventory Change
-                InventoryLog::create([
-                    'ingredient_id' => $ingredient->id,
-                    'user_id' => Auth::id(),
-                    'quantity_change' => $normalizedQty,
-                    'action' => 'purchase',
-                    'stock_before' => $oldStock,
-                    'stock_after' => $newStock,
-                    'reason' => 'New Purchase (Auto-processed)',
-                ]);
+        } catch (\Exception $e) {
+            $disk = config('filesystems.default');
+            foreach ($uploadedFiles as $path) {
+                Storage::disk($disk)->delete($path);
             }
-        });
 
-        return redirect()->route('purchases.index')->with('success', 'Purchase recorded and stock updated successfully.');
+            return back()->withErrors(['error' => 'Purchase failed: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function approve(Purchase $purchase)

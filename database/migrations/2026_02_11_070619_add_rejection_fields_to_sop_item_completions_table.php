@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('sop_item_completions', function (Blueprint $table) {
+            $table->enum('status', ['completed', 'rejected', 'resubmitted'])->default('completed')->after('is_completed');
+            $table->text('rejection_reason')->nullable()->after('status');
+            $table->json('photo_history')->nullable()->after('photo_path');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('sop_item_completions', function (Blueprint $table) {
+            $table->dropColumn(['status', 'rejection_reason', 'photo_history']);
+        });
+    }
+};

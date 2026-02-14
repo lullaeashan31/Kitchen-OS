@@ -172,7 +172,8 @@
                     @else
                         @foreach($productionDay->driveFiles as $file)
                             <div class="flex justify-between items-center p-2 border rounded bg-white mb-2">
-                                <a href="{{ $file->drive_url }}" target="_blank"
+                                <a href="javascript:void(0)"
+                                    onclick="openPreview('{{ $file->drive_url }}', '{{ $file->name }}')"
                                     class="flex items-center gap-2 text-sm text-blue-600 hover:underline">
                                     <i data-lucide="image"></i> {{ $file->name }}
                                 </a>

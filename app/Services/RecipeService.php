@@ -6,17 +6,20 @@ use App\Models\Recipe;
 use App\Models\User;
 use App\Enums\RecipeStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\DriveService;
 
 class RecipeService
 {
     protected $unitService;
     protected $driveService;
+    protected $googleDriveService;
 
-    public function __construct(UnitConversionService $unitService, DriveService $driveService)
+    public function __construct(UnitConversionService $unitService, DriveService $driveService, GoogleDriveService $googleDriveService)
     {
         $this->unitService = $unitService;
         $this->driveService = $driveService;
+        $this->googleDriveService = $googleDriveService;
     }
 
     /**
@@ -58,6 +61,12 @@ class RecipeService
             ]);
 
             \App\Models\AuditLog::log('Created Recipe', $recipe, null, $recipe->toArray());
+
+            // Auto-save PDF to Google Drive
+            $driveFileId = $this->googleDriveService->saveRecipePdfToDrive($recipe);
+            if ($driveFileId) {
+                $recipe->update(['drive_file_id' => $driveFileId]);
+            }
 
             return $recipe;
         });
@@ -101,6 +110,12 @@ class RecipeService
             ]);
 
             \App\Models\AuditLog::log('Updated Recipe', $recipe, $oldData, $recipe->toArray());
+
+            // Auto-save PDF to Google Drive
+            $driveFileId = $this->googleDriveService->saveRecipePdfToDrive($recipe);
+            if ($driveFileId) {
+                $recipe->update(['drive_file_id' => $driveFileId]);
+            }
 
             return $recipe;
         });
@@ -241,64 +256,96 @@ class RecipeService
             return true;
         }
 
-        // 1. Recalculate Pivot Costs using Latest Avg Cost
-        $recipe->load('ingredients');
-        foreach ($recipe->ingredients as $ingredient) {
-            $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : $ingredient->price;
-            $cost = 0;
-
-            if ($unitCost > 0) {
-                try {
-                    $quantityInBase = $this->unitService->convert(
-                        $ingredient->pivot->quantity,
-                        $ingredient->pivot->unit,
-                        $ingredient->measurement_unit
-                    );
-                    $cost = $quantityInBase * $unitCost;
-                } catch (\Exception $e) {
-                    $cost = 0;
+        try {
+            // 1. Recalculate Costs using Latest Avg Cost
+            $recipe->load('recipeIngredients.ingredient');
+            
+            foreach ($recipe->recipeIngredients as $recipeIngredient) {
+                $ingredient = $recipeIngredient->ingredient;
+                if (!$ingredient) {
+                    continue;
                 }
+
+                $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : ($ingredient->price ?? 0);
+                $cost = 0;
+
+                if ($unitCost > 0 && $ingredient->measurement_unit) {
+                    try {
+                        $quantityInBase = $this->unitService->convert(
+                            $recipeIngredient->quantity,
+                            $recipeIngredient->unit,
+                            $ingredient->measurement_unit
+                        );
+                        $cost = $quantityInBase * $unitCost;
+                    } catch (\Exception $e) {
+                        // If conversion fails, try direct calculation
+                        if ($recipeIngredient->unit === $ingredient->measurement_unit) {
+                            $cost = $recipeIngredient->quantity * $unitCost;
+                        } else {
+                            $cost = 0;
+                        }
+                    }
+                }
+
+                // Update cost
+                $recipeIngredient->update(['cost' => $cost]);
             }
 
-            // Update pivot without detaching
-            $recipe->ingredients()->updateExistingPivot($ingredient->id, ['cost' => $cost]);
+            // 2. Final Summation
+            $recipe->refresh();
+            $totalCost = $recipe->recipeIngredients()->sum('cost');
+            $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
+
+            DB::transaction(function () use ($recipe, $user, $totalCost, $costPerPortion) {
+                $recipe->update([
+                    'status' => RecipeStatus::Permanent,
+                    'approved_by' => $user->id,
+                    'total_cost' => $totalCost,
+                    'cost_per_portion' => $costPerPortion,
+                ]);
+
+                // Try to generate HTML Recipe Card (optional, don't fail if view doesn't exist)
+                try {
+                    if (view()->exists('recipes.export.card')) {
+                        $recipe->load(['category', 'stages.ingredients.ingredient', 'recipeIngredients.ingredient']);
+                        $htmlContent = view('recipes.export.card', compact('recipe'))->render();
+                        $filename = 'recipe_' . $recipe->id . '_' . \Illuminate\Support\Str::slug($recipe->name) . '.html';
+
+                        // Upload to "Drive" (S3)
+                        if ($this->driveService) {
+                            $path = $this->driveService->uploadContent($htmlContent, $filename, 'recipes/cards');
+
+                            // Link Drive File
+                            \App\Models\DriveFile::create([
+                                'name' => $recipe->name . ' - Card',
+                                'drive_url' => null,
+                                'path' => $path,
+                                'file_id' => 's3_' . uniqid(),
+                                'linked_type' => Recipe::class,
+                                'linked_id' => $recipe->id,
+                                'uploaded_by' => $user->id,
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Log error but don't fail approval
+                    \Log::warning('Failed to generate recipe card during approval: ' . $e->getMessage());
+                }
+
+                // Log approval
+                \App\Models\AuditLog::log('Approved Recipe', $recipe);
+            });
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Recipe approval failed: ' . $e->getMessage(), [
+                'recipe_id' => $recipe->id,
+                'user_id' => $user->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            throw $e; // Re-throw to show proper error
         }
-
-        // 2. Final Summation
-        $recipe->refresh(); // Reload relation with new pivot values
-        $totalCost = $recipe->recipeIngredients()->sum('cost');
-        $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
-
-        DB::transaction(function () use ($recipe, $user, $totalCost, $costPerPortion) {
-            $recipe->update([
-                'status' => RecipeStatus::Permanent,
-                'approved_by' => $user->id,
-                'total_cost' => $totalCost,
-                'cost_per_portion' => $costPerPortion,
-            ]);
-
-            // Generate HTML Recipe Card
-            $htmlContent = view('recipes.export.card', compact('recipe'))->render();
-            $filename = 'recipe_' . $recipe->id . '_' . \Illuminate\Support\Str::slug($recipe->name) . '.html';
-
-            // Upload to "Drive"
-            $publicUrl = $this->driveService->uploadContent($htmlContent, $filename, 'recipes/cards');
-
-            // Link Drive File
-            \App\Models\DriveFile::create([
-                'name' => $recipe->name . ' - Card',
-                'drive_url' => $publicUrl,
-                'file_id' => 'mock_id_' . uniqid(), // Simulation
-                'linked_type' => Recipe::class,
-                'linked_id' => $recipe->id,
-                'uploaded_by' => $user->id,
-            ]);
-
-            // Log approval
-            \App\Models\AuditLog::log('Approved Recipe', $recipe);
-        });
-
-        return true;
     }
 
     /**

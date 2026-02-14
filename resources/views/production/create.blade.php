@@ -108,58 +108,69 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+        <script>
+            let currentUnit = 'batches';
+            let baseYield = 1;
 
-        let currentUnit = 'batches';
-        let baseYield = 1;
+            function toggleUnit(type) {
+                currentUnit = type;
+                // Update UI styles
+                document.getElementById('lbl-batches').className = type === 'batches' ?
+                    'cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-colors bg-orange-100 text-orange-700' :
+                    'cursor-pointer px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors';
 
-        function toggleUnit(type) {
-            currentUnit = type;
-            // Update UI styles
-            document.getElementById('lbl-batches').className = type === 'batches' ? 
-                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-colors bg-orange-100 text-orange-700' : 
-                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors';
-            
-            document.getElementById('lbl-portions').className = type === 'portions' ? 
-                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-colors bg-orange-100 text-orange-700' : 
-                'cursor-pointer px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors';
+                document.getElementById('lbl-portions').className = type === 'portions' ?
+                    'cursor-pointer px-3 py-1 rounded-md text-sm font-medium transition-colors bg-orange-100 text-orange-700' :
+                    'cursor-pointer px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors';
 
-            updateHelperText();
-        }
-
-        function adjustAmount(delta) {
-            const input = document.getElementById('amount');
-            let val = parseFloat(input.value) || 0;
-            val += delta;
-            if (val < 0.1) val = 0.1;
-            input.value = parseFloat(val.toFixed(2));
-            updateHelperText();
-        }
-
-        function updateHelperText() {
-            const val = parseFloat(document.getElementById('amount').value) || 0;
-            const text = document.getElementById('helper-text');
-            
-            if (currentUnit === 'batches') {
-                const totalPortions = val * baseYield;
-                text.innerText = `Produces ${val} Batch(es) = ${totalPortions} Portions`;
-            } else {
-                const totalBatches = (val / baseYield).toFixed(2);
-                text.innerText = `Produces ${val} Portions = ${totalBatches} Batch(es)`;
-            }
-        }
-
-        document.getElementById('recipe_id').addEventListener('change', function () {
-            const selected = this.options[this.selectedIndex];
-            const yieldVal = selected.getAttribute('data-yields');
-            if (yieldVal) {
-                baseYield = parseFloat(yieldVal);
-                // Reset to 1 batch default
-                if (currentUnit === 'batches') {
-                    document.getElementById('amount').value = 1;
-                } else {
-                    document.getElementById('amount').value = baseYield;
-                }
                 updateHelperText();
             }
-        });
+
+            function adjustAmount(delta) {
+                const input = document.getElementById('amount');
+                let val = parseFloat(input.value) || 0;
+                val += delta;
+                if (val < 0.1) val = 0.1;
+                input.value = parseFloat(val.toFixed(2));
+                updateHelperText();
+            }
+
+            function updateHelperText() {
+                const val = parseFloat(document.getElementById('amount').value) || 0;
+                const text = document.getElementById('helper-text');
+
+                if (currentUnit === 'batches') {
+                    const totalPortions = (val * baseYield).toFixed(2);
+                    text.innerText = `Produces ${val} Batch(es) = ${totalPortions} Portions`;
+                } else {
+                    const totalBatches = (val / baseYield).toFixed(2);
+                    text.innerText = `Produces ${val} Portions = ${totalBatches} Batch(es)`;
+                }
+            }
+
+            document.getElementById('recipe_id').addEventListener('change', function () {
+                const selected = this.options[this.selectedIndex];
+                const yieldVal = selected.getAttribute('data-yields');
+                if (yieldVal) {
+                    baseYield = parseFloat(yieldVal);
+                    // Reset to 1 batch default
+                    if (currentUnit === 'batches') {
+                        document.getElementById('amount').value = 1;
+                    } else {
+                        document.getElementById('amount').value = baseYield;
+                    }
+                    updateHelperText();
+                }
+            });
+
+            // Initialize if recipe is already selected (e.g. after validation error)
+            window.addEventListener('load', () => {
+                const recipeSelect = document.getElementById('recipe_id');
+                if (recipeSelect.value) {
+                    recipeSelect.dispatchEvent(new Event('change'));
+                }
+            });
+        </script>
+    @endpush
 @endsection

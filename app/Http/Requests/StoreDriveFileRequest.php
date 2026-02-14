@@ -18,18 +18,8 @@ class StoreDriveFileRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'drive_url' => [
-                'required',
-                'url',
-                function ($attribute, $value, $fail) {
-                    if (!DriveFile::validateDriveUrl($value)) {
-                        $fail('The ' . $attribute . ' must be a valid Google Drive URL.');
-                    }
-                    if (!DriveFile::extractFileId($value)) {
-                        $fail('Could not extract file ID from the provided Google Drive URL.');
-                    }
-                },
-            ],
+            'file' => 'nullable|file|max:10240', // 10MB Max
+            'drive_url' => 'nullable|url',
             'linked_type' => ['required', Rule::enum(LinkedType::class)],
             'linked_id' => 'required|integer',
         ];

@@ -107,6 +107,108 @@
         </a>
     </div>
 
+    <!-- Command Centre Section -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <i data-lucide="layout-dashboard" class="w-6 h-6 text-indigo-600"></i>
+            Command Centre
+        </h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- SOP Progress -->
+            <a href="{{ route('admin.sop.reviews.index') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                        <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">SOP Status</span>
+                </div>
+                <div class="flex items-end justify-between">
+                    <div>
+                        <div class="text-2xl font-black text-gray-800">
+                            {{ $stats['completed_checklists'] }}/{{ $stats['total_checklists'] }}
+                        </div>
+                        <p class="text-xs text-gray-500">Checklists done</p>
+                    </div>
+                    @php 
+                        $sopPercent = $stats['total_checklists'] > 0 ? ($stats['completed_checklists'] / $stats['total_checklists']) * 100 : 0;
+                    @endphp
+                    <div class="w-12 h-12 relative flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-100" />
+                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="{{ 125.6 * (1 - $sopPercent / 100) }}" class="text-blue-500 transition-all duration-500" />
+                        </svg>
+                        <span class="absolute text-[10px] font-bold text-blue-600">{{ round($sopPercent) }}%</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Overdue Count -->
+            <a href="{{ route('admin.sop.reviews.index') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 {{ $stats['overdue_sop_count'] > 0 ? 'ring-2 ring-red-500 ring-inset hover:bg-red-50' : 'hover:bg-gray-50' }} transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="p-2 {{ $stats['overdue_sop_count'] > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
+                        <i data-lucide="clock-alert" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Overdue</span>
+                </div>
+                <div>
+                    <div class="text-2xl font-black {{ $stats['overdue_sop_count'] > 0 ? 'text-red-600' : 'text-gray-800' }}">
+                        {{ $stats['overdue_sop_count'] }}
+                    </div>
+                    <p class="text-xs text-gray-500">Checklists missed</p>
+                </div>
+            </a>
+
+            <!-- Inventory Alerts -->
+            <a href="{{ route('admin.inventory.index', ['stock_status' => 'low', 'include_out' => '1']) }}" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="p-2 {{ $stats['low_stock_count'] > 0 ? 'bg-amber-100 text-amber-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
+                        <i data-lucide="package-search" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Inventory</span>
+                </div>
+                <div>
+                    <div class="text-2xl font-black {{ $stats['low_stock_count'] > 0 ? 'text-amber-600' : 'text-gray-800' }}">
+                        {{ $stats['low_stock_count'] }}
+                    </div>
+                    <p class="text-xs text-gray-500">Low stock alerts</p>
+                </div>
+            </a>
+
+            <!-- Purchase Pending -->
+            <a href="{{ route('purchases.index') }}" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="p-2 {{ $stats['pending_purchases_count'] > 0 ? 'bg-purple-100 text-purple-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Purchases</span>
+                </div>
+                <div>
+                    <div class="text-2xl font-black {{ $stats['pending_purchases_count'] > 0 ? 'text-purple-600' : 'text-gray-800' }}">
+                        {{ $stats['pending_purchases_count'] }}
+                    </div>
+                    <p class="text-xs text-gray-500">Pending approval</p>
+                </div>
+            </a>
+
+            <!-- POS Sync -->
+            <a href="{{ route('pos.upload') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="p-2 {{ $stats['pos_synced_today'] ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600' }} rounded-lg">
+                        <i data-lucide="{{ $stats['pos_synced_today'] ? 'refresh-cw' : 'alert-circle' }}" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">POS Sync</span>
+                </div>
+                <div>
+                    <div class="text-lg font-black {{ $stats['pos_synced_today'] ? 'text-emerald-600' : 'text-rose-600' }}">
+                        {{ $stats['pos_synced_today'] ? 'Synced' : 'Required' }}
+                    </div>
+                    <p class="text-xs text-gray-500">{{ $stats['pos_synced_today'] ? 'Sales data up to date' : 'Upload daily sales CSV' }}</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
 
     @if($stats['low_stock_count'] > 0)
         <div class="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">

@@ -1,75 +1,206 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="flex items-center gap-4">
-        <a href="{{ route('sop.index') }}" class="text-gray-500 hover:text-gray-700">
-            <i data-lucide="arrow-left" class="w-6 h-6"></i>
+    <div class="flex items-center gap-3">
+        <a href="{{ route('sop.index') }}" class="p-2 hover:bg-gray-100 rounded-lg">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">{{ $checklist->name }}</h1>
-            <p class="text-sm text-gray-500">Photo evidence mandatory for each step.</p>
+            <h2 class="text-xl font-semibold">{{ $checklist->name }}</h2>
+            <p class="text-sm text-gray-500">{{ $checklist->items->count() }} Tasks to complete today</p>
         </div>
     </div>
 @endsection
 
 @section('content')
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-3xl mx-auto">
-        <div class="space-y-6">
-            @foreach($items as $item)
-                @php
-                    $log = $itemLogs[$item->id] ?? null;
-                    $isDone = $log && $log->is_completed;
-                @endphp
+    <div class="max-w-3xl mx-auto space-y-6 pb-20">
+        <div id="progress-bar-container" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm sticky top-4 z-10">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-bold text-gray-700">Checklist Progress</span>
+                <span id="progress-text" class="text-sm font-bold text-primary">0%</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-primary h-2.5 rounded-full transition-all duration-500" style="width: 0%">
+                </div>
+            </div>
+        </div>
 
-                <div class="border rounded-xl p-4 {{ $isDone ? 'bg-green-50 border-green-100' : 'bg-white border-gray-200' }}">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="font-bold text-gray-800 {{ $isDone ? 'line-through text-gray-500' : '' }}">
-                                {{ $item->task }}
-                            </h3>
+        <div class="space-y-4">
+            @foreach($checklist->items as $item)
+                @php
+                    $completion = $completions->get($item->id);
+                    $isDone = $completion && ($completion->is_completed || $completion->status === 'resubmitted');
+                    $isRejected = $completion && $completion->status === 'rejected';
+                @endphp
+                <div class="item-card bg-white p-5 rounded-xl border {{ $isDone ? 'border-green-200 bg-green-50/30' : ($isRejected ? 'border-red-200 bg-red-50/30' : 'border-gray-200') }} shadow-sm transition-all"
+                    data-item-id="{{ $item->id }}" data-photo-required="{{ $item->is_photo_required ? 'true' : 'false' }}">
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1">
+                            <div class="checkbox-container w-6 h-6 rounded-md border-2 
+                                    {{ $isDone ? 'bg-green-500 border-green-500 text-white' : ($isRejected ? 'bg-red-500 border-red-500 text-white' : 'border-gray-300') }} 
+                                    flex items-center justify-center transition-colors">
+                                @if($isRejected)
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                @else
+                                    <i data-lucide="check" class="w-4 h-4 {{ $isDone ? '' : 'hidden' }}"></i>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900 {{ $isDone ? 'line-through text-gray-500' : '' }}">
+                                {{ $item->name }}</h4>
                             @if($item->description)
                                 <p class="text-sm text-gray-500 mt-1">{{ $item->description }}</p>
                             @endif
-                        </div>
-                        @if($isDone)
-                            <span
-                                class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                                <i data-lucide="check" class="w-3 h-3"></i> Done
-                            </span>
-                        @else
-                            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">Pending</span>
-                        @endif
-                    </div>
 
-                    @if($isDone)
-                        <div class="mt-2">
-                            <span class="text-xs text-gray-500 mb-2 block">Photo Evidence:</span>
-                            <div class="w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
-                                <img src="{{ asset('storage/' . $log->photo_path) }}" class="w-full h-full object-cover">
-                            </div>
-                            <div class="text-xs text-gray-400 mt-1">Completed: {{ $log->completed_at->format('h:i A') }}</div>
-                        </div>
-                    @else
-                        <form action="{{ route('sop.update_item', ['checklist' => $checklist->id, 'itemId' => $item->id]) }}"
-                            method="POST" enctype="multipart/form-data" class="mt-4">
-                            @csrf
-                            <div class="flex items-center gap-4">
-                                <div class="flex-1">
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
-                                        Upload Proof <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="file" name="photo" accept="image/*" capture="environment" required
-                                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            @if($isRejected)
+                                <div class="mt-2 p-3 bg-red-100/50 rounded-lg border border-red-200 text-sm">
+                                    <span class="font-bold text-red-700">Rejected:</span>
+                                    <p class="text-red-600 mt-0.5">{{ $completion->rejection_reason }}</p>
                                 </div>
-                                <button type="submit"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-bold shadow-md transition-all">
-                                    Complete
+                            @endif
+
+                            @if($item->is_photo_required)
+                                <div class="mt-4">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                        <i data-lucide="camera" class="w-3 h-3 inline mr-1"></i> Photo Proof Required
+                                    </label>
+
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="photo-preview w-20 h-20 bg-gray-100 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                                            @if(($isDone || $isRejected) && $completion->photo_path)
+                                                <img src="{{ Storage::url($completion->photo_path) }}"
+                                                    class="w-full h-full object-cover">
+                                            @else
+                                                <i data-lucide="image" class="w-6 h-6 text-gray-300"></i>
+                                            @endif
+                                        </div>
+
+                                        @if(!$isDone || $isRejected)
+                                            <label
+                                                class="cursor-pointer bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50">
+                                                <span>{{ $isRejected ? 'Retake Photo' : 'Take/Upload Photo' }}</span>
+                                                <input type="file" class="photo-input hidden" accept="image/*" capture="environment">
+                                            </label>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(!$item->is_photo_required && (!$isDone || $isRejected))
+                                <button onclick="toggleItem({{ $item->id }})"
+                                    class="mt-3 px-4 py-1.5 {{ $isRejected ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700' }} text-xs font-bold rounded-lg hover:opacity-90">
+                                    {{ $isRejected ? 'Mark Re-Completed' : 'Mark as Complete' }}
                                 </button>
-                            </div>
-                        </form>
-                    @endif
+                            @endif
+                        </div>
+                    </div>
                 </div>
             @endforeach
         </div>
+
+        <!-- Submit Section -->
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:left-[310px]">
+            <div class="max-w-3xl mx-auto flex justify-between items-center">
+                <div class="text-sm font-medium text-gray-500">
+                    <span id="items-done-count">0</span> of {{ $checklist->items->count() }} completed
+                </div>
+                <form action="{{ route('sop.complete', $checklist) }}" method="POST">
+                    @csrf
+                    <button type="submit" id="submit-btn" disabled
+                        class="px-8 py-3 bg-gray-200 text-gray-400 font-bold rounded-xl cursor-not-allowed transition-all">
+                        Finish & Submit
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
+
+    @push('scripts')
+        <script>
+            function updateProgress() {
+                const total = {{ $checklist->items->count() }};
+                const done = document.querySelectorAll('.checkbox-container.bg-green-500').length;
+                const percent = Math.round((done / total) * 100);
+
+                document.getElementById('progress-bar').style.width = percent + '%';
+                document.getElementById('progress-text').textContent = percent + '%';
+                document.getElementById('items-done-count').textContent = done;
+
+                const btn = document.getElementById('submit-btn');
+                if (percent === 100) {
+                    btn.disabled = false;
+                    btn.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+                    btn.classList.add('bg-success', 'text-white', 'shadow-lg', 'shadow-green-100');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+                    btn.classList.remove('bg-success', 'text-white', 'shadow-lg', 'shadow-green-100');
+                }
+            }
+
+            async function toggleItem(itemId, photoFile = null) {
+                const card = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
+                const formData = new FormData();
+                if (photoFile) formData.append('photo', photoFile);
+
+                try {
+                    const response = await fetch(`{{ url('sop/' . $checklist->id . '/item') }}/${itemId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        // Update UI
+                        card.classList.add('border-green-200', 'bg-green-50/30');
+                        card.classList.remove('border-gray-200');
+                        card.querySelector('.checkbox-container').classList.add('bg-green-500', 'border-green-500', 'text-white');
+                        card.querySelector('.checkbox-container').classList.remove('border-gray-300');
+                        card.querySelector('.checkbox-container i').classList.remove('hidden');
+                        card.querySelector('h4').classList.add('line-through', 'text-gray-500');
+
+                        // Remove buttons/inputs if photo was uploaded
+                        const btn = card.querySelector('button');
+                        if (btn) btn.remove();
+                        const label = card.querySelector('label.cursor-pointer');
+                        if (label) label.remove();
+
+                        updateProgress();
+                    }
+                } catch (error) {
+                    console.error('Error updating item:', error);
+                    alert('Failed to update item. Please try again.');
+                }
+            }
+
+            // Handle Photo Uploads
+            document.querySelectorAll('.photo-input').forEach(input => {
+                input.addEventListener('change', function (e) {
+                    if (this.files && this.files[0]) {
+                        const itemId = this.closest('.item-card').dataset.itemId;
+                        const preview = this.closest('.item-card').querySelector('.photo-preview');
+
+                        // Show local preview immediately for weightless feel
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                        };
+                        reader.readAsDataURL(this.files[0]);
+
+                        toggleItem(itemId, this.files[0]);
+                    }
+                });
+            });
+
+            // Initial check
+            updateProgress();
+        </script>
+    @endpush
 @endsection

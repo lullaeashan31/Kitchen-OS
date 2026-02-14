@@ -35,7 +35,7 @@
                             <i data-lucide="camera" class="w-5 h-5"></i>
                         </label>
                         <input type="file" name="profile_photo" id="profile_photo" class="hidden" accept="image/*"
-                            onchange="previewImage(this)" required>
+                            onchange="previewImage(this)">
                     </div>
                     <div class="text-center md:text-left">
                         <h2 class="text-xl font-bold text-gray-800">New Employee Profile</h2>

@@ -16,6 +16,8 @@ use App\Http\Controllers\DriveFileController;
 use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\VendorController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +33,20 @@ use App\Http\Controllers\ProductionController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Custom route to serve purchase photos (fixes 403 error)
+Route::get('/storage/purchases/{type}/{filename}', function ($type, $filename) {
+    $path = "purchases/{$type}/{$filename}";
+
+    if (!\Illuminate\Support\Facades\Storage::exists($path)) {
+        abort(404);
+    }
+
+    $file = \Illuminate\Support\Facades\Storage::get($path);
+    $mimeType = \Illuminate\Support\Facades\Storage::mimeType($path);
+
+    return response($file, 200)->header('Content-Type', $mimeType);
+})->where(['type' => 'invoices|goods', 'filename' => '.*']);
 
 Route::get('/time-clock', [AttendanceViewController::class, 'tablet'])->name('attendance.tablet');
 
@@ -77,6 +93,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Recipes
     Route::get('recipes/{recipe}/print', [RecipeController::class, 'print'])->name('recipes.print');
+    Route::get('recipes/export/{type}', [RecipeController::class, 'export'])->name('recipes.export');
     Route::resource('recipes', RecipeController::class);
     Route::delete('categories/bulk-destroy', [\App\Http\Controllers\CategoryController::class, 'bulkDestroy'])->name('categories.bulk_destroy');
     Route::resource('categories', \App\Http\Controllers\CategoryController::class);
@@ -88,6 +105,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Purchases
     Route::resource('purchases', \App\Http\Controllers\PurchaseController::class)->only(['index', 'create', 'store']);
+    Route::post('vendors', [VendorController::class, 'store'])->name('vendors.store');
     // Admin only actions
     Route::middleware(['admin'])->group(function () {
         Route::post('purchases/{purchase}/approve', [\App\Http\Controllers\PurchaseController::class, 'approve'])->name('purchases.approve');
@@ -136,9 +154,29 @@ Route::middleware(['auth'])->group(function () {
     Route::post('pos/parse', [\App\Http\Controllers\PosController::class, 'parse'])->name('pos.parse');
     Route::post('pos/process', [\App\Http\Controllers\PosController::class, 'process'])->name('pos.process');
 
-    // SOP Checklists
+    // Admin SOP Management
+    Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
+        Route::resource('shifts', \App\Http\Controllers\Admin\ShiftController::class);
+        Route::get('shift-assignments', [\App\Http\Controllers\Admin\ShiftAssignmentController::class, 'index'])->name('shifts.assignments.index');
+        Route::post('shift-assignments', [\App\Http\Controllers\Admin\ShiftAssignmentController::class, 'store'])->name('shifts.assignments.store');
+
+        // Review Routes
+        Route::get('sop/reviews', [\App\Http\Controllers\Admin\SopReviewController::class, 'index'])->name('sop.reviews.index');
+        Route::get('sop/reviews/{run}', [\App\Http\Controllers\Admin\SopReviewController::class, 'show'])->name('sop.reviews.show');
+        Route::post('sop/reviews/{run}/approve', [\App\Http\Controllers\Admin\SopReviewController::class, 'approveRun'])->name('sop.reviews.approve_run');
+        Route::post('sop/reviews/{run}/approve/{completion}', [\App\Http\Controllers\Admin\SopReviewController::class, 'approveItem'])->name('sop.reviews.approve_item');
+        Route::post('sop/reviews/{run}/reject/{completion}', [\App\Http\Controllers\Admin\SopReviewController::class, 'rejectItem'])->name('sop.reviews.reject');
+
+        Route::resource('sop', \App\Http\Controllers\Admin\SopController::class);
+        Route::post('sop/{checklist}/archive', [\App\Http\Controllers\Admin\SopController::class, 'archive'])->name('sop.archive');
+        Route::post('sop/{checklist}/pause', [\App\Http\Controllers\Admin\SopController::class, 'pause'])->name('sop.pause');
+        Route::post('sop/reorder', [\App\Http\Controllers\Admin\SopController::class, 'reorder'])->name('sop.reorder');
+    });
+
+    // Staff SOP Execution
     Route::get('sop', [\App\Http\Controllers\SopController::class, 'index'])->name('sop.index');
     Route::get('sop/{checklist}/execute', [\App\Http\Controllers\SopController::class, 'execute'])->name('sop.execute');
     Route::post('sop/{checklist}/item/{itemId}', [\App\Http\Controllers\SopController::class, 'updateItem'])->name('sop.update_item');
+    Route::post('sop/{checklist}/complete', [\App\Http\Controllers\SopController::class, 'complete'])->name('sop.complete');
     Route::get('sop/report', [\App\Http\Controllers\SopController::class, 'report'])->name('sop.report');
 });
