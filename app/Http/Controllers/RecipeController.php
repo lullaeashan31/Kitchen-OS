@@ -55,28 +55,33 @@ class RecipeController extends Controller
 
     public function create()
     {
-        $categories = Category::all();
-        $units = Unit::cases();
+        try {
+            $categories = Category::all();
+            $units = Unit::cases();
 
-        // Fetch Sub-Recipes: Show all recipes that produce an ingredient
-        // This includes recipes marked as sub-recipes OR recipes that have produces_ingredient_id
-        $subRecipes = Recipe::where(function($query) {
+            // Fetch Sub-Recipes: Show all recipes that produce an ingredient
+            $subRecipes = Recipe::where(function ($query) {
                 $query->where('is_sub_recipe', true)
-                      ->orWhereNotNull('produces_ingredient_id');
+                    ->orWhereNotNull('produces_ingredient_id');
             })
-            ->whereNotNull('produces_ingredient_id')
-            ->with('producesIngredient')
-            ->orderBy('name')
-            ->get();
-        $producedIngredientIds = $subRecipes->pluck('produces_ingredient_id')->toArray();
+                ->whereNotNull('produces_ingredient_id')
+                ->with('producesIngredient')
+                ->orderBy('name')
+                ->get();
+            $producedIngredientIds = $subRecipes->pluck('produces_ingredient_id')->filter()->toArray();
 
-        // Raw Ingredients: All ingredients (not just approved) and NOT produced by any sub-recipe
-        // Users should be able to use any ingredient in recipes, even if pending approval
-        $ingredients = \App\Models\Ingredient::whereNotIn('id', $producedIngredientIds)
-            ->orderBy('name')
-            ->get();
+            $ingredients = \App\Models\Ingredient::whereNotIn('id', $producedIngredientIds)
+                ->orderBy('name')
+                ->get();
 
-        return view('recipes.create', compact('categories', 'units', 'ingredients', 'subRecipes'));
+            return view('recipes.create', compact('categories', 'units', 'ingredients', 'subRecipes'));
+        } catch (\Throwable $e) {
+            Log::error('Recipe create page error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
     }
 
     public function store(StoreRecipeRequest $request)

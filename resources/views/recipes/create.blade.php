@@ -95,8 +95,12 @@
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 font-medium">Portions <span
-                                        class="text-red-500">*</span></label>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <label class="block text-xs text-gray-500 font-medium">Portions <span
+                                            class="text-red-500">*</span></label>
+                                    <button type="button" onclick="resetScaling()"
+                                        class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
+                                </div>
                                 <input type="number" name="yield_portions" id="yield_portions" min="1" step="1"
                                     value="{{ old('yield_portions') }}"
                                     class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all text-center font-bold text-gray-800"
@@ -104,11 +108,7 @@
                                 @error('yield_portions') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <div class="flex justify-between items-center mb-1.5">
-                                    <label class="block text-xs text-gray-500 font-medium">Batches</label>
-                                    <button type="button" onclick="resetScaling()"
-                                        class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
-                                </div>
+                                <label class="block text-xs text-gray-500 font-medium mb-1.5">Batches</label>
                                 <input type="number" name="yield_batches" min="1" step="1"
                                     value="{{ old('yield_batches') }}"
                                     class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all text-center font-bold text-gray-800"
@@ -865,6 +865,15 @@
                 window.basePortions = 10; // Default fallback
             }
 
+            // STEP 1: Base quantity + original state on form load
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                if (!input.dataset.baseQty || input.dataset.baseQty === '') {
+                    const v = input.value || '';
+                    if (v) input.dataset.baseQty = v;
+                }
+                setQuantityHighlight(input, 'original');
+            });
+
             // Sub-recipe toggle logic restoration
             if (document.getElementById('produces_ingredient_id').value) {
                 toggleSubRecipe(true);
@@ -998,17 +1007,12 @@
                         qty.dataset.baseQty = currentValue;
                     }
                 }
-                
+                setQuantityHighlight(qty, 'original');
                 qty.addEventListener('input', () => {
-                    // Manual Edit Highlight: When user manually edits the field
                     if (document.activeElement === qty) {
-                        // Mark as manually edited
                         qty.dataset.manuallyEdited = 'true';
-                        // Update base quantity to current value (so future scaling uses this as base)
                         qty.dataset.baseQty = qty.value;
-                        // Apply manual edit visual state (Light Blue)
-                        qty.classList.remove('bg-amber-100');
-                        qty.classList.add('bg-blue-100');
+                        setQuantityHighlight(qty, 'manual');
                     }
                     calculateRowCost(row);
                 });
@@ -1075,6 +1079,18 @@
             if (display) display.textContent = total.toFixed(2);
         }
 
+        // --- Scaling Highlight (per spec: original=white/grey, scaled=yellow/orange, manual=blue) ---
+        function setQuantityHighlight(input, state) {
+            input.classList.remove('bg-yellow-100', 'border-orange-400', 'bg-blue-100', 'border-blue-400', 'bg-white', 'border-gray-300');
+            if (state === 'scaled') {
+                input.classList.add('bg-yellow-100', 'border-orange-400');
+            } else if (state === 'manual') {
+                input.classList.add('bg-blue-100', 'border-blue-400');
+            } else {
+                input.classList.add('bg-white', 'border-gray-300');
+            }
+        }
+
         // --- Scaling Logic ---
         function updateScaling() {
             const yieldInput = document.getElementById('yield_portions');
@@ -1086,28 +1102,17 @@
             const ratio = currentPortions / (window.basePortions || 10);
 
             document.querySelectorAll('.quantity-input').forEach(input => {
-                // Skip manually edited fields - they should remain blue
-                if (input.dataset.manuallyEdited === 'true') {
-                    return;
-                }
+                if (input.dataset.manuallyEdited === 'true') return;
 
                 const baseQty = parseFloat(input.dataset.baseQty);
                 if (!isNaN(baseQty) && baseQty > 0) {
                     const newQty = baseQty * ratio;
                     input.value = newQty.toFixed(3);
-
-                    // Visual Highlight: Scaled (Amber background)
-                    input.classList.remove('bg-blue-100');
-                    if (ratio !== 1) {
-                        input.classList.add('bg-amber-100');
-                    } else {
-                        // If ratio is 1, remove amber (back to original white)
-                        input.classList.remove('bg-amber-100');
-                    }
+                    // Apply highlight inside scaling (no event wait): remove original/manual, apply scaled
+                    setQuantityHighlight(input, ratio !== 1 ? 'scaled' : 'original');
                 }
             });
 
-            // Recalculate all row costs
             document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
         }
 
@@ -1117,12 +1122,8 @@
 
             document.querySelectorAll('.quantity-input').forEach(input => {
                 const baseQty = input.dataset.baseQty;
-                if (baseQty !== undefined && baseQty !== '') {
-                    input.value = baseQty;
-                }
-                // Reset visual states to original (white background)
-                input.classList.remove('bg-amber-100', 'bg-blue-100');
-                // Clear manually edited flag
+                if (baseQty !== undefined && baseQty !== '') input.value = baseQty;
+                setQuantityHighlight(input, 'original');
                 input.removeAttribute('data-manually-edited');
             });
 

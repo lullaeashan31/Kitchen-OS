@@ -149,7 +149,10 @@
                         <div class="grid grid-cols-2 gap-4">
                             <!-- Row 1 -->
                             <div>
-                                <label class="block text-xs text-gray-400 mb-1">Portions <span class="text-red-500">*</span></label>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-xs text-gray-400">Portions <span class="text-red-500">*</span></label>
+                                    <button type="button" onclick="resetScaling()" class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
+                                </div>
                                 <input type="number" name="yield_portions" id="yield_portions"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none font-bold text-gray-800"
                                     min="1" step="1" value="{{ old('yield_portions', $recipe->yield_portions) }}"
@@ -157,10 +160,7 @@
                                 @error('yield_portions') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <label class="block text-xs text-gray-400">Batches</label>
-                                    <button type="button" onclick="resetScaling()" class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
-                                </div>
+                                <label class="block text-xs text-gray-400 mb-1">Batches</label>
                                 <input type="number" name="yield_batches"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none"
                                     min="1" step="1" value="{{ old('yield_batches', $recipe->yield_batches) }}"
@@ -256,9 +256,11 @@
                                                 <th
                                                     class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                                     Unit</th>
+                                                @if(auth()->user()->isAdmin())
                                                 <th
                                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
                                                     Cost</th>
+                                                @endif
                                                 <th
                                                     class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
                                                 </th>
@@ -378,9 +380,11 @@
                                                     <input type="hidden"
                                                         name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][ingredient_group]"
                                                         value="{{ $rGroup }}">
+                                                    @if(auth()->user()->isAdmin())
                                                     <td class="px-4 py-3 text-right font-medium text-gray-700 cost-display">
                                                         {{ number_format((float) $rCost, 2) }}
                                                     </td>
+                                                    @endif
                                                     <td class="px-4 py-3 text-center">
                                                         <button type="button" onclick="removeRow(this)"
                                                             class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50">
@@ -554,9 +558,11 @@
                                 <th
                                     class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                     Unit</th>
+                                @if(auth()->user()->isAdmin())
                                 <th
                                     class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
                                     Cost</th>
+                                @endif
                                 <th
                                     class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
                                 </th>
@@ -567,7 +573,7 @@
                         </tbody>
                         <tfoot class="bg-gray-50 border-t border-gray-200">
                             <tr>
-                                <td colspan="6" class="px-4 py-3">
+                                <td colspan="{{ auth()->user()->isAdmin() ? 6 : 5 }}" class="px-4 py-3">
                                     <button type="button" onclick="addIngredientRow(this)"
                                         class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
                                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
@@ -605,9 +611,11 @@
             </td>
             <!-- Hidden field to preserve data, not shown in UI -->
             <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_group]" value="">
+            @if(auth()->user()->isAdmin())
             <td class="px-4 py-3 text-right font-medium text-gray-700 cost-display">
                 0.00
             </td>
+            @endif
             <td class="px-4 py-3 text-center">
                 <button type="button" onclick="removeRow(this)"
                     class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50">
@@ -688,6 +696,7 @@
         
         let subRecipeSelector = null;
         window.addedSubRecipes = window.initialSubRecipes || [];
+        window.userIsAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
 
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize existing rows
@@ -698,6 +707,15 @@
 
             // Set initial base portions from recipe
             window.basePortions = {{ $recipe->yield_portions ?? 10 }};
+
+            // STEP 1: Base quantity + original state on form load
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                if (!input.dataset.baseQty || input.dataset.baseQty === '') {
+                    const v = input.value || '';
+                    if (v) input.dataset.baseQty = v;
+                }
+                setQuantityHighlight(input, 'original');
+            });
 
             // Initialize Sub-Recipe Selector
             const subSelEl = document.getElementById('sub-recipe-selector');
@@ -897,6 +915,7 @@
             
             window.addedSubRecipes.forEach((sub, index) => {
                 const cost = (sub.qty * sub.price).toFixed(2);
+                const showCost = window.userIsAdmin === true || window.userIsAdmin === 'true';
                 const card = document.createElement('div');
                 card.className = 'sub-recipe-card bg-indigo-50/30 border border-indigo-100 rounded-xl p-4 flex justify-between items-center group hover:bg-indigo-50 transition-colors animate-fade-in-up';
                 card.innerHTML = `
@@ -906,14 +925,14 @@
                         </div>
                         <div>
                             <h4 class="font-bold text-gray-800">${sub.name}</h4>
-                            <p class="text-xs text-gray-500 font-medium">${sub.qty} ${sub.unit} • ₹${cost}</p>
+                            <p class="text-xs text-gray-500 font-medium">${sub.qty} ${sub.unit}${showCost ? ' • ₹' + cost : ''}</p>
                         </div>
                     </div>
                     <button type="button" onclick="removeSubRecipe(${index})" 
                         class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
-                    <span class="cost-val hidden">${cost}</span>
+                    ${showCost ? '<span class="cost-val hidden">' + cost + '</span>' : ''}
                 `;
                 container.appendChild(card);
             });
@@ -975,17 +994,12 @@
                         qty.dataset.baseQty = currentValue;
                     }
                 }
-                
+                setQuantityHighlight(qty, 'original');
                 qty.addEventListener('input', () => {
-                    // Manual Edit Highlight: When user manually edits the field
                     if (document.activeElement === qty) {
-                        // Mark as manually edited
                         qty.dataset.manuallyEdited = 'true';
-                        // Update base quantity to current value (so future scaling uses this as base)
                         qty.dataset.baseQty = qty.value;
-                        // Apply manual edit visual state (Light Blue)
-                        qty.classList.remove('bg-amber-100');
-                        qty.classList.add('bg-blue-100');
+                        setQuantityHighlight(qty, 'manual');
                     }
                     calculateRowCost(row);
                 });
@@ -1051,6 +1065,18 @@
             calculateTotal();
         }
 
+        // --- Scaling Highlight (per spec: original=white/grey, scaled=yellow/orange, manual=blue) ---
+        function setQuantityHighlight(input, state) {
+            input.classList.remove('bg-yellow-100', 'border-orange-400', 'bg-blue-100', 'border-blue-400', 'bg-white', 'border-gray-300');
+            if (state === 'scaled') {
+                input.classList.add('bg-yellow-100', 'border-orange-400');
+            } else if (state === 'manual') {
+                input.classList.add('bg-blue-100', 'border-blue-400');
+            } else {
+                input.classList.add('bg-white', 'border-gray-300');
+            }
+        }
+
         // --- Scaling Logic ---
         function updateScaling() {
             const yieldInput = document.getElementById('yield_portions');
@@ -1062,28 +1088,16 @@
             const ratio = currentPortions / (window.basePortions || 10);
 
             document.querySelectorAll('.quantity-input').forEach(input => {
-                // Skip manually edited fields - they should remain blue
-                if (input.dataset.manuallyEdited === 'true') {
-                    return;
-                }
+                if (input.dataset.manuallyEdited === 'true') return;
 
                 const baseQty = parseFloat(input.dataset.baseQty);
                 if (!isNaN(baseQty) && baseQty > 0) {
                     const newQty = baseQty * ratio;
                     input.value = newQty.toFixed(3);
-                    
-                    // Visual Highlight: Scaled (Amber background)
-                    input.classList.remove('bg-blue-100');
-                    if (ratio !== 1) {
-                        input.classList.add('bg-amber-100');
-                    } else {
-                        // If ratio is 1, remove amber (back to original white)
-                        input.classList.remove('bg-amber-100');
-                    }
+                    setQuantityHighlight(input, ratio !== 1 ? 'scaled' : 'original');
                 }
             });
-            
-            // Recalculate all row costs
+
             document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
         }
 
@@ -1093,12 +1107,8 @@
 
             document.querySelectorAll('.quantity-input').forEach(input => {
                 const baseQty = input.dataset.baseQty;
-                if (baseQty !== undefined && baseQty !== '') {
-                    input.value = baseQty;
-                }
-                // Reset visual states to original (white background)
-                input.classList.remove('bg-amber-100', 'bg-blue-100');
-                // Clear manually edited flag
+                if (baseQty !== undefined && baseQty !== '') input.value = baseQty;
+                setQuantityHighlight(input, 'original');
                 input.removeAttribute('data-manually-edited');
             });
 
