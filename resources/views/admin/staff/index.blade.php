@@ -101,6 +101,11 @@
                                             </button>
                                         </form>
                                     @endif
+                                    <a href="{{ route('admin.staff.permissions.edit', $user->id) }}"
+                                       class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors border border-blue-200 shadow-sm"
+                                       title="Manage Permissions">
+                                        <i data-lucide="lock" class="w-5 h-5"></i>
+                                    </a>
                                     <a href="{{ route('admin.staff.edit', $user->id) }}"
                                        class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 transition-colors border border-orange-200 shadow-sm"
                                        title="Edit details">

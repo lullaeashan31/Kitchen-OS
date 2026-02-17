@@ -183,6 +183,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin SOP Management
     Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
+        Route::get('staff/{user}/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'edit'])->name('staff.permissions.edit');
+        Route::put('staff/{user}/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'update'])->name('staff.permissions.update');
+
+        Route::post('shifts/auto-generate', [\App\Http\Controllers\Admin\ShiftController::class, 'autoGenerate'])->name('shifts.auto_generate');
         Route::resource('shifts', \App\Http\Controllers\Admin\ShiftController::class);
         Route::get('shift-assignments', [\App\Http\Controllers\Admin\ShiftAssignmentController::class, 'index'])->name('shifts.assignments.index');
         Route::post('shift-assignments', [\App\Http\Controllers\Admin\ShiftAssignmentController::class, 'store'])->name('shifts.assignments.store');

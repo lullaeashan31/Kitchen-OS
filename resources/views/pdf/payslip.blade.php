@@ -106,7 +106,7 @@
             </tr>
             <tr>
                 <td class="label">Designation:</td>
-                <td class="value">{{ ucfirst($record->user->role) }}</td>
+                <td class="value">{{ $record->user->role->label() }}</td>
             </tr>
         </table>
     </div>

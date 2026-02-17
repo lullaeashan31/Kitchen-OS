@@ -17,27 +17,24 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Users - All with password: admin123
-        User::create([
+        User::updateOrCreate(['email' => 'admin@kitchen.com'], [
             'name' => 'Admin User',
-            'email' => 'admin@kitchen.com',
             'phone' => '9999999999',
             'password' => Hash::make('admin123'),
             'role' => UserRole::Admin,
             'is_password_changed' => true,
         ]);
 
-        User::create([
+        User::updateOrCreate(['email' => 'manager@kitchen.com'], [
             'name' => 'Manager User',
-            'email' => 'manager@kitchen.com',
             'phone' => '8888888888',
             'password' => Hash::make('admin123'),
             'role' => UserRole::Manager,
             'is_password_changed' => true,
         ]);
 
-        User::create([
+        User::updateOrCreate(['email' => 'staff@kitchen.com'], [
             'name' => 'Staff User',
-            'email' => 'staff@kitchen.com',
             'phone' => '7777777777',
             'password' => Hash::make('admin123'),
             'role' => UserRole::Staff,
@@ -47,6 +44,22 @@ class DatabaseSeeder extends Seeder
             'target_location_name' => 'Main Kitchen',
             'is_password_changed' => true,
         ]);
+
+        // Permissions
+        $permissions = [
+            ['name' => 'HR & Payroll', 'slug' => 'module_hr_payroll'],
+            ['name' => 'Inventory Management', 'slug' => 'module_inventory'],
+            ['name' => 'Recipe Management', 'slug' => 'module_recipes'],
+            ['name' => 'SOP Management', 'slug' => 'module_sops'],
+            ['name' => 'Production Management', 'slug' => 'module_production'],
+            ['name' => 'Vendor Management', 'slug' => 'module_vendors'],
+            ['name' => 'Audit Logs', 'slug' => 'module_audit_logs'],
+            ['name' => 'Staff Management', 'slug' => 'module_staff_management'],
+        ];
+
+        foreach ($permissions as $perm) {
+            \App\Models\Permission::updateOrCreate(['slug' => $perm['slug']], $perm);
+        }
 
         // Categories
         $categories = ['Starters', 'Mains', 'Desserts', 'Beverages', 'Sauces', 'Sides'];
