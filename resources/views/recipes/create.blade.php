@@ -1,41 +1,46 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div class="flex items-center gap-4">
+    <div>
+        <div class="flex items-center gap-3 md:gap-4 mb-2">
             <a href="{{ route('recipes.index') }}"
-                class="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all">
-                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                class="p-2 md:p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all">
+                <i data-lucide="arrow-left" class="w-4 h-4 md:w-5 md:h-5"></i>
             </a>
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Create Recipe</h1>
-                <p class="text-gray-500 mt-1">Design a new culinary creation.</p>
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">Create Recipe</h1>
+                <p class="text-xs md:text-sm text-gray-500 mt-1">Design a new culinary creation.</p>
             </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <button type="button" onclick="window.history.back()"
-                class="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
-                Cancel
-            </button>
-            <button type="button" onclick="document.getElementById('recipeForm').submit()"
-                class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-blue-600/40 transition-all flex items-center gap-2">
-                <i data-lucide="save" class="w-5 h-5"></i>
-                Save Recipe
-            </button>
         </div>
     </div>
 @endsection
 
+@section('actions')
+    <div class="flex items-center gap-2 md:gap-3">
+        <button type="button" onclick="window.history.back()"
+            class="px-4 md:px-6 py-2 md:py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm md:text-base">
+            <span class="hidden sm:inline">Cancel</span>
+            <span class="sm:hidden">✕</span>
+        </button>
+        <button type="button" onclick="document.getElementById('recipeForm').submit()"
+            class="px-4 md:px-6 py-2 md:py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-blue-600/40 transition-all flex items-center gap-2 text-sm md:text-base">
+            <i data-lucide="save" class="w-4 h-4 md:w-5 md:h-5"></i>
+            <span class="hidden sm:inline">Save Recipe</span>
+            <span class="sm:hidden">Save</span>
+        </button>
+    </div>
+@endsection
+
 @section('content')
-    <form action="{{ route('recipes.store') }}" method="POST" id="recipeForm" class="flex flex-col lg:flex-row gap-8 pb-20">
+    <form action="{{ route('recipes.store') }}" method="POST" id="recipeForm" class="flex flex-col xl:flex-row gap-6 md:gap-8 pb-20">
         @csrf
 
         <!-- LEFT SIDEBAR: Basic Info & Settings -->
-        <div class="w-full lg:w-1/3 space-y-6">
+        <div class="w-full xl:w-1/3 space-y-4 md:space-y-6">
 
             <!-- Basic Details Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-6">
-                <div class="p-6 border-b border-gray-50">
+                <div class="p-4 md:p-6 border-b border-gray-50">
                     <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                         <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
                             <i data-lucide="info" class="w-5 h-5"></i>
@@ -44,7 +49,7 @@
                     </h2>
                 </div>
 
-                <div class="p-6 space-y-6">
+                <div class="p-4 md:p-6 space-y-4 md:space-y-6">
                     <!-- Name -->
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Recipe Name <span
@@ -61,32 +66,48 @@
                                 class="text-red-500">*</span></label>
                         <div class="relative">
                             <select name="category_id" required id="category-select"
-                                class="w-full px-4 py-3 rounded-xl bg-gray-50 border {{ $errors->has('category_id') ? 'border-red-500' : 'border-gray-200' }} focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none font-medium text-gray-700 cursor-pointer">
-                                <option value="" disabled selected>Select a category...</option>
+                                class="w-full px-4 py-3 rounded-xl bg-gray-50 border {{ $errors->has('category_id') ? 'border-red-500' : 'border-gray-200' }} focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none font-medium text-gray-700 cursor-pointer pr-10">
+                                <option value="" disabled {{ old('category_id') ? '' : 'selected' }}>Select a category...</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
                             </select>
+                            <!-- Dropdown arrow icon -->
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
                         </div>
                         @error('category_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    @push('scripts')
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                                new TomSelect('#category-select', {
-                                    create: false,
-                                    sortField: {
-                                        field: "text",
-                                        direction: "asc"
-                                    },
-                                    placeholder: "Search Category...",
-                                });
-                            });
-                        </script>
-                    @endpush
+                    <!-- Smart Scale Section -->
+                    <div class="bg-white rounded-xl p-5 border border-gray-100 mb-4">
+                        <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3">
+                            <i data-lucide="calculator" class="w-4 h-4"></i>
+                            Smart Scale
+                        </h3>
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Scaling Mode</label>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="setMultiplier(0.5)" 
+                                    class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
+                                    data-multiplier="0.5">0.5x</button>
+                                <button type="button" onclick="setMultiplier(1)" 
+                                    class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-blue-500 bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-all active"
+                                    data-multiplier="1">1x</button>
+                                <button type="button" onclick="setMultiplier(2)" 
+                                    class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
+                                    data-multiplier="2">2x</button>
+                                <button type="button" onclick="setMultiplier(3)" 
+                                    class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
+                                    data-multiplier="3">3x</button>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Yields Section -->
                     <div class="bg-gray-50/80 rounded-xl p-5 border border-gray-100 border-dashed">
@@ -102,7 +123,7 @@
                                         class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
                                 </div>
                                 <input type="number" name="yield_portions" id="yield_portions" min="1" step="1"
-                                    value="{{ old('yield_portions') }}"
+                                    value="{{ old('yield_portions', 10) }}"
                                     class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all text-center font-bold text-gray-800"
                                     placeholder="10" oninput="updateScaling()">
                                 @error('yield_portions') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -169,7 +190,7 @@
         </div>
 
         <!-- RIGHT CONTENT: Sets & Methods -->
-        <div class="w-full lg:w-2/3 space-y-8">
+        <div class="w-full xl:w-2/3 space-y-6 md:space-y-8">
 
             <!-- Global Method (Optional, usually per stage but some like a summary) -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -212,17 +233,17 @@
 
                             <div class="p-6 space-y-6">
                                 <!-- Ingredients Table -->
-                                <div class="rounded-xl border border-gray-100">
-                                    <table class="w-full text-sm text-left">
+                                <div class="rounded-xl border border-gray-100 overflow-x-auto -mx-2 md:mx-0">
+                                    <table class="w-full text-sm text-left min-w-[600px]">
                                         <thead class="bg-gray-50 text-gray-500 font-semibold uppercase text-xs">
                                             <tr>
-                                                <th class="px-4 py-3 w-[50%]">Item</th>
-                                                <th class="px-4 py-3 w-[20%]">Qty</th>
-                                                <th class="px-4 py-3 w-[20%]">Unit</th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[50%]">Item</th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]">Qty</th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]">Unit</th>
                                                 @if(auth()->user()->isAdmin())
-                                                    <th class="px-4 py-3 w-[10%] text-right">Cost</th>
+                                                    <th class="px-2 md:px-4 py-2 md:py-3 w-[10%] text-right">Cost</th>
                                                 @endif
-                                                <th class="px-4 py-3 w-[5%]"></th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[5%]"></th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-100 stage-ingredients-body bg-white">
@@ -232,40 +253,63 @@
                                                         <td class="px-4 py-2">
                                                             <div
                                                                 class="w-full {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.ingredient_id') ? 'border border-red-500 rounded-lg' : '' }}">
-                                                                <select class="ingredient-select w-full"
-                                                                    name="stages[{{ $index }}][ingredients][{{ $rIndex }}][ingredient_id]"
-                                                                    required>
-                                                                    <option value="">Search Ingredient...</option>
-                                                                    @foreach($ingredients as $ing)
-                                                                        <option value="{{ $ing->id }}"
-                                                                            data-price="{{ $ing->latest_price ?? $ing->price }}"
-                                                                            data-unit="{{ $ing->measurement_unit }}" {{ ($ingredient['ingredient_id'] ?? '') == $ing->id ? 'selected' : '' }}>
-                                                                            {{ $ing->name }} ({{ $ing->measurement_unit }})
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
+                                                                <div class="relative">
+                                                                    <select class="ingredient-select w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-white cursor-pointer pr-8"
+                                                                        name="stages[{{ $index }}][ingredients][{{ $rIndex }}][ingredient_id]"
+                                                                        required>
+                                                                        <option value="">Select Ingredient...</option>
+                                                                        @foreach($ingredients as $ing)
+                                                                            <option value="{{ $ing->id }}"
+                                                                                data-price="{{ $ing->latest_price ?? $ing->price }}"
+                                                                                data-unit="{{ $ing->measurement_unit }}" {{ ($ingredient['ingredient_id'] ?? '') == $ing->id ? 'selected' : '' }}>
+                                                                                {{ $ing->name }} ({{ $ing->measurement_unit }})
+                                                                            </option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                    <!-- Dropdown arrow -->
+                                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                                        </svg>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                             @error('stages.' . $index . '.ingredients.' . $rIndex . '.ingredient_id')
                                                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                                             @enderror
                                                         </td>
-                                                        <td class="px-4 py-2">
+                                                        <td class="px-2 md:px-4 py-2">
                                                             <input type="number" step="any"
                                                                 name="stages[{{ $index }}][ingredients][{{ $rIndex }}][quantity]"
                                                                 value="{{ $ingredient['quantity'] ?? '' }}" required
                                                                 data-base-qty="{{ $ingredient['quantity'] ?? '' }}"
-                                                                class="quantity-input w-full h-[44px] px-3 rounded-xl border-2 {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.quantity') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-base text-gray-900 transition-all bg-white">
+                                                                class="quantity-input w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.quantity') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-sm md:text-base text-gray-900 transition-all bg-white">
                                                             @error('stages.' . $index . '.ingredients.' . $rIndex . '.quantity')
                                                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                                             @enderror
                                                         </td>
-                                                        <td class="px-4 py-2">
-                                                            <select name="stages[{{ $index }}][ingredients][{{ $rIndex }}][unit]" required
-                                                                class="unit-select w-full h-[44px] px-3 rounded-xl border-2 {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.unit') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none bg-white font-bold text-base text-gray-900 appearance-none transition-all">
-                                                                @foreach(\App\Enums\Unit::cases() as $unit)
-                                                                    <option value="{{ $unit->value }}" {{ ($ingredient['unit'] ?? '') == $unit->value ? 'selected' : '' }}>{{ $unit->label() }}</option>
-                                                                @endforeach
-                                                            </select>
+                                                        <td class="px-2 md:px-4 py-2">
+                                                            <!-- Hidden input for form submission -->
+                                                            <input type="hidden" name="stages[{{ $index }}][ingredients][{{ $rIndex }}][unit]" 
+                                                                value="{{ $ingredient['unit'] ?? '' }}" 
+                                                                class="unit-value-input">
+                                                            <!-- Display field (readonly) -->
+                                                            @php
+                                                                $unitDisplayValue = '';
+                                                                if (isset($ingredient['unit']) && $ingredient['unit']) {
+                                                                    foreach (\App\Enums\Unit::cases() as $unit) {
+                                                                        if ($unit->value == $ingredient['unit']) {
+                                                                            $unitDisplayValue = $unit->label();
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            <input type="text" 
+                                                                readonly
+                                                                value="{{ $unitDisplayValue }}"
+                                                                class="unit-display w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.unit') ? 'border-red-500' : 'border-gray-300' }} bg-gray-50 font-bold text-sm md:text-base text-gray-700 cursor-not-allowed"
+                                                                placeholder="Select item first">
                                                             @error('stages.' . $index . '.ingredients.' . $rIndex . '.unit')
                                                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                                             @enderror
@@ -275,9 +319,9 @@
                                                             name="stages[{{ $index }}][ingredients][{{ $rIndex }}][ingredient_group]"
                                                             value="{{ $ingredient['ingredient_group'] ?? '' }}">
                                                         @if(auth()->user()->isAdmin())
-                                                            <td class="px-4 py-2 text-right font-medium text-gray-700 cost-display">0.00</td>
+                                                            <td class="px-2 md:px-4 py-2 text-right font-medium text-gray-700 cost-display text-sm">0.00</td>
                                                         @endif
-                                                        <td class="px-4 py-2 text-center">
+                                                        <td class="px-2 md:px-4 py-2 text-center">
                                                             <button type="button" onclick="removeRow(this)"
                                                                 class="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-md">
                                                                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -366,7 +410,7 @@
                         <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                     </div>
                     <div class="w-full">
-                        <input type="text" name="stages[STAGE_INDEX][name]" value="Set 1"
+                        <input type="text" name="stages[STAGE_INDEX][name]" value="SET_NUMBER_PLACEHOLDER"
                             class="bg-transparent border-none text-lg font-bold text-gray-800 focus:ring-0 placeholder-gray-400 w-full"
                             placeholder="Set Name (e.g. Sauce Prep)">
                         <!-- Note: JS generated validation errors for new stages are hard to target server-side before submit, 
@@ -381,18 +425,18 @@
             </div>
 
             <div class="p-6 space-y-6">
-                <!-- Ingredients Table -->
-                <div class="rounded-xl border border-gray-100">
-                    <table class="w-full text-sm text-left">
+                                <!-- Ingredients Table -->
+                                <div class="rounded-xl border border-gray-100 overflow-x-auto -mx-2 md:mx-0">
+                                    <table class="w-full text-sm text-left min-w-[600px]">
                         <thead class="bg-gray-50 text-gray-500 font-semibold uppercase text-xs">
                             <tr>
-                                <th class="px-4 py-3 w-[50%]">Item</th>
-                                <th class="px-4 py-3 w-[20%]">Qty</th>
-                                <th class="px-4 py-3 w-[20%]">Unit</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[50%]">Item</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]">Qty</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]">Unit</th>
                                 @if(auth()->user()->isAdmin())
-                                    <th class="px-4 py-3 w-[10%] text-right">Cost</th>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 w-[10%] text-right">Cost</th>
                                 @endif
-                                <th class="px-4 py-3 w-[5%]"></th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[5%]"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 stage-ingredients-body bg-white">
@@ -421,30 +465,43 @@
         <tr class="group hover:bg-blue-50/20 transition-colors ingredient-row">
             <td class="px-4 py-2">
                 <!-- Ingredient Select -->
-                <select class="ingredient-select w-full" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_id]"
-                    required>
-                    <option value="">Search Ingredient...</option>
-                </select>
+                <div class="relative">
+                    <select class="ingredient-select w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-white cursor-pointer pr-8"
+                        name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_id]"
+                        required>
+                        <option value="">Select Ingredient...</option>
+                    </select>
+                    <!-- Dropdown arrow -->
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
             </td>
-            <td class="px-4 py-2">
+            <td class="px-2 md:px-4 py-2">
                 <input type="number" step="any" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][quantity]" required
                     data-base-qty=""
-                    class="quantity-input w-full h-[44px] px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-base text-gray-900 transition-all bg-white">
+                    class="quantity-input w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-sm md:text-base text-gray-900 transition-all bg-white">
             </td>
-            <td class="px-4 py-2">
-                <select name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" required
-                    class="unit-select w-full h-[44px] px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none bg-white font-bold text-base text-gray-900 appearance-none transition-all">
-                    @foreach(\App\Enums\Unit::cases() as $unit)
-                        <option value="{{ $unit->value }}">{{ $unit->label() }}</option>
-                    @endforeach
-                </select>
+            <td class="px-2 md:px-4 py-2">
+                <!-- Hidden input for form submission -->
+                <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" 
+                    value="" 
+                    class="unit-value-input">
+                <!-- Display field (readonly) -->
+                <input type="text" 
+                    readonly
+                    value=""
+                    class="unit-display w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 border-gray-300 bg-gray-50 font-bold text-sm md:text-base text-gray-700 cursor-not-allowed"
+                    placeholder="Select item first">
             </td>
             <!-- Hidden field to preserve data, not shown in UI -->
             <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_group]" value="">
             @if(auth()->user()->isAdmin())
-                <td class="px-4 py-2 text-right font-medium text-gray-700 cost-display">0.00</td>
+                <td class="px-2 md:px-4 py-2 text-right font-medium text-gray-700 cost-display text-sm">0.00</td>
             @endif
-            <td class="px-4 py-2 text-center">
+            <td class="px-2 md:px-4 py-2 text-center">
                 <button type="button" onclick="removeRow(this)"
                     class="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-md">
                     <i data-lucide="x" class="w-4 h-4"></i>
@@ -650,11 +707,118 @@
             padding: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
+            cursor: pointer !important;
+            position: relative !important;
         }
 
         .ts-control .item {
             font-weight: 500;
             color: #1f2937;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+
+        .ts-control .item:hover {
+            background-color: #f3f4f6 !important;
+        }
+        
+        /* Make sure selected items are clickable */
+        .ts-control .item[data-value] {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+
+        /* Ensure TomSelect control is clickable even when item is selected */
+        .ts-control,
+        .ts-control input,
+        .ts-control .item,
+        .ts-wrapper {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+
+        /* Make input field clickable */
+        .ts-wrapper input.ts-input {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+
+        /* TomSelect Dropdown Visibility Fix - Apply to ALL dropdowns */
+        .ts-dropdown {
+            z-index: 99999 !important;
+            position: absolute !important;
+            max-height: 300px !important;
+            overflow-y: auto !important;
+            background: white !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .ts-dropdown.hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        .ts-dropdown-content {
+            max-height: 300px !important;
+            overflow-y: auto !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .ts-dropdown .option {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            padding: 0.5rem 0.75rem !important;
+            cursor: pointer !important;
+            color: #1f2937 !important;
+            background-color: white !important;
+        }
+
+        .ts-dropdown .option:hover,
+        .ts-dropdown .option.active,
+        .ts-dropdown .option.selected {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+
+        .ts-dropdown .option[data-selectable="false"] {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+        
+        /* Ensure all TomSelect wrappers are clickable */
+        .ts-wrapper {
+            cursor: pointer !important;
+            position: relative !important;
+        }
+        
+        /* Fix for category and sub-recipe selectors */
+        #category-select + .ts-wrapper,
+        #sub-recipe-selector + .ts-wrapper {
+            cursor: pointer !important;
+        }
+
+        /* Ensure parent containers don't hide dropdown */
+        .stage-block {
+            position: relative !important;
+            overflow: visible !important;
+        }
+
+        .stage-block .rounded-xl {
+            overflow: visible !important;
+        }
+
+        .ingredient-select {
+            position: relative !important;
         }
 
         .animate-fade-in-up {
@@ -673,35 +837,14 @@
             }
         }
 
-        /* Unit Select Styling - High Visibility & Mobile Friendly */
-        .unit-select {
+        /* Unit Display Styling - Readonly field */
+        .unit-display {
             min-height: 44px !important;
             font-size: 16px !important;
             font-weight: 700 !important;
-            color: #111827 !important;
-            background-color: #ffffff !important;
-            cursor: pointer !important;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23111827' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1.25rem;
-            padding-right: 2.5rem !important;
-        }
-
-        .unit-select:focus {
-            outline: none;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
-        }
-
-        .unit-select option {
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            color: #111827 !important;
-            padding: 0.75rem !important;
+            color: #374151 !important;
+            background-color: #f9fafb !important;
+            cursor: not-allowed !important;
         }
 
         /* Ensure equal visual weight with quantity input */
@@ -717,6 +860,16 @@
         let activeSelect = null;
         const ingredientOptionsHTML = document.getElementById('ingredientOptions').innerHTML;
         const UNIT_FACTORS = { 'g': 1, 'kg': 1000, 'ml': 1, 'l': 1000, 'tbsp': 15, 'tsp': 5, 'cup': 240, 'pcs': 1, 'oz': 28.35, 'lb': 453.6 };
+        const UNIT_LABELS = {
+            'g': 'Gram (g)',
+            'kg': 'Kilogram (kg)',
+            'ml': 'Milliliter (ml)',
+            'l': 'Liter (l)',
+            'tbsp': 'Tablespoon (tbsp)',
+            'tsp': 'Teaspoon (tsp)',
+            'cup': 'Cup',
+            'pcs': 'Piece (pcs)'
+        };
 
         let subRecipeSelector = null;
         window.addedSubRecipes = [];
@@ -725,13 +878,68 @@
             if (stageCount === 0) {
                 addStage(); // Initial stage
             } else {
-                // Initialize existing ingredients
+                // Initialize existing stages - ONLY set default names if completely empty
+                // IMPORTANT: Never modify existing stage names - preserve "Set 1", "Set 2", etc. as-is
+                const existingStages = document.querySelectorAll('.stage-block');
+                existingStages.forEach((stage, index) => {
+                    const nameInput = stage.querySelector('input[name*="[name]"]');
+                    // Only set default name if field is completely empty or just whitespace
+                    // If name already exists (even "Set 1", "Set 2"), DO NOT CHANGE IT
+                    if (nameInput && (!nameInput.value || nameInput.value.trim() === '')) {
+                        nameInput.value = `Set ${index + 1}`;
+                    }
+                });
+                // Initialize existing ingredients and auto-populate units
                 document.querySelectorAll('.ingredient-row').forEach(row => {
                     initRow(row);
+                    
+                    // Auto-populate unit for already selected ingredients (native select)
+                    const ingSelect = row.querySelector('.ingredient-select');
+                    if (ingSelect && ingSelect.value) {
+                        const selectedOption = ingSelect.querySelector(`option[value="${ingSelect.value}"]`);
+                        if (selectedOption) {
+                            const unitValue = selectedOption.getAttribute('data-unit') || selectedOption.dataset.unit;
+                            if (unitValue) {
+                                const unitValueInput = row.querySelector('.unit-value-input');
+                                const unitDisplay = row.querySelector('.unit-display');
+                                const unitLabel = UNIT_LABELS[unitValue] || unitValue;
+                                
+                                if (unitValueInput && (!unitValueInput.value || unitValueInput.value === '')) {
+                                    unitValueInput.value = unitValue;
+                                }
+                                if (unitDisplay && (!unitDisplay.value || unitDisplay.value === '')) {
+                                    unitDisplay.value = unitLabel;
+                                }
+                            }
+                        }
+                    }
                 });
                 lucide.createIcons();
             }
             calculateTotal();
+
+            // Initialize Scaling Mode buttons
+            const yieldInput = document.getElementById('yield_portions');
+            if (yieldInput) {
+                window.basePortions = parseFloat(yieldInput.value) || 10;
+                if (!yieldInput.value) {
+                    yieldInput.value = 10;
+                    window.basePortions = 10;
+                }
+                // Highlight the correct button based on current ratio
+                const currentPortions = parseFloat(yieldInput.value) || 10;
+                const ratio = currentPortions / window.basePortions;
+                document.querySelectorAll('.scaling-btn').forEach(btn => {
+                    const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                    if (Math.abs(btnMultiplier - ratio) < 0.01) {
+                        btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+                        btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                    } else {
+                        btn.classList.remove('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                        btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
+                    }
+                });
+            }
 
             // Initialize Sub-Recipe Selector
             const subSelEl = document.getElementById('sub-recipe-selector');
@@ -747,7 +955,8 @@
                         create: false,
                         sortField: { field: "text", direction: "asc" },
                         placeholder: 'Search for a sub-recipe...',
-                        plugins: ['dropdown_input'],
+                        plugins: [],
+                        openOnFocus: true,
                         onChange: function (val) {
                             if (!val) {
                                 const unitDisplay = document.getElementById('sub-recipe-unit-display');
@@ -769,6 +978,29 @@
                                     addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                                 }
                             }
+                            
+                            // Close dropdown after selection
+                            setTimeout(() => {
+                                if (this.isOpen) {
+                                    this.close();
+                                }
+                                this.blur();
+                            }, 150);
+                        },
+                        onFocus: function() {
+                            if (!this.isOpen) {
+                                this.open();
+                            }
+                        },
+                        onBlur: function() {
+                            setTimeout(() => {
+                                const dropdown = document.querySelector('#sub-recipe-selector + .ts-dropdown');
+                                if (dropdown) {
+                                    dropdown.style.display = 'none';
+                                    dropdown.style.visibility = 'hidden';
+                                    dropdown.style.opacity = '0';
+                                }
+                            }, 200);
                         },
                         onInitialize: function() {
                             // Enable/disable add button based on selection
@@ -783,6 +1015,47 @@
                             }
                         }
                     });
+                    
+                    // Store reference globally for global click handler
+                    window.subRecipeSelector = subRecipeSelector;
+                    
+                    // Click handler for sub-recipe selector - force open dropdown
+                    setTimeout(() => {
+                        const subWrapper = subSelEl.closest('.ts-wrapper');
+                        const subControl = subWrapper ? subWrapper.querySelector('.ts-control') : null;
+                        const subInput = subWrapper ? subWrapper.querySelector('input.ts-input') : null;
+                        
+                        const openSubRecipe = function(e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            
+                            // Focus first, then open
+                            if (subInput) {
+                                subInput.focus();
+                            }
+                            
+                            setTimeout(() => {
+                                subRecipeSelector.focus();
+                                subRecipeSelector.open();
+                            }, 10);
+                        };
+                        
+                        if (subWrapper) {
+                            subWrapper.style.cursor = 'pointer';
+                            subWrapper.addEventListener('click', openSubRecipe);
+                        }
+                        
+                        if (subControl) {
+                            subControl.style.cursor = 'pointer';
+                            subControl.addEventListener('click', openSubRecipe);
+                            
+                            // Also handle mousedown to prevent blur
+                            subControl.addEventListener('mousedown', function(e) {
+                                e.preventDefault();
+                                setTimeout(() => openSubRecipe(e), 10);
+                            });
+                        }
+                    }, 300);
                 } else {
                     // No sub-recipes available - disable the selector and show message
                     subSelEl.disabled = true;
@@ -909,10 +1182,22 @@
             const stageBlock = clone.querySelector('.stage-block');
             stageBlock.dataset.stageIndex = stageCount;
 
-            // Fix names
+            // Calculate next set number based on existing stages
+            // IMPORTANT: We only modify the NEW stage's name, never touch existing stage names
+            const existingStages = container.querySelectorAll('.stage-block');
+            const nextSetNumber = existingStages.length + 1;
+
+            // Fix names (only for the NEW stage being added)
             stageBlock.querySelectorAll('[name*="STAGE_INDEX"]').forEach(el => {
                 el.name = el.name.replace('STAGE_INDEX', stageCount);
             });
+
+            // Update set name with correct number (ONLY for the NEW stage)
+            // Existing stages keep their names unchanged ("Set 1", "Set 2", etc. remain as-is)
+            const setNameInput = stageBlock.querySelector('input[name*="[name]"]');
+            if (setNameInput) {
+                setNameInput.value = setNameInput.value.replace('SET_NUMBER_PLACEHOLDER', `Set ${nextSetNumber}`);
+            }
 
             // Initial Ingredient Row
             const tbody = stageBlock.querySelector('.stage-ingredients-body');
@@ -960,33 +1245,260 @@
 
             // Populate select options (only ingredients, no sub-recipes)
             const ingSelect = tr.querySelector('.ingredient-select');
-            ingSelect.innerHTML += ingredientOptionsHTML;
+            
+            // Clear existing options first (except placeholder)
+            const placeholderOption = ingSelect.querySelector('option[value=""]');
+            ingSelect.innerHTML = '';
+            if (placeholderOption) {
+                ingSelect.appendChild(placeholderOption);
+            }
+            
+            // Add ingredient options using proper DOM methods
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = ingredientOptionsHTML;
+            const optionsToAdd = tempDiv.querySelectorAll('option');
+            optionsToAdd.forEach(opt => {
+                if (opt.value) {
+                    // Clone and ensure data attributes are preserved
+                    const clonedOpt = opt.cloneNode(true);
+                    
+                    // Ensure data-unit attribute is preserved
+                    const unitAttr = opt.getAttribute('data-unit');
+                    if (unitAttr) {
+                        clonedOpt.setAttribute('data-unit', unitAttr);
+                    } else if (opt.dataset && opt.dataset.unit) {
+                        clonedOpt.setAttribute('data-unit', opt.dataset.unit);
+                    } else {
+                        // Fallback: Extract from text like "Milk (l)"
+                        const match = opt.textContent.match(/\(([^)]+)\)/);
+                        if (match && match[1]) {
+                            clonedOpt.setAttribute('data-unit', match[1].trim());
+                        }
+                    }
+                    
+                    // Ensure data-price attribute is preserved
+                    const priceAttr = opt.getAttribute('data-price');
+                    if (priceAttr) {
+                        clonedOpt.setAttribute('data-price', priceAttr);
+                    } else if (opt.dataset && opt.dataset.price) {
+                        clonedOpt.setAttribute('data-price', opt.dataset.price);
+                    }
+                    
+                    ingSelect.appendChild(clonedOpt);
+                }
+            });
 
             tbody.appendChild(tr);
             initRow(tr);
             lucide.createIcons();
         }
 
+        // Helper function to update unit when ingredient is selected (for native select)
+        function updateUnitForIngredient(value, row, ingSelect) {
+            if (!value) {
+                // Clear unit if no value
+                const unitValueInput = row.querySelector('.unit-value-input');
+                const unitDisplay = row.querySelector('.unit-display');
+                if (unitValueInput) unitValueInput.value = '';
+                if (unitDisplay) {
+                    unitDisplay.value = '';
+                    unitDisplay.setAttribute('placeholder', 'Select item first');
+                }
+                return;
+            }
+            
+            // Get unit from selected option
+            const selectedOption = ingSelect.querySelector(`option[value="${value}"]`);
+            if (selectedOption) {
+                const unitValue = selectedOption.getAttribute('data-unit') || selectedOption.dataset.unit;
+                if (unitValue) {
+                    const unitLabel = UNIT_LABELS[unitValue] || unitValue;
+                    
+                    // Update hidden input
+                    const unitValueInput = row.querySelector('.unit-value-input');
+                    if (unitValueInput) {
+                        unitValueInput.value = unitValue;
+                    }
+                    
+                    // Update display field
+                    const unitDisplay = row.querySelector('.unit-display');
+                    if (unitDisplay) {
+                        unitDisplay.value = unitLabel;
+                        unitDisplay.removeAttribute('placeholder');
+                    }
+                }
+            }
+        }
+
         function initRow(row) {
             const ingSelect = row.querySelector('.ingredient-select');
-
-            // Init TomSelect for Ingredient (only raw ingredients, no sub-recipes)
-            if (ingSelect && !ingSelect.tomselect) {
-                new TomSelect(ingSelect, {
-                    create: true,
-                    sortField: { field: "text", direction: "asc" },
-                    placeholder: 'Type to search ingredient...',
-                    plugins: ['dropdown_input'],
-                    render: {
-                        option_create: (data, escape) => `<div class="create text-blue-600 p-2">Create <strong>${escape(data.input)}</strong>...</div>`
-                    },
-                    create: function (input) {
-                        activeSelect = ingSelect;
-                        openIngredientModal(input);
-                        return false;
-                    },
-                    onChange: () => calculateRowCost(row)
+            
+            // Simple native select - no TomSelect
+            if (ingSelect && !ingSelect.hasAttribute('data-initialized')) {
+                ingSelect.setAttribute('data-initialized', 'true');
+                
+                // Populate options from ingredientOptions if empty
+                if (ingSelect.querySelectorAll('option').length <= 1) {
+                    const ingredientOptionsHTML = document.getElementById('ingredientOptions');
+                    if (ingredientOptionsHTML) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = ingredientOptionsHTML.innerHTML;
+                        const options = tempDiv.querySelectorAll('option');
+                        options.forEach(opt => {
+                            if (opt.value) {
+                                const newOpt = opt.cloneNode(true);
+                                
+                                // Ensure data-unit attribute is preserved
+                                const unitAttr = opt.getAttribute('data-unit');
+                                if (unitAttr) {
+                                    newOpt.setAttribute('data-unit', unitAttr);
+                                } else if (opt.dataset && opt.dataset.unit) {
+                                    newOpt.setAttribute('data-unit', opt.dataset.unit);
+                                } else {
+                                    // Fallback: Extract from text like "Milk (l)"
+                                    const match = opt.textContent.match(/\(([^)]+)\)/);
+                                    if (match && match[1]) {
+                                        newOpt.setAttribute('data-unit', match[1].trim());
+                                    }
+                                }
+                                
+                                // Ensure data-price attribute is preserved
+                                const priceAttr = opt.getAttribute('data-price');
+                                if (priceAttr) {
+                                    newOpt.setAttribute('data-price', priceAttr);
+                                } else if (opt.dataset && opt.dataset.price) {
+                                    newOpt.setAttribute('data-price', opt.dataset.price);
+                                }
+                                
+                                ingSelect.appendChild(newOpt);
+                            }
+                        });
+                    }
+                }
+                
+                // Add change handler for unit and cost update
+                // Use arrow function to preserve 'row' reference, or find row dynamically
+                ingSelect.addEventListener('change', function() {
+                    const selectedValue = this.value;
+                    // Find the row dynamically to ensure we get the correct row
+                    const currentRow = this.closest('tr.ingredient-row') || this.closest('tr');
+                    
+                    if (!currentRow) {
+                        console.error('Row not found for ingredient select');
+                        return;
+                    }
+                    
+                    console.log('Item changed to:', selectedValue, 'in row:', currentRow);
+                    
+                    if (selectedValue) {
+                        const selectedOption = this.querySelector(`option[value="${selectedValue}"]`);
+                        console.log('Selected option:', selectedOption);
+                        
+                        if (selectedOption) {
+                            // Try multiple methods to get unit
+                            let unitValue = selectedOption.getAttribute('data-unit');
+                            if (!unitValue && selectedOption.dataset) {
+                                unitValue = selectedOption.dataset.unit;
+                            }
+                            
+                            // Fallback: Extract from text like "Milk (l)"
+                            if (!unitValue && selectedOption.textContent) {
+                                const match = selectedOption.textContent.match(/\(([^)]+)\)/);
+                                if (match && match[1]) {
+                                    unitValue = match[1].trim();
+                                    console.log('Unit extracted from text:', unitValue);
+                                }
+                            }
+                            
+                            console.log('Unit value found:', unitValue);
+                            
+                            if (unitValue) {
+                                const unitValueInput = currentRow.querySelector('.unit-value-input');
+                                const unitDisplay = currentRow.querySelector('.unit-display');
+                                
+                                console.log('Unit input found:', unitValueInput, 'in row:', currentRow);
+                                console.log('Unit display found:', unitDisplay, 'in row:', currentRow);
+                                
+                                if (unitValueInput) {
+                                    unitValueInput.value = unitValue;
+                                    console.log('Unit input set to:', unitValue);
+                                } else {
+                                    console.error('Unit value input not found in row');
+                                }
+                                
+                                if (unitDisplay) {
+                                    const unitLabel = UNIT_LABELS[unitValue] || unitValue;
+                                    unitDisplay.value = unitLabel;
+                                    unitDisplay.removeAttribute('placeholder');
+                                    console.log('Unit display set to:', unitLabel);
+                                } else {
+                                    console.error('Unit display not found in row');
+                                }
+                            } else {
+                                console.warn('No unit found for selected option');
+                            }
+                            
+                            // Calculate cost
+                            calculateRowCost(currentRow);
+                        } else {
+                            console.error('Selected option not found for value:', selectedValue);
+                        }
+                    } else {
+                        // Clear unit if no selection
+                        const unitValueInput = currentRow.querySelector('.unit-value-input');
+                        const unitDisplay = currentRow.querySelector('.unit-display');
+                        if (unitValueInput) unitValueInput.value = '';
+                        if (unitDisplay) {
+                            unitDisplay.value = '';
+                            unitDisplay.setAttribute('placeholder', 'Select item first');
+                        }
+                        calculateRowCost(currentRow);
+                    }
                 });
+                
+                // Add global click handler to close TomSelect dropdowns when clicking outside (only for sub-recipe selector now)
+                if (!window.dropdownCloseHandlerAdded) {
+                    window.dropdownCloseHandlerAdded = true;
+                    document.addEventListener('click', function(e) {
+                        // Check what was clicked
+                        const isDropdown = e.target.closest('.ts-dropdown');
+                        const isTomSelectControl = e.target.closest('.ts-control');
+                        const isTomSelectWrapper = e.target.closest('.ts-wrapper');
+                        const isOption = e.target.classList.contains('option') || e.target.closest('.option');
+                        
+                        // If clicking on option, let TomSelect handle it
+                        if (isOption) {
+                            return;
+                        }
+                        
+                        // If clicking outside TomSelect area, close sub-recipe selector dropdown
+                        if (!isDropdown && !isTomSelectControl && !isTomSelectWrapper) {
+                            setTimeout(() => {
+                                // Close sub-recipe selector
+                                if (window.subRecipeSelector) {
+                                    try {
+                                        if (window.subRecipeSelector.isOpen) {
+                                            window.subRecipeSelector.close();
+                                        }
+                                        window.subRecipeSelector.blur();
+                                    } catch(err) {
+                                        console.log('Error closing sub-recipe:', err);
+                                    }
+                                }
+                                
+                                // Hide all TomSelect dropdowns manually
+                                const dropdowns = document.querySelectorAll('.ts-dropdown');
+                                dropdowns.forEach(dropdown => {
+                                    dropdown.style.display = 'none';
+                                    dropdown.style.visibility = 'hidden';
+                                    dropdown.style.opacity = '0';
+                                    dropdown.classList.remove('active');
+                                    dropdown.classList.add('hidden');
+                                });
+                            }, 150);
+                        }
+                    }, false); // Bubble phase
+                }
             }
 
             // Listeners for cost recalc and highlights
@@ -1009,8 +1521,7 @@
                     calculateRowCost(row);
                 });
             }
-            const unit = row.querySelector('.unit-select');
-            if (unit) unit.addEventListener('change', () => calculateRowCost(row));
+            // Unit is now readonly, no need for change listeners
 
             // Calculate initial cost
             calculateRowCost(row);
@@ -1025,7 +1536,7 @@
         function calculateRowCost(row) {
             const select = row.querySelector('.ingredient-select');
             const qtyInput = row.querySelector('.quantity-input');
-            const unitSelect = row.querySelector('.unit-select');
+            const unitValueInput = row.querySelector('.unit-value-input');
             const costDisplay = row.querySelector('.cost-display');
 
             if (!costDisplay || !select) return;
@@ -1041,7 +1552,7 @@
             const price = parseFloat(opt.dataset.price); // Price per Inventory Unit
             const invUnit = opt.dataset.unit;
             const qty = parseFloat(qtyInput.value) || 0;
-            const useUnit = unitSelect.value;
+            const useUnit = unitValueInput ? unitValueInput.value : '';
 
             // Simple Factor Conversion
             const priceFactor = UNIT_FACTORS[invUnit] || 1;
@@ -1083,6 +1594,32 @@
             }
         }
 
+        // --- Scaling Mode Multiplier Function ---
+        function setMultiplier(multiplier) {
+            // Update active button styling
+            document.querySelectorAll('.scaling-btn').forEach(btn => {
+                const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                if (btnMultiplier === multiplier) {
+                    // Active state: blue background, white text, blue border
+                    btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+                    btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                } else {
+                    // Inactive state: white background, gray text, gray border
+                    btn.classList.remove('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                    btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
+                }
+            });
+
+            // Update yield_portions input based on base portions
+            const basePortions = window.basePortions || 10;
+            const newPortions = basePortions * multiplier;
+            const yieldInput = document.getElementById('yield_portions');
+            if (yieldInput) {
+                yieldInput.value = Math.round(newPortions);
+                updateScaling();
+            }
+        }
+
         // --- Scaling Logic ---
         function updateScaling() {
             const yieldInput = document.getElementById('yield_portions');
@@ -1092,6 +1629,20 @@
             if (currentPortions <= 0) return;
 
             const ratio = currentPortions / (window.basePortions || 10);
+            
+            // Update active button based on current ratio
+            const multiplier = ratio;
+            document.querySelectorAll('.scaling-btn').forEach(btn => {
+                const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                // Check if this button matches the current multiplier (with small tolerance for rounding)
+                if (Math.abs(btnMultiplier - multiplier) < 0.01) {
+                    btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+                    btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                } else {
+                    btn.classList.remove('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                    btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
+                }
+            });
 
             document.querySelectorAll('.quantity-input').forEach(input => {
                 if (input.dataset.manuallyEdited === 'true') return;
@@ -1136,7 +1687,7 @@
                             create: false,
                             sortField: { field: "text", direction: "asc" },
                             placeholder: 'Search for a sub-recipe...',
-                            plugins: ['dropdown_input'],
+                            plugins: [],
                             onChange: function (val) {
                                 if (!val) {
                                     const unitDisplay = document.getElementById('sub-recipe-unit-display');

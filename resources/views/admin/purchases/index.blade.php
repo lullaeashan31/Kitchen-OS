@@ -6,10 +6,18 @@
 @endsection
 
 @section('actions')
-    <a href="{{ route('purchases.create') }}" class="btn btn-primary"
-        style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border-radius: 0.375rem; text-decoration: none;">
-        <i data-lucide="plus" style="width: 1rem; height: 1rem; display: inline-block;"></i> New Purchase
-    </a>
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <a href="{{ route('purchases.download.90days') }}" 
+           class="btn btn-secondary"
+           style="padding: 0.5rem 1rem; background: #10b981; color: white; border-radius: 0.375rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+            <i data-lucide="download" style="width: 1rem; height: 1rem; display: inline-block;"></i> 
+            Download Invoices (90 Days)
+        </a>
+        <a href="{{ route('purchases.create') }}" class="btn btn-primary"
+            style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border-radius: 0.375rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="plus" style="width: 1rem; height: 1rem; display: inline-block;"></i> New Purchase
+        </a>
+    </div>
 @endsection
 
 @section('content')
@@ -66,9 +74,14 @@
                         <td style="padding: 0.75rem 1rem; text-align: right;">₹{{ number_format($purchase->total_price ?? $purchase->price, 2) }}</td>
                         <td style="padding: 0.75rem 1rem; text-align: center;">
                             @if($purchase->invoice_url)
-                                <a href="{{ $purchase->invoice_url }}" target="_blank" title="View Invoice" style="color: #3b82f6;">
-                                    <i data-lucide="file-text" style="width: 1.25rem; height: 1.25rem; margin: 0 auto;"></i>
-                                </a>
+                                <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+                                    <a href="{{ $purchase->invoice_url }}" target="_blank" title="View Invoice" style="color: #3b82f6;">
+                                        <i data-lucide="eye" style="width: 1.25rem; height: 1.25rem;"></i>
+                                    </a>
+                                    <a href="{{ route('purchases.download.invoice', $purchase) }}" title="Download Invoice" style="color: #10b981;">
+                                        <i data-lucide="download" style="width: 1.25rem; height: 1.25rem;"></i>
+                                    </a>
+                                </div>
                             @else
                                 <span style="color: #cbd5e1;">-</span>
                             @endif

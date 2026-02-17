@@ -48,6 +48,10 @@ Route::get('/storage/purchases/{type}/{filename}', function ($type, $filename) {
     return response($file, 200)->header('Content-Type', $mimeType);
 })->where(['type' => 'invoices|goods', 'filename' => '.*']);
 
+// Onboarding Wizard (Public with Token)
+Route::get('/onboarding/{token}', [\App\Http\Controllers\Employee\OnboardingWizardController::class, 'show'])->name('onboarding.wizard');
+Route::post('/onboarding/{token}', [\App\Http\Controllers\Employee\OnboardingWizardController::class, 'submit'])->name('onboarding.submit');
+
 Route::get('/time-clock', [AttendanceViewController::class, 'tablet'])->name('attendance.tablet');
 
 // Admin Routes
@@ -106,6 +110,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Purchases
     Route::resource('purchases', \App\Http\Controllers\PurchaseController::class)->only(['index', 'create', 'store']);
+    Route::get('purchases/download/90days', [\App\Http\Controllers\PurchaseController::class, 'downloadInvoices90Days'])->name('purchases.download.90days');
+    Route::get('purchases/{purchase}/download-invoice', [\App\Http\Controllers\PurchaseController::class, 'downloadInvoice'])->name('purchases.download.invoice');
     Route::post('vendors', [VendorController::class, 'store'])->name('vendors.store');
     // Admin only actions
     Route::middleware(['admin'])->group(function () {

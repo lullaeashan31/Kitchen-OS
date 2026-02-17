@@ -55,6 +55,22 @@
             z-index: 40;
             display: flex;
             flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 35;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
         }
 
         .main-content {
@@ -64,6 +80,7 @@
             padding: 2rem;
             display: flex;
             flex-direction: column;
+            transition: margin-left 0.3s ease;
         }
 
         .top-header {
@@ -77,6 +94,111 @@
             position: sticky;
             top: 0;
             z-index: 30;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 1.5rem;
+        }
+
+        /* Tablet & Mobile Responsive */
+        /* Tablet: 768px - 1024px */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+                padding: 1rem;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+                width: 100%;
+            }
+
+            .top-header {
+                padding: 1rem 1.5rem;
+                margin: 0 0 1.5rem 0 !important;
+                flex-wrap: wrap;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .nav-link {
+                padding: 0.65rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            /* Tablet: Better table spacing */
+            table {
+                font-size: 0.875rem;
+            }
+
+            /* Tablet: Form inputs */
+            input[type="text"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Mobile: < 768px */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .top-header {
+                padding: 0.75rem 1rem;
+                margin: 0 0 1rem 0 !important;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .sidebar {
+                width: 280px;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .main-content {
+                padding: 0.75rem;
+            }
+
+            .top-header {
+                padding: 0.5rem 0.75rem;
+            }
         }
 
         .nav-link.active {
@@ -294,12 +416,20 @@
             </div>
         </aside>
 
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div>
-                    <!-- Breadcrumbs placeholder or page title logic -->
-                    @yield('header')
+                <div class="flex items-center gap-3">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div>
+                        <!-- Breadcrumbs placeholder or page title logic -->
+                        @yield('header')
+                    </div>
                 </div>
                 <div>
                     <!-- Actions -->
@@ -355,6 +485,27 @@
     <!-- Initialization Scripts -->
     <script>
         lucide.createIcons();
+
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+
+        // Close sidebar on window resize if > 1024px
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 1024) {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        });
 
         function openPreview(url, name) {
             // Google Drive Embed Hack: Replace 'view' with 'preview' if needed, or rely on URL

@@ -104,6 +104,68 @@
                         </div>
                     </div>
 
+                    <!-- Payroll Configuration Section -->
+                    <div class="border-t border-gray-100 pt-8 mt-8">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="banknote" class="w-5 h-5 text-green-600"></i>
+                            Payroll Configuration
+                        </h3>
+
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-green-50/50 p-6 rounded-2xl border border-green-100">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Salary (Base)</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                    <input type="number" name="monthly_salary" value="{{ old('monthly_salary') }}" required
+                                        min="0"
+                                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
+                                </div>
+                                @error('monthly_salary')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Weekly Off Day</label>
+                                <select name="weekly_off_day" required
+                                    class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
+                                    @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
+                                        <option value="{{ $day }}" {{ old('weekly_off_day', 'Sunday') == $day ? 'selected' : '' }}>{{ $day }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label
+                                    class="flex items-center space-x-3 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer group">
+                                    <input type="checkbox" name="variable_enabled" value="1" {{ old('variable_enabled') ? 'checked' : '' }}
+                                        class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 transition-colors">
+                                    <div>
+                                        <span class="text-sm font-bold text-gray-700">Enable Performance Bonus
+                                            (Variable)</span>
+                                        <p class="text-xs text-gray-500">Allows managers to rate staff and calculate monthly
+                                            bonuses.</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div id="max_variable_input" class="{{ old('variable_enabled') ? '' : 'hidden' }}">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Max Monthly Variable
+                                    Amount</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                    <input type="number" name="max_variable_amount"
+                                        value="{{ old('max_variable_amount', 0) }}" min="0"
+                                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
+                                </div>
+                                @error('max_variable_amount')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Permissions Section -->
                     <div class="border-t border-gray-100 pt-8">
                         <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -166,5 +228,10 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
+
+        // Toggle Max Variable Input
+        document.querySelector('input[name="variable_enabled"]').addEventListener('change', function () {
+            document.getElementById('max_variable_input').classList.toggle('hidden', !this.checked);
+        });
     </script>
 @endsection

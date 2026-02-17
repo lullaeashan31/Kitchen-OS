@@ -1,19 +1,20 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">Recipe Book</h1>
-            <p class="text-sm text-gray-500">Manage kitchen recipes and approvals</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <button onclick="openExportModal()" class="bg-green-600 hover:bg-green-700 text-white shadow-lg flex items-center gap-2 px-6 py-3 rounded-xl transition-colors">
-                <i data-lucide="download" class="w-5 h-5"></i> Export
-            </button>
-            <a href="{{ route('recipes.create') }}" class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center gap-2 px-6 py-3 rounded-xl">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Recipe
-            </a>
-        </div>
+    <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Recipe Book</h1>
+        <p class="text-xs md:text-sm text-gray-500">Manage kitchen recipes and approvals</p>
+    </div>
+@endsection
+
+@section('actions')
+    <div class="flex flex-wrap items-center gap-2 md:gap-3">
+        <button onclick="openExportModal()" class="bg-green-600 hover:bg-green-700 text-white shadow-lg flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 rounded-xl transition-colors text-sm md:text-base">
+            <i data-lucide="download" class="w-4 h-4 md:w-5 md:h-5"></i> <span class="hidden sm:inline">Export</span>
+        </button>
+        <a href="{{ route('recipes.create') }}" class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 rounded-xl text-sm md:text-base">
+            <i data-lucide="plus-circle" class="w-4 h-4 md:w-5 md:h-5"></i> <span class="hidden sm:inline">Create Recipe</span>
+        </a>
     </div>
 @endsection
 
@@ -21,20 +22,20 @@
     <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         
         <!-- Filters -->
-        <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-            <form method="GET" action="{{ route('recipes.index') }}" class="flex flex-wrap gap-4 items-end">
-                <div class="flex-1 min-w-[200px]">
+        <div class="p-4 md:p-5 lg:p-6 border-b border-gray-100 bg-gray-50/50">
+            <form method="GET" action="{{ route('recipes.index') }}" class="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 sm:items-end">
+                <div class="flex-1 min-w-full sm:min-w-[200px]">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Search</label>
                     <div class="relative">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-                        <input type="text" name="search" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" 
+                        <input type="text" name="search" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm md:text-base" 
                                placeholder="Search by name..." value="{{ request('search') }}">
                     </div>
                 </div>
                 
-                <div class="w-48">
+                <div class="w-full sm:w-48">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
-                    <select name="category_id" id="category-filter" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
+                    <select name="category_id" id="category-filter" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white text-sm md:text-base">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
@@ -61,9 +62,9 @@
                 </script>
                 @endpush
 
-                <div class="w-48">
+                <div class="w-full sm:w-48">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                    <select name="status" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
+                    <select name="status" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white text-sm md:text-base">
                         <option value="">All Statuses</option>
                         <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Pending (Draft)</option>
                         <option value="permanent" {{ request('status') == 'permanent' ? 'selected' : '' }}>Approved</option>
@@ -72,12 +73,12 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium text-sm flex items-center gap-2">
-                        <i data-lucide="filter" class="w-4 h-4"></i> Filter
+                    <button type="submit" class="px-3 md:px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium text-sm flex items-center gap-2">
+                        <i data-lucide="filter" class="w-4 h-4"></i> <span class="hidden sm:inline">Filter</span>
                     </button>
                     @if(request()->hasAny(['search', 'category_id', 'status']))
-                        <a href="{{ route('recipes.index') }}" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium text-sm flex items-center gap-2">
-                            <i data-lucide="x" class="w-4 h-4"></i> Clear
+                        <a href="{{ route('recipes.index') }}" class="px-3 md:px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium text-sm flex items-center gap-2">
+                            <i data-lucide="x" class="w-4 h-4"></i> <span class="hidden sm:inline">Clear</span>
                         </a>
                     @endif
                 </div>
@@ -85,33 +86,38 @@
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto -mx-2 sm:-mx-4 md:mx-0">
+            <table class="w-full text-left border-collapse min-w-[700px] md:min-w-[800px]">
                 <thead>
                     <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
-                        <th class="p-5 font-semibold">Recipe Details</th>
-                        <th class="p-5 font-semibold">Category</th>
-                        <th class="p-5 font-semibold">Status</th>
+                        <th class="p-3 md:p-4 lg:p-5 font-semibold">Recipe Details</th>
+                        <th class="p-3 md:p-4 lg:p-5 font-semibold hidden sm:table-cell">Category</th>
+                        <th class="p-3 md:p-4 lg:p-5 font-semibold">Status</th>
                         @if(auth()->user()->isAdmin())
-                            <th class="p-5 font-semibold">Costing</th>
+                            <th class="p-3 md:p-4 lg:p-5 font-semibold hidden md:table-cell">Costing</th>
                         @endif
-                        <th class="p-5 font-semibold">Created By</th>
-                        <th class="p-5 font-semibold text-right">Actions</th>
+                        <th class="p-3 md:p-4 lg:p-5 font-semibold hidden lg:table-cell">Created By</th>
+                        <th class="p-3 md:p-4 lg:p-5 font-semibold text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse($recipes as $recipe)
                         <tr class="group hover:bg-blue-50/20 transition-colors">
-                            <td class="p-5">
-                                <div class="font-bold text-gray-800 text-lg">{{ $recipe->name }}</div>
+                            <td class="p-3 md:p-4 lg:p-5">
+                                <div class="font-bold text-gray-800 text-base md:text-lg">{{ $recipe->name }}</div>
                                 <div class="text-xs text-gray-400 font-mono">v{{ $recipe->version }} • {{ $recipe->yields }} Portions</div>
+                                <div class="sm:hidden mt-1">
+                                    <span class="px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                        {{ $recipe->category->name ?? 'Uncategorized' }}
+                                    </span>
+                                </div>
                             </td>
-                            <td class="p-5">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                            <td class="p-3 md:p-4 lg:p-5 hidden sm:table-cell">
+                                <span class="px-2 md:px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
                                     {{ $recipe->category->name ?? 'Uncategorized' }}
                                 </span>
                             </td>
-                            <td class="p-5">
+                            <td class="p-3 md:p-4 lg:p-5">
                                 @if($recipe->status->value === 'permanent')
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
                                         <i data-lucide="check-circle" class="w-3 h-3"></i> Approved
@@ -127,16 +133,16 @@
                                 @endif
                             </td>
                             @if(auth()->user()->isAdmin())
-                                <td class="p-5">
-                                    <div class="font-mono font-bold text-gray-700">₹{{ number_format($recipe->total_cost, 2) }}</div>
+                                <td class="p-3 md:p-4 lg:p-5 hidden md:table-cell">
+                                    <div class="font-mono font-bold text-gray-700 text-sm md:text-base">₹{{ number_format($recipe->total_cost, 2) }}</div>
                                 </td>
                             @endif
-                            <td class="p-5">
+                            <td class="p-3 md:p-4 lg:p-5 hidden lg:table-cell">
                                 <div class="text-sm font-medium text-gray-700">{{ $recipe->creator->name }}</div>
                                 <div class="text-xs text-gray-400">{{ $recipe->updated_at->diffForHumans() }}</div>
                             </td>
-                            <td class="p-5 text-right">
-                                <div class="flex items-center justify-end gap-2">
+                            <td class="p-3 md:p-4 lg:p-5 text-right">
+                                <div class="flex items-center justify-end gap-1 md:gap-2">
                                     <a href="{{ route('recipes.show', $recipe) }}" 
                                        class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
                                         <i data-lucide="eye" class="w-5 h-5"></i>

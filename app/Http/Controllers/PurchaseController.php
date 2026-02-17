@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use ZipArchive;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -211,5 +213,98 @@ class PurchaseController extends Controller
         ]);
 
         return back()->with('success', 'Purchase rejected.');
+    }
+
+    /**
+     * Download single invoice (image/PDF)
+     */
+    public function downloadInvoice(Purchase $purchase)
+    {
+        $this->authorize('view', $purchase);
+
+        if (!$purchase->invoice_photo_path) {
+            return back()->with('error', 'Invoice not found.');
+        }
+
+        $disk = config('filesystems.default');
+        
+        if (!Storage::disk($disk)->exists($purchase->invoice_photo_path)) {
+            return back()->with('error', 'Invoice file not found.');
+        }
+
+        $file = Storage::disk($disk)->get($purchase->invoice_photo_path);
+        $mimeType = Storage::disk($disk)->mimeType($purchase->invoice_photo_path);
+        $extension = pathinfo($purchase->invoice_photo_path, PATHINFO_EXTENSION) ?: 'jpg';
+        $filename = 'invoice_' . $purchase->id . '_' . $purchase->purchase_date->format('Y-m-d') . '.' . $extension;
+
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
+     * Download all invoices from last 90 days as ZIP
+     */
+    public function downloadInvoices90Days()
+    {
+        $this->authorize('viewAny', Purchase::class);
+
+        $startDate = now()->subDays(90);
+        
+        $query = Purchase::where('purchase_date', '>=', $startDate)
+            ->whereNotNull('invoice_photo_path');
+
+        if (Auth::user()->isStaff()) {
+            $query->where('created_by', Auth::id());
+        }
+
+        $purchases = $query->get();
+
+        if ($purchases->isEmpty()) {
+            return back()->with('error', 'No invoices found in the last 90 days.');
+        }
+
+        $disk = config('filesystems.default');
+        $zipPath = storage_path('app/temp/invoices_90days_' . now()->format('Y-m-d_His') . '.zip');
+        
+        // Create temp directory if not exists
+        $tempDir = dirname($zipPath);
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+            return back()->with('error', 'Failed to create ZIP file.');
+        }
+
+        $addedCount = 0;
+        foreach ($purchases as $purchase) {
+            if (Storage::disk($disk)->exists($purchase->invoice_photo_path)) {
+                try {
+                    $fileContent = Storage::disk($disk)->get($purchase->invoice_photo_path);
+                    $extension = pathinfo($purchase->invoice_photo_path, PATHINFO_EXTENSION) ?: 'jpg';
+                    $ingredientName = $purchase->ingredient->name ?? 'Unknown';
+                    // Sanitize filename - remove special characters
+                    $ingredientName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $ingredientName);
+                    $zipFilename = 'Invoice_' . $purchase->id . '_' . $purchase->purchase_date->format('Y-m-d') . '_' . $ingredientName . '.' . $extension;
+                    $zip->addFromString($zipFilename, $fileContent);
+                    $addedCount++;
+                } catch (\Exception $e) {
+                    Log::warning('Failed to add invoice to ZIP: ' . $e->getMessage(), ['purchase_id' => $purchase->id]);
+                    continue;
+                }
+            }
+        }
+
+        $zip->close();
+
+        if ($addedCount === 0) {
+            @unlink($zipPath);
+            return back()->with('error', 'No invoice files found to download.');
+        }
+
+        return response()->download($zipPath, 'invoices_last_90_days_' . now()->format('Y-m-d') . '.zip')
+            ->deleteFileAfterSend(true);
     }
 }

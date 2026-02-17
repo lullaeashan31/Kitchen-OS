@@ -356,10 +356,10 @@
                     <div class="mb-4">
                         <label class="form-label text-xs uppercase text-gray-500 font-bold">Scaling Mode</label>
                         <div class="flex gap-2">
-                            <button onclick="setMultiplier(0.5)" class="btn btn-sm btn-outline-secondary">0.5x</button>
-                            <button onclick="setMultiplier(1)" class="btn btn-sm btn-primary">1x</button>
-                            <button onclick="setMultiplier(2)" class="btn btn-sm btn-outline-secondary">2x</button>
-                            <button onclick="setMultiplier(3)" class="btn btn-sm btn-outline-secondary">3x</button>
+                            <button onclick="setMultiplier(0.5)" class="scaling-btn btn btn-sm btn-outline-secondary" data-multiplier="0.5">0.5x</button>
+                            <button onclick="setMultiplier(1)" class="scaling-btn btn btn-sm btn-primary active" data-multiplier="1">1x</button>
+                            <button onclick="setMultiplier(2)" class="scaling-btn btn btn-sm btn-outline-secondary" data-multiplier="2">2x</button>
+                            <button onclick="setMultiplier(3)" class="scaling-btn btn btn-sm btn-outline-secondary" data-multiplier="3">3x</button>
                         </div>
                     </div>
 
@@ -481,7 +481,38 @@
         const baseCost = {{ $recipe->total_cost }};
         const basePrepTime = {{ $recipe->prep_time_minutes ?? 0 }};
 
+        // Initialize button colors on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const desiredPortions = parseFloat(document.getElementById('desiredPortions').value) || basePortions;
+            const ratio = desiredPortions / basePortions;
+            
+            document.querySelectorAll('.scaling-btn').forEach(btn => {
+                const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                if (Math.abs(btnMultiplier - ratio) < 0.01) {
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-primary', 'active');
+                } else {
+                    btn.classList.remove('btn-primary', 'active');
+                    btn.classList.add('btn-outline-secondary');
+                }
+            });
+        });
+
         function setMultiplier(m) {
+            // Update button colors - remove active state from all, add to clicked one
+            document.querySelectorAll('.scaling-btn').forEach(btn => {
+                const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                if (btnMultiplier === m) {
+                    // Active state: primary button
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-primary', 'active');
+                } else {
+                    // Inactive state: outline button
+                    btn.classList.remove('btn-primary', 'active');
+                    btn.classList.add('btn-outline-secondary');
+                }
+            });
+
             const target = basePortions * m;
             document.getElementById('desiredPortions').value = target;
             updateScaling();
@@ -490,6 +521,19 @@
         function updateScaling() {
             const targetPortions = parseFloat(document.getElementById('desiredPortions').value) || basePortions;
             const ratio = targetPortions / basePortions;
+
+            // Update button colors based on current ratio
+            document.querySelectorAll('.scaling-btn').forEach(btn => {
+                const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                // Check if this button matches the current multiplier (with small tolerance for rounding)
+                if (Math.abs(btnMultiplier - ratio) < 0.01) {
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-primary', 'active');
+                } else {
+                    btn.classList.remove('btn-primary', 'active');
+                    btn.classList.add('btn-outline-secondary');
+                }
+            });
 
             // Update Form Input
             document.getElementById('formNewYield').value = targetPortions;

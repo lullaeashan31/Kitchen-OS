@@ -30,6 +30,11 @@ class User extends Authenticatable
         'password',
         'role',
         'shift',
+        'monthly_salary',
+        'variable_enabled',
+        'max_variable_amount',
+        'weekly_off_day',
+        'onboarding_status',
         'profile_photo_path',
         'is_password_changed',
     ];
@@ -149,5 +154,20 @@ class User extends Authenticatable
     public function shiftAssignments()
     {
         return $this->hasMany(ShiftAssignment::class);
+    }
+
+    public function employeeProfile()
+    {
+        return $this->hasOne(EmployeeProfile::class);
+    }
+
+    public function onboardingTokens()
+    {
+        return $this->hasMany(OnboardingToken::class);
+    }
+
+    public function hrPolicyLogs()
+    {
+        return $this->hasMany(HrPolicyLog::class);
     }
 }

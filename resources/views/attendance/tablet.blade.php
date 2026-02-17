@@ -27,7 +27,22 @@
                     <p class="text-gray-400 text-lg">Identity Verification Active</p>
                 </div>
 
-                <div
+                <!-- Photo Mode Toggle -->
+                <div class="flex items-center justify-center lg:justify-start gap-3 mb-4">
+                    <button id="mode-live" onclick="switchPhotoMode('live')" 
+                        class="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-sm flex items-center gap-2 transition-all">
+                        <i data-lucide="camera" class="w-4 h-4"></i>
+                        Live Camera
+                    </button>
+                    <button id="mode-upload" onclick="switchPhotoMode('upload')" 
+                        class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm flex items-center gap-2 transition-all">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        Upload Photo
+                    </button>
+                </div>
+
+                <!-- Live Camera View -->
+                <div id="camera-view"
                     class="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/5 bg-black">
                     <video id="camera" autoplay playsinline
                         class="w-full h-full object-cover transform -scale-x-100"></video>
@@ -41,6 +56,21 @@
                     <!-- Face Overlay Guide -->
                     <div
                         class="absolute inset-0 border-[3px] border-dashed border-white/20 m-12 rounded-3xl pointer-events-none opacity-50">
+                    </div>
+                </div>
+
+                <!-- Upload Photo View -->
+                <div id="upload-view" class="hidden relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/5 bg-black" 
+                     ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <img id="uploaded-preview" class="hidden w-full h-full object-cover" alt="Uploaded photo">
+                    <div id="upload-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-gray-400 p-6 border-2 border-dashed border-white/20 rounded-3xl transition-all">
+                        <i data-lucide="image" class="w-16 h-16 mb-4 opacity-50"></i>
+                        <p class="text-center mb-2">Click to select photo</p>
+                        <p class="text-center text-xs mb-4 text-gray-500">or drag & drop image here</p>
+                        <label for="photo-upload" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl cursor-pointer font-semibold transition-all">
+                            Choose Photo
+                        </label>
+                        <input type="file" id="photo-upload" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
                     </div>
                 </div>
 
@@ -123,14 +153,44 @@
     <script>
         lucide.createIcons();
         let currentCode = '';
+        let photoMode = 'live'; // 'live' or 'upload'
+        let uploadedPhotoFile = null;
         const codeInput = document.getElementById('staff-code');
         const video = document.getElementById('camera');
         const canvas = document.getElementById('snapshot');
+        let cameraStream = null;
+
+        // Photo Mode Switch
+        function switchPhotoMode(mode) {
+            photoMode = mode;
+            const liveBtn = document.getElementById('mode-live');
+            const uploadBtn = document.getElementById('mode-upload');
+            const cameraView = document.getElementById('camera-view');
+            const uploadView = document.getElementById('upload-view');
+
+            if (mode === 'live') {
+                liveBtn.className = 'px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-sm flex items-center gap-2 transition-all';
+                uploadBtn.className = 'px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm flex items-center gap-2 transition-all';
+                cameraView.classList.remove('hidden');
+                uploadView.classList.add('hidden');
+                startCamera();
+            } else {
+                liveBtn.className = 'px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm flex items-center gap-2 transition-all';
+                uploadBtn.className = 'px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-sm flex items-center gap-2 transition-all';
+                cameraView.classList.add('hidden');
+                uploadView.classList.remove('hidden');
+                stopCamera();
+            }
+        }
 
         // Camera Setup
         async function startCamera() {
             try {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                }
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                cameraStream = stream;
                 video.srcObject = stream;
                 document.getElementById('loading-camera').classList.add('hidden');
             } catch (err) {
@@ -138,6 +198,14 @@
                 showToast('error', 'Camera Blocked', 'Allow camera access to enable system.');
             }
         }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+
         startCamera();
 
         // GPS Setup
@@ -170,62 +238,162 @@
             codeInput.value = currentCode;
         }
 
+        // Handle File Upload
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            processUploadedFile(file);
+        }
+
+        // Handle Drag & Drop
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const placeholder = document.getElementById('upload-placeholder');
+            if (placeholder) {
+                placeholder.classList.add('border-blue-500', 'bg-gray-800');
+            }
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const placeholder = document.getElementById('upload-placeholder');
+            if (placeholder) {
+                placeholder.classList.remove('border-blue-500', 'bg-gray-800');
+            }
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const placeholder = document.getElementById('upload-placeholder');
+            if (placeholder) {
+                placeholder.classList.remove('border-blue-500', 'bg-gray-800');
+            }
+
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                processUploadedFile(files[0]);
+            }
+        }
+
+        function processUploadedFile(file) {
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('error', 'Invalid File', 'Please select an image file.');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                showToast('error', 'File Too Large', 'Please select an image smaller than 5MB.');
+                return;
+            }
+
+            uploadedPhotoFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('uploaded-preview');
+                const placeholder = document.getElementById('upload-placeholder');
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
         // Main Action
-        function submitAttendance(actionType) {
+        async function submitAttendance(actionType) {
             if (currentCode.length !== 6) {
                 showToast('error', 'Code Required', 'Enter your 6-digit staff code.');
                 return;
             }
 
+            let photoBlob = null;
+
+            if (photoMode === 'live') {
+                // Capture from live camera
+                if (!video.videoWidth || !video.videoHeight) {
+                    showToast('error', 'Camera Error', 'Camera not ready. Please wait or switch to upload mode.');
+                    return;
+                }
+
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                photoBlob = await new Promise((resolve) => {
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            handleError('Camera capture failed');
+                            resolve(null);
+                        } else {
+                            resolve(blob);
+                        }
+                    }, 'image/jpeg', 0.8);
+                });
+
+                if (!photoBlob) return;
+
+            } else {
+                // Use uploaded photo
+                if (!uploadedPhotoFile) {
+                    showToast('error', 'Photo Required', 'Please upload a photo or switch to live camera mode.');
+                    return;
+                }
+                photoBlob = uploadedPhotoFile;
+            }
+
             document.getElementById('loading').classList.remove('hidden');
 
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            if (!navigator.geolocation) {
+                handleError('GPS not supported');
+                return;
+            }
 
-            canvas.toBlob((blob) => {
-                if (!blob) return handleError('Camera capture failed');
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const formData = new FormData();
+                formData.append('staff_code', currentCode);
+                formData.append('action_type', actionType);
+                formData.append('gps_latitude', position.coords.latitude);
+                formData.append('gps_longitude', position.coords.longitude);
+                formData.append('device_id', 'tablet-web-001');
+                formData.append('selfie_image', photoBlob, photoMode === 'live' ? 'capture.jpg' : uploadedPhotoFile.name);
 
-                if (!navigator.geolocation) return handleError('GPS not supported');
+                // Add CSRF Token
+                formData.append('_token', '{{ csrf_token() }}');
 
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    const formData = new FormData();
-                    formData.append('staff_code', currentCode);
-                    formData.append('action_type', actionType);
-                    formData.append('gps_latitude', position.coords.latitude);
-                    formData.append('gps_longitude', position.coords.longitude);
-                    formData.append('device_id', 'tablet-web-001');
-                    formData.append('selfie_image', blob, 'capture.jpg');
+                try {
+                    const res = await fetch('/api/attendance/clock', {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json' },
+                        body: formData
+                    });
+                    const data = await res.json();
 
-                    // Add CSRF Token
-                    formData.append('_token', '{{ csrf_token() }}');
-
-                    try {
-                        const res = await fetch('/api/attendance/clock', {
-                            method: 'POST',
-                            headers: { 'Accept': 'application/json' },
-                            body: formData
-                        });
-                        const data = await res.json();
-
-                        if (res.ok) {
-                            showToast('success', actionType === 'CLOCK_IN' ? 'Welcome Back!' : 'See You Later!', data.message);
-                            clearCode();
-                            // Optional: Refresh dashboard stats if needed, or just stay on clock page
-                        } else {
-                            showToast('error', 'Action Failed', data.message || 'Verification failed');
+                    if (res.ok) {
+                        showToast('success', actionType === 'CLOCK_IN' ? 'Welcome Back!' : 'See You Later!', data.message);
+                        clearCode();
+                        // Reset photo if upload mode
+                        if (photoMode === 'upload') {
+                            uploadedPhotoFile = null;
+                            document.getElementById('photo-upload').value = '';
+                            document.getElementById('uploaded-preview').classList.add('hidden');
+                            document.getElementById('upload-placeholder').classList.remove('hidden');
                         }
-                    } catch (e) {
-                        showToast('error', 'System Error', e.message);
-                    } finally {
-                        document.getElementById('loading').classList.add('hidden');
+                    } else {
+                        showToast('error', 'Action Failed', data.message || 'Verification failed');
                     }
-                }, () => {
-                    handleError('GPS Permission Denied. Enable location services.');
+                } catch (e) {
+                    showToast('error', 'System Error', e.message);
+                } finally {
                     document.getElementById('loading').classList.add('hidden');
-                });
-            }, 'image/jpeg', 0.8);
+                }
+            }, () => {
+                handleError('GPS Permission Denied. Enable location services.');
+                document.getElementById('loading').classList.add('hidden');
+            });
         }
 
         function handleError(msg) {

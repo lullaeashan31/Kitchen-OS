@@ -14,9 +14,30 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Shift Name</label>
-                    <input type="text" name="name" value="{{ old('name', $shift->name ?? '') }}"
-                        class="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="e.g. Morning Shift" required>
+                    <div class="relative">
+                        <select name="name" id="shift_name_select"
+                            class="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 appearance-none pr-10"
+                            onchange="handleShiftNameChange()">
+                            <option value="">Select or type new shift name...</option>
+                            @if(isset($existingShifts) && $existingShifts->count() > 0)
+                                @foreach($existingShifts as $existingShift)
+                                    <option value="{{ $existingShift->name }}" {{ old('name') == $existingShift->name ? 'selected' : '' }}>
+                                        {{ $existingShift->name }}
+                                    </option>
+                                @endforeach
+                            @endif
+                            <option value="__custom__">+ Create New Shift Name</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <input type="text" name="name_custom" id="shift_name_input" value="{{ old('name') }}"
+                        class="w-full mt-2 rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 hidden"
+                        placeholder="e.g. Morning Shift">
+                    <input type="hidden" name="name" id="shift_name_hidden" value="{{ old('name') }}">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -51,4 +72,46 @@
             </div>
         </form>
     </div>
+
+    @push('scripts')
+    <script>
+        function handleShiftNameChange() {
+            const select = document.getElementById('shift_name_select');
+            const input = document.getElementById('shift_name_input');
+            const hidden = document.getElementById('shift_name_hidden');
+            const selectedValue = select.value;
+
+            if (selectedValue === '__custom__') {
+                // Show input field for custom name
+                input.classList.remove('hidden');
+                input.required = true;
+                select.required = false;
+                hidden.value = '';
+                input.focus();
+            } else if (selectedValue) {
+                // Hide input, use selected value
+                input.classList.add('hidden');
+                input.required = false;
+                select.required = true;
+                hidden.value = selectedValue;
+            } else {
+                // Nothing selected
+                input.classList.add('hidden');
+                input.required = false;
+                select.required = true;
+                hidden.value = '';
+            }
+        }
+
+        // Update hidden field when custom input changes
+        document.getElementById('shift_name_input')?.addEventListener('input', function() {
+            document.getElementById('shift_name_hidden').value = this.value;
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            handleShiftNameChange();
+        });
+    </script>
+    @endpush
 @endsection

@@ -18,7 +18,8 @@ class ShiftController extends Controller
 
     public function create()
     {
-        return view('admin.shifts.create');
+        $existingShifts = \App\Models\Shift::orderBy('name')->get();
+        return view('admin.shifts.create', compact('existingShifts'));
     }
 
     public function store(Request $request)
@@ -37,7 +38,8 @@ class ShiftController extends Controller
 
     public function edit(\App\Models\Shift $shift)
     {
-        return view('admin.shifts.edit', compact('shift'));
+        $existingShifts = \App\Models\Shift::orderBy('name')->get();
+        return view('admin.shifts.edit', compact('shift', 'existingShifts'));
     }
 
     public function update(Request $request, \App\Models\Shift $shift)

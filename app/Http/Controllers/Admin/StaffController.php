@@ -33,6 +33,10 @@ class StaffController extends Controller
             'profile_photo' => 'nullable|image|max:5120', // Optional 5MB max
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+            'monthly_salary' => 'required|numeric|min:0',
+            'variable_enabled' => 'boolean',
+            'max_variable_amount' => 'nullable|numeric|min:0',
+            'weekly_off_day' => 'required|string',
         ]);
 
         $createData = [
@@ -41,6 +45,11 @@ class StaffController extends Controller
             'staff_code' => $validated['staff_code'],
             'password' => Hash::make($validated['password']),
             'role' => \App\Enums\UserRole::Staff,
+            'monthly_salary' => $validated['monthly_salary'],
+            'variable_enabled' => $request->has('variable_enabled'),
+            'max_variable_amount' => $validated['max_variable_amount'] ?? 0,
+            'weekly_off_day' => $validated['weekly_off_day'],
+            'onboarding_status' => 'pending',
             'is_password_changed' => false, // Force change
         ];
 
@@ -55,7 +64,18 @@ class StaffController extends Controller
             $user->permissions()->sync($request->permissions);
         }
 
-        return redirect()->route('admin.staff.index')->with('success', 'Staff member created successfully.');
+        // Generate Onboarding Token
+        $token = \Illuminate\Support\Str::random(32);
+        $user->onboardingTokens()->create([
+            'token' => $token,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // Logic to send Email/SMS would go here
+        // For now, we'll just flash the link (for dev/testing)
+        $onboardingLink = route('onboarding.wizard', ['token' => $token]);
+
+        return redirect()->route('admin.staff.index')->with('success', 'Staff member created successfully. Onboarding Link: ' . $onboardingLink);
     }
 
     public function edit(string $id)

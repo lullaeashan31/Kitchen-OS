@@ -1,32 +1,49 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="flex items-center gap-3">
-        <a href="{{ route('recipes.show', $recipe) }}"
-            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-            <i data-lucide="arrow-left" class="w-6 h-6"></i>
-        </a>
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Edit Recipe</h1>
-            <p class="text-sm text-gray-500">Refining {{ $recipe->name }}</p>
+    <div>
+        <div class="flex items-center gap-3 md:gap-4">
+            <a href="{{ route('recipes.show', $recipe) }}"
+                class="p-2 md:p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i data-lucide="arrow-left" class="w-5 h-5 md:w-6 md:h-6"></i>
+            </a>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">Edit Recipe</h1>
+                <p class="text-xs md:text-sm text-gray-500">Refining {{ $recipe->name }}</p>
+            </div>
         </div>
+    </div>
+@endsection
+
+@section('actions')
+    <div class="flex items-center gap-2 md:gap-3">
+        <button type="button" onclick="window.history.back()"
+            class="px-4 md:px-6 py-2 md:py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm hover:bg-gray-50 transition-all text-sm md:text-base">
+            <span class="hidden sm:inline">Cancel</span>
+            <span class="sm:hidden">✕</span>
+        </button>
+        <button type="submit"
+            class="px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-lg shadow-lg hover:shadow-blue-500/30 transition-all text-sm md:text-base">
+            <span class="hidden sm:inline">Update Recipe</span>
+            <span class="sm:hidden">Update</span>
+        </button>
     </div>
 @endsection
 
 @section('content')
     <form action="{{ route('recipes.update', $recipe) }}" method="POST" id="recipeForm"
-        class="flex flex-col lg:flex-row gap-6">
+        class="flex flex-col xl:flex-row gap-4 md:gap-6">
         @csrf
         @method('PUT')
 
         <!-- Left Column: Primary Details -->
-        <div class="w-full lg:w-1/3 flex flex-col gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i data-lucide="info" class="w-5 h-5 text-blue-500"></i> Basic Info
+        <div class="w-full xl:w-1/3 flex flex-col gap-4 md:gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+                <h2 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2">
+                    <i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5 text-blue-500"></i> Basic Info
                 </h2>
 
-                <div class="space-y-4">
+                <div class="space-y-3 md:space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Recipe Name</label>
                         <input type="text" name="name"
@@ -155,7 +172,7 @@
                                 </div>
                                 <input type="number" name="yield_portions" id="yield_portions"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none font-bold text-gray-800"
-                                    min="1" step="1" value="{{ old('yield_portions', $recipe->yield_portions) }}"
+                                    min="1" step="1" value="{{ old('yield_portions', $recipe->yield_portions ? (int)$recipe->yield_portions : '') }}"
                                     placeholder="e.g. 10" oninput="updateScaling()">
                                 @error('yield_portions') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -163,7 +180,7 @@
                                 <label class="block text-xs text-gray-400 mb-1">Batches</label>
                                 <input type="number" name="yield_batches"
                                     class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none"
-                                    min="1" step="1" value="{{ old('yield_batches', $recipe->yield_batches) }}"
+                                    min="1" step="1" value="{{ old('yield_batches', $recipe->yield_batches ? (int)$recipe->yield_batches : '') }}"
                                     placeholder="e.g. 1">
                                 @error('yield_batches') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -227,7 +244,7 @@
         </div>
 
         <!-- Right Column: Ingredients -->
-        <div class="w-full lg:w-2/3">
+        <div class="w-full xl:w-2/3 space-y-4 md:space-y-6">
             <!-- Recipe Sets Section -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                 <div class="flex justify-between items-center mb-6">
@@ -282,26 +299,26 @@
                             </div>
 
                             <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                <div class="overflow-x-auto">
-                                    <table class="w-full">
+                                <div class="overflow-x-auto -mx-2 md:mx-0">
+                                    <table class="w-full min-w-[600px]">
                                         <thead class="bg-gray-50 border-b border-gray-200">
                                             <tr>
                                                 <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50%]">
+                                                    class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50%]">
                                                     Item</th>
                                                 <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
+                                                    class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                                     Quantity</th>
                                                 <th
-                                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
+                                                    class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                                     Unit</th>
                                                 @if(auth()->user()->isAdmin())
                                                 <th
-                                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
+                                                    class="px-2 md:px-4 py-2 md:py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
                                                     Cost</th>
                                                 @endif
                                                 <th
-                                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
+                                                    class="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
                                                 </th>
                                             </tr>
                                         </thead>
@@ -393,25 +410,37 @@
                                                             <!-- Other options injected via JS or fallback -->
                                                         </select>
                                                         </div>
-                                                    <td class="px-4 py-3">
+                                                    <td class="px-2 md:px-4 py-2 md:py-3">
                                                             <input type="number" step="any"
                                                                 name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][quantity]"
                                                                 value="{{ $rQty }}" required
                                                                 data-base-qty="{{ $rQty }}"
-                                                                class="quantity-input w-full h-[44px] px-3 rounded-xl border-2 {{ $errors->has('stages.'.$index.'.ingredients.'.$ingIndex.'.quantity') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-base text-gray-900 transition-all bg-white">
+                                                                class="quantity-input w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 {{ $errors->has('stages.'.$index.'.ingredients.'.$ingIndex.'.quantity') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-sm md:text-base text-gray-900 transition-all bg-white">
                                                         @error('stages.' . $index . '.ingredients.' . $ingIndex . '.quantity') <p
                                                         class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                                     </td>
-                                                    <td class="px-4 py-3">
-                                                        <select name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][unit]"
-                                                            required
-                                                            class="unit-select w-full h-[44px] px-3 rounded-xl border-2 {{ $errors->has('stages.'.$index.'.ingredients.'.$ingIndex.'.unit') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none bg-white font-bold text-base text-gray-900 appearance-none transition-all">
-                                                            @foreach(\App\Enums\Unit::cases() as $unit)
-                                                                <option value="{{ $unit->value }}" {{ $rUnit == $unit->value ? 'selected' : '' }}>
-                                                                    {{ $unit->label() }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
+                                                    <td class="px-2 md:px-4 py-2 md:py-3">
+                                                        <!-- Hidden input for form submission -->
+                                                        <input type="hidden" name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][unit]" 
+                                                            value="{{ $rUnit ?? '' }}" 
+                                                            class="unit-value-input">
+                                                        <!-- Display field (readonly) -->
+                                                        @php
+                                                            $unitDisplayValue = '';
+                                                            if ($rUnit) {
+                                                                foreach (\App\Enums\Unit::cases() as $unit) {
+                                                                    if ($unit->value == $rUnit) {
+                                                                        $unitDisplayValue = $unit->label();
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        <input type="text" 
+                                                            value="{{ $unitDisplayValue }}" 
+                                                            readonly
+                                                            class="unit-display w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 border-gray-300 bg-gray-50 font-bold text-sm md:text-base text-gray-600 cursor-not-allowed"
+                                                            placeholder="Select item first">
                                                         @error('stages.' . $index . '.ingredients.' . $ingIndex . '.unit') <p
                                                         class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                                     </td>
@@ -420,11 +449,11 @@
                                                         name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][ingredient_group]"
                                                         value="{{ $rGroup }}">
                                                     @if(auth()->user()->isAdmin())
-                                                    <td class="px-4 py-3 text-right font-medium text-gray-700 cost-display">
+                                                    <td class="px-2 md:px-4 py-2 md:py-3 text-right font-medium text-gray-700 cost-display text-sm">
                                                         {{ number_format((float) $rCost, 2) }}
                                                     </td>
                                                     @endif
-                                                    <td class="px-4 py-3 text-center">
+                                                    <td class="px-2 md:px-4 py-2 md:py-3 text-center">
                                                         <button type="button" onclick="removeRow(this)"
                                                             class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50">
                                                             <i data-lucide="x" class="w-4 h-4"></i>
@@ -584,26 +613,26 @@
             </div>
 
             <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
+                <div class="overflow-x-auto -mx-2 md:mx-0">
+                    <table class="w-full min-w-[600px]">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50%]">
+                                    class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50%]">
                                     Item</th>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
+                                    class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                     Quantity</th>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
+                                    class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">
                                     Unit</th>
                                 @if(auth()->user()->isAdmin())
                                 <th
-                                    class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
+                                    class="px-2 md:px-4 py-2 md:py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-[10%]">
                                     Cost</th>
                                 @endif
                                 <th
-                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
+                                    class="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[5%]">
                                 </th>
                             </tr>
                         </thead>
@@ -635,27 +664,31 @@
                     <option value="">Select Ingredient...</option>
                 </select>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-2 md:px-4 py-2 md:py-3">
                 <input type="number" step="any" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][quantity]" required
                     data-base-qty=""
-                    class="quantity-input w-full h-[44px] px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-base text-gray-900 transition-all bg-white">
+                    class="quantity-input w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-sm md:text-base text-gray-900 transition-all bg-white">
             </td>
-            <td class="px-4 py-3">
-                <select name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" required
-                    class="unit-select w-full h-[44px] px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none bg-white font-bold text-base text-gray-900 appearance-none transition-all">
-                    @foreach(\App\Enums\Unit::cases() as $unit)
-                        <option value="{{ $unit->value }}">{{ $unit->label() }}</option>
-                    @endforeach
-                </select>
+            <td class="px-2 md:px-4 py-2 md:py-3">
+                <!-- Hidden input for form submission -->
+                <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" 
+                    value="" 
+                    class="unit-value-input">
+                <!-- Display field (readonly) -->
+                <input type="text" 
+                    value="" 
+                    readonly
+                    class="unit-display w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 border-gray-300 bg-gray-50 font-bold text-sm md:text-base text-gray-600 cursor-not-allowed"
+                    placeholder="Select item first">
             </td>
             <!-- Hidden field to preserve data, not shown in UI -->
             <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_group]" value="">
             @if(auth()->user()->isAdmin())
-            <td class="px-4 py-3 text-right font-medium text-gray-700 cost-display">
+            <td class="px-2 md:px-4 py-2 md:py-3 text-right font-medium text-gray-700 cost-display text-sm">
                 0.00
             </td>
             @endif
-            <td class="px-4 py-3 text-center">
+            <td class="px-2 md:px-4 py-2 md:py-3 text-center">
                 <button type="button" onclick="removeRow(this)"
                     class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50">
                     <i data-lucide="x" class="w-4 h-4"></i>
@@ -689,35 +722,66 @@
             opacity: 0 !important;
         }
 
-        /* Unit Select Styling - High Visibility & Mobile Friendly */
-        .unit-select {
+        /* Unit Display Styling (Readonly) */
+        .unit-display {
             min-height: 44px !important;
             font-size: 16px !important;
             font-weight: 700 !important;
-            color: #111827 !important;
-            background-color: #ffffff !important;
+            color: #4b5563 !important;
+            background-color: #f9fafb !important;
+            cursor: not-allowed !important;
+        }
+
+        /* TomSelect Control Styling */
+        .ts-control {
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
             cursor: pointer !important;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23111827' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1.25rem;
-            padding-right: 2.5rem !important;
+            position: relative !important;
         }
 
-        .unit-select:focus {
-            outline: none;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+        .ts-control .item {
+            font-weight: 500;
+            color: #1f2937;
+            cursor: pointer !important;
+            pointer-events: auto !important;
         }
 
-        .unit-select option {
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            color: #111827 !important;
-            padding: 0.75rem !important;
+        .ts-control .item:hover {
+            background-color: #f3f4f6 !important;
+        }
+
+        /* Ensure TomSelect control is clickable even when item is selected */
+        .ts-control,
+        .ts-control input,
+        .ts-control .item,
+        .ts-wrapper {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+
+        /* Make input field clickable */
+        .ts-wrapper input.ts-input {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+
+        /* TomSelect Dropdown Visibility Fix */
+        .ts-dropdown {
+            z-index: 9999 !important;
+            position: absolute !important;
+            max-height: 300px !important;
+            overflow-y: auto !important;
+            background: white !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .ts-dropdown.hidden {
+            display: none !important;
         }
 
         /* Ensure equal visual weight with quantity input */
@@ -732,6 +796,16 @@
         let activeSelect = null; // Track which select triggered the modal
         const ingredientOptionsHTML = document.getElementById('ingredientOptions').innerHTML;
         const UNIT_FACTORS = { 'g': 1, 'kg': 1000, 'ml': 1, 'l': 1000, 'tbsp': 15, 'tsp': 5, 'cup': 240, 'pcs': 1, 'oz': 28.35, 'lb': 453.6 };
+        const UNIT_LABELS = {
+            'g': 'Gram (g)',
+            'kg': 'Kilogram (kg)',
+            'ml': 'Milliliter (ml)',
+            'l': 'Liter (l)',
+            'tbsp': 'Tablespoon (tbsp)',
+            'tsp': 'Teaspoon (tsp)',
+            'cup': 'Cup',
+            'pcs': 'Piece (pcs)'
+        };
         
         let subRecipeSelector = null;
         window.addedSubRecipes = window.initialSubRecipes || [];
@@ -741,11 +815,30 @@
             // Initialize existing rows
             document.querySelectorAll('.ingredient-row').forEach(row => {
                 initRow(row);
+                
+                // Auto-populate unit for already selected ingredients
+                const ingSelect = row.querySelector('.ingredient-select');
+                const unitValueInput = row.querySelector('.unit-value-input');
+                const unitDisplay = row.querySelector('.unit-display');
+                
+                if (ingSelect && ingSelect.value && unitValueInput && unitDisplay) {
+                    const selectedOption = ingSelect.querySelector(`option[value="${ingSelect.value}"]`);
+                    if (selectedOption && selectedOption.dataset.unit) {
+                        const ingredientUnit = selectedOption.dataset.unit;
+                        const unitLabel = UNIT_LABELS[ingredientUnit] || ingredientUnit;
+                        
+                        // Only update if unit is not already set
+                        if (!unitValueInput.value || unitValueInput.value === '') {
+                            unitValueInput.value = ingredientUnit;
+                            unitDisplay.value = unitLabel;
+                        }
+                    }
+                }
             });
             calculateTotal();
 
-            // Set initial base portions from recipe
-            window.basePortions = {{ $recipe->yield_portions ?? 10 }};
+            // Set initial base portions from recipe (ensure integer)
+            window.basePortions = {{ $recipe->yield_portions ? (int)$recipe->yield_portions : 10 }};
 
             // STEP 1: Base quantity + original state on form load
             document.querySelectorAll('.quantity-input').forEach(input => {
@@ -1030,24 +1123,343 @@
             if(display) display.textContent = total.toFixed(2);
         };
 
+        // Helper function to update unit when ingredient is selected
+        function updateUnitForIngredient(value, row, ingSelect, optionDataMap, tomSelectInstance) {
+            if (!value) {
+                // Clear unit if no value
+                const unitValueInput = row.querySelector('.unit-value-input');
+                const unitDisplay = row.querySelector('.unit-display');
+                if (unitValueInput) unitValueInput.value = '';
+                if (unitDisplay) {
+                    unitDisplay.value = '';
+                    unitDisplay.setAttribute('placeholder', 'Select item first');
+                }
+                return;
+            }
+            
+            console.log('updateUnitForIngredient called with value:', value);
+            let ingredientUnit = null;
+            
+            // Method 1: Get from our data map
+            if (optionDataMap && optionDataMap[value]) {
+                ingredientUnit = optionDataMap[value].unit;
+                console.log('✓ Unit from data map:', ingredientUnit);
+            }
+            
+            // Method 2: Get from original select element (most reliable)
+            if (!ingredientUnit) {
+                const selectedOption = ingSelect.querySelector(`option[value="${value}"]`);
+                console.log('Selected option:', selectedOption);
+                if (selectedOption) {
+                    // Try getAttribute first
+                    ingredientUnit = selectedOption.getAttribute('data-unit');
+                    console.log('Unit from getAttribute:', ingredientUnit);
+                    
+                    // Try dataset
+                    if (!ingredientUnit && selectedOption.dataset) {
+                        ingredientUnit = selectedOption.dataset.unit;
+                        console.log('Unit from dataset:', ingredientUnit);
+                    }
+                    
+                    // Fallback: Extract from text like "Milk (l)"
+                    if (!ingredientUnit && selectedOption.textContent) {
+                        const match = selectedOption.textContent.match(/\(([^)]+)\)/);
+                        if (match && match[1]) {
+                            ingredientUnit = match[1].trim();
+                            console.log('✓ Unit from text parsing:', ingredientUnit);
+                        }
+                    }
+                } else {
+                    console.warn('Option element not found for value:', value);
+                }
+            }
+            
+            if (ingredientUnit) {
+                const unitLabel = UNIT_LABELS[ingredientUnit] || ingredientUnit;
+                console.log('Setting unit label:', unitLabel);
+                
+                // Update hidden input
+                const unitValueInput = row.querySelector('.unit-value-input');
+                if (unitValueInput) {
+                    unitValueInput.value = ingredientUnit;
+                    console.log('✓ Hidden input updated:', unitValueInput.value);
+                } else {
+                    console.error('❌ Unit value input not found');
+                }
+                
+                // Update display field
+                const unitDisplay = row.querySelector('.unit-display');
+                if (unitDisplay) {
+                    unitDisplay.value = unitLabel;
+                    unitDisplay.removeAttribute('placeholder');
+                    console.log('✓ Unit display updated to:', unitDisplay.value);
+                } else {
+                    console.error('❌ Unit display field not found in row');
+                }
+            } else {
+                console.warn('⚠ Unit not found for ingredient:', value);
+            }
+        }
+
         function initRow(row) {
             const ingSelect = row.querySelector('.ingredient-select');
-            if (ingSelect) {
-                new TomSelect(ingSelect, {
+
+            // Init TomSelect for Ingredient (only raw ingredients, no sub-recipes)
+            if (ingSelect && !ingSelect.tomselect) {
+                // Extract data attributes from options before TomSelect initialization
+                const options = ingSelect.querySelectorAll('option');
+                const optionDataMap = {};
+                console.log('Total options found:', options.length);
+                options.forEach(opt => {
+                    if (opt.value) {
+                        // Read data-unit attribute (try multiple methods)
+                        let unitAttr = opt.getAttribute('data-unit');
+                        if (!unitAttr && opt.dataset) {
+                            unitAttr = opt.dataset.unit;
+                        }
+                        // Fallback: Extract from text content like "Milk (l)"
+                        if (!unitAttr && opt.textContent) {
+                            const match = opt.textContent.match(/\(([^)]+)\)/);
+                            if (match && match[1]) {
+                                unitAttr = match[1].trim();
+                            }
+                        }
+                        
+                        let priceAttr = opt.getAttribute('data-price');
+                        if (!priceAttr && opt.dataset) {
+                            priceAttr = opt.dataset.price;
+                        }
+                        
+                        if (unitAttr) {
+                            optionDataMap[opt.value] = {
+                                unit: unitAttr,
+                                price: priceAttr
+                            };
+                            console.log('Mapped option:', opt.value, '-> unit:', unitAttr);
+                        } else {
+                            console.warn('No unit found for option:', opt.value, 'text:', opt.textContent);
+                        }
+                    }
+                });
+                console.log('Option data map:', optionDataMap);
+                
+                const tomSelectInstance = new TomSelect(ingSelect, {
                     create: true,
                     sortField: { field: "text", direction: "asc" },
-                    placeholder: 'Type to search...',
-                    plugins: ['dropdown_input'],
+                    placeholder: 'Type to search ingredient...',
+                    // Remove dropdown_input plugin to avoid double dropdown
+                    plugins: [],
+                    // Allow opening dropdown even when item is selected
+                    openOnFocus: true,
+                    closeAfterSelect: false, // Don't auto-close, let our handlers manage it
+                    maxItems: 1, // Single selection
+                    allowEmptyOption: false, // Don't allow empty selection
                     render: {
                         option_create: (data, escape) => `<div class="create text-blue-600 p-2">Create <strong>${escape(data.input)}</strong>...</div>`
                     },
-                    create: function(input) {
+                    create: function (input) {
                         activeSelect = ingSelect;
                         openIngredientModal(input);
                         return false;
                     },
-                    onChange: () => calculateRowCost(row)
+                    onInitialize: function() {
+                        console.log('TomSelect initialized');
+                        // Ensure all options are visible
+                        const options = ingSelect.querySelectorAll('option');
+                        console.log('Total options:', options.length);
+                    },
+                    onDropdownOpen: function() {
+                        console.log('Dropdown opened');
+                        const self = this;
+                        // Ensure dropdown is visible and properly positioned
+                        setTimeout(() => {
+                            const dropdown = document.querySelector('.ts-dropdown');
+                            if (dropdown) {
+                                dropdown.style.zIndex = '9999';
+                                dropdown.style.visibility = 'visible';
+                                dropdown.style.opacity = '1';
+                                dropdown.style.display = 'block';
+                                dropdown.style.position = 'absolute';
+                                // Ensure options are visible
+                                const options = dropdown.querySelectorAll('.option');
+                                options.forEach(opt => {
+                                    opt.style.display = 'block';
+                                    opt.style.visibility = 'visible';
+                                    opt.style.opacity = '1';
+                                });
+                                console.log('Dropdown options visible:', options.length);
+                            }
+                        }, 50);
+                    },
+                    onItemAdd: function(value) {
+                        // This fires when an item is added/selected
+                        console.log('onItemAdd triggered:', value);
+                        const self = this;
+                        // Update unit first
+                        updateUnitForIngredient(value, row, ingSelect, optionDataMap, tomSelectInstance);
+                        
+                        // Close dropdown after selection is complete
+                        setTimeout(() => {
+                            try {
+                                if (self.isOpen) {
+                                    self.close();
+                                }
+                                self.blur();
+                            } catch(e) {
+                                console.log('Error closing dropdown:', e);
+                            }
+                            
+                            // Hide dropdown manually
+                            const dropdown = document.querySelector('.ts-dropdown');
+                            if (dropdown) {
+                                dropdown.style.display = 'none';
+                                dropdown.style.visibility = 'hidden';
+                                dropdown.style.opacity = '0';
+                                dropdown.classList.remove('active');
+                                dropdown.classList.add('hidden');
+                            }
+                        }, 150);
+                    },
+                    onItemRemove: function(value) {
+                        // Clear unit when item is removed
+                        console.log('onItemRemove triggered:', value);
+                        const unitValueInput = row.querySelector('.unit-value-input');
+                        const unitDisplay = row.querySelector('.unit-display');
+                        if (unitValueInput) unitValueInput.value = '';
+                        if (unitDisplay) {
+                            unitDisplay.value = '';
+                            unitDisplay.setAttribute('placeholder', 'Select item first');
+                        }
+                    },
+                    onChange: function(value) {
+                        console.log('=== onChange triggered ===', value);
+                        const self = this;
+                        // Update unit and cost first
+                        updateUnitForIngredient(value, row, ingSelect, optionDataMap, tomSelectInstance);
+                        calculateRowCost(row);
+                        
+                        // Close dropdown when value changes
+                        setTimeout(() => {
+                            if (value) {
+                                // Force close dropdown
+                                try {
+                                    if (self.isOpen) {
+                                        self.close();
+                                    }
+                                    self.blur();
+                                } catch(e) {
+                                    console.log('Error closing dropdown:', e);
+                                }
+                                
+                                // Force hide all dropdowns
+                                const dropdowns = document.querySelectorAll('.ts-dropdown');
+                                dropdowns.forEach(dropdown => {
+                                    dropdown.style.display = 'none';
+                                    dropdown.style.visibility = 'hidden';
+                                    dropdown.style.opacity = '0';
+                                    dropdown.classList.remove('active');
+                                    dropdown.classList.add('hidden');
+                                });
+                            }
+                        }, 100);
+                    },
+                    onFocus: function() {
+                        console.log('TomSelect focused - opening dropdown');
+                        const self = this;
+                        // Open dropdown when focused (even if item is selected)
+                        setTimeout(() => {
+                            if (!self.isOpen) {
+                                self.open();
+                            }
+                        }, 10);
+                    },
+                    onBlur: function() {
+                        console.log('TomSelect blurred');
+                        // Ensure dropdown is closed (with delay to allow option click)
+                        setTimeout(() => {
+                            const dropdown = document.querySelector('.ts-dropdown');
+                            if (dropdown) {
+                                dropdown.style.display = 'none';
+                                dropdown.style.visibility = 'hidden';
+                                dropdown.style.opacity = '0';
+                            }
+                        }, 200);
+                    }
                 });
+                
+                // Store tomSelectInstance reference for global access
+                ingSelect.tomSelectInstance = tomSelectInstance;
+                
+                // Make TomSelect control clickable to open dropdown even when item is selected
+                setTimeout(() => {
+                    const tsWrapper = ingSelect.closest('.ts-wrapper');
+                    if (!tsWrapper) return;
+                    
+                    const tsControl = tsWrapper.querySelector('.ts-control');
+                    const tsInput = tsWrapper.querySelector('input.ts-input');
+                    
+                    // Function to open dropdown
+                    const openDropdown = function(e) {
+                        // Don't prevent if clicking remove button
+                        if (e && (e.target.classList.contains('item-remove') || e.target.closest('.item-remove'))) {
+                            return;
+                        }
+                        console.log('Opening TomSelect dropdown');
+                        if (e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }
+                        
+                        // Focus the input first
+                        if (tsInput) {
+                            tsInput.focus();
+                            tsInput.click(); // Trigger click to ensure focus
+                        }
+                        
+                        // Open dropdown
+                        setTimeout(() => {
+                            if (!tomSelectInstance.isOpen) {
+                                tomSelectInstance.open();
+                            }
+                            tomSelectInstance.focus();
+                        }, 10);
+                    };
+                    
+                    // Add click handler to wrapper (catches all clicks)
+                    if (tsWrapper) {
+                        tsWrapper.style.cursor = 'pointer';
+                        tsWrapper.addEventListener('click', function(e) {
+                            // Skip if clicking remove button
+                            if (e.target.classList.contains('item-remove') || e.target.closest('.item-remove')) {
+                                return;
+                            }
+                            openDropdown(e);
+                        });
+                    }
+                    
+                    // Add click handler to control
+                    if (tsControl) {
+                        tsControl.style.cursor = 'pointer';
+                        tsControl.addEventListener('click', openDropdown, true);
+                    }
+                    
+                    // Add click handler to input
+                    if (tsInput) {
+                        tsInput.style.cursor = 'pointer';
+                        tsInput.addEventListener('click', openDropdown, true);
+                    }
+                    
+                    // Also handle mousedown for better compatibility
+                    if (tsControl) {
+                        tsControl.addEventListener('mousedown', function(e) {
+                            if (e.target.classList.contains('item-remove') || e.target.closest('.item-remove')) {
+                                return;
+                            }
+                            e.preventDefault(); // Prevent blur
+                            setTimeout(() => openDropdown(e), 10);
+                        });
+                    }
+                }, 300);
             }
 
             const qty = row.querySelector('.quantity-input');
@@ -1069,8 +1481,6 @@
                     calculateRowCost(row);
                 });
             }
-            const unit = row.querySelector('.unit-select');
-            if(unit) unit.addEventListener('change', () => calculateRowCost(row));
 
             calculateRowCost(row);
         }
@@ -1083,7 +1493,7 @@
         function calculateRowCost(row) {
             const select = row.querySelector('.ingredient-select');
             const qtyInput = row.querySelector('.quantity-input');
-            const unitSelect = row.querySelector('.unit-select');
+            const unitValueInput = row.querySelector('.unit-value-input');
             const costDisplay = row.querySelector('.cost-display');
 
             if (!costDisplay || !select) return; 
@@ -1099,7 +1509,7 @@
             const price = parseFloat(opt.dataset.price); 
             const invUnit = opt.dataset.unit;
             const qty = parseFloat(qtyInput.value) || 0;
-            const useUnit = unitSelect.value;
+            const useUnit = unitValueInput ? unitValueInput.value : '';
 
             const priceFactor = UNIT_FACTORS[invUnit] || 1;
             const useFactor = UNIT_FACTORS[useUnit] || 1;
