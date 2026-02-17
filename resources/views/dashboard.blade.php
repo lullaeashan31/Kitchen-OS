@@ -70,6 +70,16 @@
                 <div class="text-muted text-sm uppercase">My Pending Tasks</div>
                 <div style="font-size: 2rem; font-weight: 700; color: var(--text-main);">{{ $stats['pending_tasks'] }}</div>
             </div>
+            <div class="card flex-1 min-w-[200px]" style="border-top: 4px solid #10b981;">
+                <div class="text-muted text-sm uppercase">Pending Onboardings</div>
+                <div style="font-size: 2rem; font-weight: 700; color: #10b981;">{{ $stats['pending_onboarding_count'] }}</div>
+                <a href="{{ route('admin.staff.index') }}" class="text-xs text-blue-500 hover:underline">View All</a>
+            </div>
+            <div class="card flex-1 min-w-[200px]" style="border-top: 4px solid #f97316;">
+                <div class="text-muted text-sm uppercase">Leave Requests</div>
+                <div style="font-size: 2rem; font-weight: 700; color: #f97316;">{{ $stats['pending_leaves_count'] }}</div>
+                <a href="{{ route('admin.leave.index') }}" class="text-xs text-blue-500 hover:underline">Manage</a>
+            </div>
         @endif
     </div>
 

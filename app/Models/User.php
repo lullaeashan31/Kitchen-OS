@@ -170,4 +170,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(HrPolicyLog::class);
     }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function performanceReviews()
+    {
+        return $this->hasMany(PerformanceReview::class);
+    }
+
+    public function payrollRecords()
+    {
+        return $this->hasMany(PayrollRecord::class);
+    }
 }

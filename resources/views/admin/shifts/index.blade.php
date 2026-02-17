@@ -3,10 +3,19 @@
 @section('header')
     <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold text-gray-800">Manage Shifts</h2>
-        <a href="{{ route('admin.shifts.create') }}"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-            <i data-lucide="plus" class="w-4 h-4"></i> New Shift
-        </a>
+        <div class="flex gap-2">
+            <form action="{{ route('admin.shifts.auto_generate') }}" method="POST">
+                @csrf
+                <button type="submit"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i> Auto-Generate Next Week
+                </button>
+            </form>
+            <a href="{{ route('admin.shifts.create') }}"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i> New Shift
+            </a>
+        </div>
     </div>
 @endsection
 

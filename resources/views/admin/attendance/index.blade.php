@@ -93,6 +93,15 @@
                                 </div>
                             </td>
                             <td class="p-5 text-right">
+                                @if(!$attendance->clock_out_time)
+                                    <form action="{{ route('admin.attendance.force_clock_out', $attendance->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-xs font-bold text-orange-600 hover:text-orange-800 hover:underline mr-4">
+                                            Manual Out
+                                        </button>
+                                    </form>
+                                @endif
+
                                 <form action="{{ route('admin.attendance.update', $attendance->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PUT')

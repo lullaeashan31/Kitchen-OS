@@ -53,6 +53,13 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Required Staff Count</label>
+                    <input type="number" name="required_staff" value="{{ old('required_staff', $shift->required_staff ?? 1) }}"
+                        class="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500" required min="1">
+                    <p class="text-xs text-gray-400 mt-1">Number of staff members needed for this shift.</p>
+                </div>
+
                 <div class="flex items-center gap-2">
                     <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" name="is_active" value="1" id="is_active" {{ old('is_active', $shift->is_active ?? true) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">

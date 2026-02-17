@@ -43,4 +43,27 @@ class AttendanceController extends Controller
 
         return redirect()->back()->with('success', 'Attendance updated successfully.');
     }
+
+    /**
+     * Force clock out an active session.
+     */
+    public function forceClockOut(string $id)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $attendance = Attendance::findOrFail($id);
+
+        if ($attendance->clock_out_time) {
+            return redirect()->back()->with('error', 'Session already closed.');
+        }
+
+        $attendance->update([
+            'clock_out_time' => now(),
+            'status' => 'success', // Assume success if admin closes it
+        ]);
+
+        return redirect()->back()->with('success', 'Staff member clocked out manually.');
+    }
 }

@@ -129,4 +129,12 @@ class StaffController extends Controller
 
         return redirect()->route('admin.staff.index')->with('success', 'Staff member deleted successfully.');
     }
+
+    public function approve(string $id)
+    {
+        $user = User::where('role', \App\Enums\UserRole::Staff)->findOrFail($id);
+        $user->update(['onboarding_status' => 'active']);
+
+        return redirect()->route('admin.staff.index')->with('success', 'Staff onboarding approved and account activated.');
+    }
 }

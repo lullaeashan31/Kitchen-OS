@@ -28,6 +28,7 @@ class ShiftController extends Controller
             'name' => 'required|string|max:255',
             'start_time' => 'required',
             'end_time' => 'required',
+            'required_staff' => 'required|integer|min:1',
             'is_active' => 'boolean',
         ]);
 
@@ -48,6 +49,7 @@ class ShiftController extends Controller
             'name' => 'required|string|max:255',
             'start_time' => 'required',
             'end_time' => 'required',
+            'required_staff' => 'required|integer|min:1',
             'is_active' => 'boolean',
         ]);
 
@@ -60,5 +62,37 @@ class ShiftController extends Controller
     {
         $shift->delete();
         return redirect()->route('admin.shifts.index')->with('success', 'Shift deleted successfully.');
+    }
+
+    /**
+     * Trigger auto-scheduling logic for the next week.
+     */
+    public function autoGenerate(\App\Services\SchedulingService $schedulingService)
+    {
+        $startDate = now()->addDay()->startOfDay();
+        $endDate = now()->addDays(8)->endOfDay();
+
+        $results = $schedulingService->generateSchedule($startDate, $endDate);
+
+        $message = "Successfully assigned {$results['total_assigned']} shifts.";
+        if (!empty($results['understaffed_days'])) {
+            $message .= " Note: " . count($results['understaffed_days']) . " shifts could not be fully staffed.";
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Display the employee's own schedule.
+     */
+    public function mySchedule()
+    {
+        $assignments = \App\Models\ShiftAssignment::with('shift')
+            ->where('user_id', auth()->id())
+            ->where('date', '>=', today()->toDateString())
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return view('employee.shifts.index', compact('assignments'));
     }
 }

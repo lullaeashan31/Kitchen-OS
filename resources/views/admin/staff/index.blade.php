@@ -24,6 +24,7 @@
                     <tr class="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
                         <th class="p-6 font-semibold">Employee Details</th>
                         <th class="p-6 font-semibold">Staff Code</th>
+                        <th class="p-6 font-semibold">Status</th>
                         <th class="p-6 font-semibold">Role & Access</th>
                         <th class="p-6 font-semibold">Joined Date</th>
                         <th class="p-6 font-semibold text-right">Actions</th>
@@ -55,6 +56,23 @@
                                 </span>
                             </td>
                             <td class="p-6">
+                                @if($user->onboarding_status === 'pending')
+                                    <div class="flex flex-col gap-1">
+                                        <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-700 uppercase">Pending Form</span>
+                                        @php $token = $user->onboardingTokens()->where('is_used', false)->latest()->first(); @endphp
+                                        @if($token)
+                                            <button onclick="copyToClipboard('{{ route('onboarding.wizard', $token->token) }}')" class="text-[10px] text-blue-600 hover:underline flex items-center gap-1">
+                                                <i data-lucide="copy" class="w-2.5 h-2.5"></i> Copy Link
+                                            </button>
+                                        @endif
+                                    </div>
+                                @elseif($user->onboarding_status === 'onboarding_completed')
+                                    <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 uppercase">Wait Approval</span>
+                                @else
+                                    <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase italic">Active</span>
+                                @endif
+                            </td>
+                            <td class="p-6">
                                 <div class="flex flex-col gap-1">
                                     <span class="inline-flex items-center w-fit gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
                                         <i data-lucide="badge-check" class="w-3 h-3"></i>
@@ -73,7 +91,17 @@
                             </td>
                             <td class="p-6 text-right">
                                 <div class="flex items-center justify-end gap-3 opacity-100 transition-opacity">
-                                    <a href="{{ route('admin.staff.edit', $user->id) }}" 
+                                    @if($user->onboarding_status === 'onboarding_completed')
+                                        <form action="{{ route('admin.staff.approve', $user->id) }}" method="POST" class="inline-block">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors border border-green-200 shadow-sm"
+                                                    title="Approve Onboarding">
+                                                <i data-lucide="user-check" class="w-5 h-5"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                    <a href="{{ route('admin.staff.edit', $user->id) }}"
                                        class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 transition-colors border border-orange-200 shadow-sm"
                                        title="Edit details">
                                         <i data-lucide="edit-3" class="w-5 h-5"></i>
@@ -109,4 +137,12 @@
             </div>
         @endif
     </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Onboarding link copied to clipboard!');
+            });
+        }
+    </script>
 @endsection

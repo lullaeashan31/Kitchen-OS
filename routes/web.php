@@ -56,8 +56,25 @@ Route::get('/time-clock', [AttendanceViewController::class, 'tablet'])->name('at
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+    // Attendance & Leaves
     Route::resource('attendance', AdminAttendanceController::class)->only(['index', 'update']);
+    Route::post('attendance/{attendance}/force-clock-out', [AdminAttendanceController::class, 'forceClockOut'])->name('attendance.force_clock_out');
+
+    Route::get('leaves', [\App\Http\Controllers\Admin\LeaveController::class, 'index'])->name('leave.index');
+    Route::post('leaves/{leave}/approve', [\App\Http\Controllers\Admin\LeaveController::class, 'approve'])->name('leave.approve');
+    Route::post('leaves/{leave}/reject', [\App\Http\Controllers\Admin\LeaveController::class, 'reject'])->name('leave.reject');
+
+    Route::get('performance', [\App\Http\Controllers\Admin\PerformanceController::class, 'index'])->name('performance.index');
+    Route::get('performance/create', [\App\Http\Controllers\Admin\PerformanceController::class, 'create'])->name('performance.create');
+    Route::post('performance', [\App\Http\Controllers\Admin\PerformanceController::class, 'store'])->name('performance.store');
+
+    Route::get('payroll', [\App\Http\Controllers\Admin\PayrollController::class, 'index'])->name('payroll.index');
+    Route::post('payroll/generate', [\App\Http\Controllers\Admin\PayrollController::class, 'generate'])->name('payroll.generate');
+    Route::get('payroll/export', [\App\Http\Controllers\Admin\PayrollController::class, 'export'])->name('payroll.export');
+    Route::post('payroll/{payroll}/pay', [\App\Http\Controllers\Admin\PayrollController::class, 'markAsPaid'])->name('payroll.pay');
+    Route::get('payroll/{payroll}/download', [\App\Http\Controllers\Admin\PayrollController::class, 'downloadPayslip'])->name('payroll.download');
     Route::resource('staff', \App\Http\Controllers\Admin\StaffController::class);
+    Route::post('staff/{staff}/approve', [\App\Http\Controllers\Admin\StaffController::class, 'approve'])->name('staff.approve');
 
     // Settings Routes
     Route::get('settings/location', [\App\Http\Controllers\Admin\SettingsController::class, 'location'])->name('settings.location');
@@ -101,6 +118,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('recipes/export/{type}', [RecipeController::class, 'export'])->name('recipes.export');
     Route::resource('recipes', RecipeController::class);
     Route::delete('categories/bulk-destroy', [\App\Http\Controllers\CategoryController::class, 'bulkDestroy'])->name('categories.bulk_destroy');
+    Route::resource('vendors', \App\Http\Controllers\VendorController::class);
     Route::resource('categories', \App\Http\Controllers\CategoryController::class);
     Route::post('recipes/{recipe}/approve', [RecipeController::class, 'approve'])->name('recipes.approve');
     Route::post('recipes/{recipe}/reject', [RecipeController::class, 'reject'])->name('recipes.reject');
@@ -184,6 +202,15 @@ Route::middleware(['auth'])->group(function () {
 
     // Staff SOP Execution
     Route::get('sop', [\App\Http\Controllers\SopController::class, 'index'])->name('sop.index');
+
+    // Employee Portal (Personal)
+    Route::get('my-attendance', [\App\Http\Controllers\Employee\AttendanceController::class, 'index'])->name('employee.attendance.index');
+    Route::get('my-leaves', [\App\Http\Controllers\Employee\LeaveController::class, 'index'])->name('employee.leave.index');
+    Route::get('my-payslips', [\App\Http\Controllers\Admin\PayrollController::class, 'myPayslips'])->name('employee.payroll.index');
+    Route::get('my-schedule', [\App\Http\Controllers\Admin\ShiftController::class, 'mySchedule'])->name('employee.shifts.index');
+    Route::get('my-leaves/create', [\App\Http\Controllers\Employee\LeaveController::class, 'create'])->name('employee.leave.create');
+    Route::post('my-leaves', [\App\Http\Controllers\Employee\LeaveController::class, 'store'])->name('employee.leave.store');
+
     Route::get('sop/{checklist}/execute', [\App\Http\Controllers\SopController::class, 'execute'])->name('sop.execute');
     Route::post('sop/{checklist}/item/{itemId}', [\App\Http\Controllers\SopController::class, 'updateItem'])->name('sop.update_item');
     Route::post('sop/{checklist}/complete', [\App\Http\Controllers\SopController::class, 'complete'])->name('sop.complete');

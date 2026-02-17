@@ -47,31 +47,31 @@ class DashboardController extends Controller
         // Low stock alerts should include both:
         // 1. Low stock: current_stock <= alert_threshold AND current_stock > 0 AND alert_threshold > 0
         // 2. Out of stock: current_stock <= 0
-        $lowStockItems = \App\Models\Ingredient::where(function($q) {
-            $q->where(function($subQ) {
+        $lowStockItems = \App\Models\Ingredient::where(function ($q) {
+            $q->where(function ($subQ) {
                 // Low stock items
                 $subQ->whereColumn('current_stock', '<=', 'alert_threshold')
-                     ->where('current_stock', '>', 0)
-                     ->where('alert_threshold', '>', 0);
-            })->orWhere(function($subQ) {
+                    ->where('current_stock', '>', 0)
+                    ->where('alert_threshold', '>', 0);
+            })->orWhere(function ($subQ) {
                 // Out of stock items
                 $subQ->where('current_stock', '<=', 0);
             });
         })
-        ->orderBy('current_stock')
-        ->limit(5)
-        ->get();
+            ->orderBy('current_stock')
+            ->limit(5)
+            ->get();
 
         // SOP Metrics
         $totalChecklists = \App\Models\SopChecklist::active()->count();
-        $completedChecklists = \App\Models\SopDailyRun::whereDate('date', today()->toDateString())
+        $completedChecklists = \App\Models\SopDailyRun::where('date', today()->toDateString())
             ->where('status', 'approved')
             ->count();
 
         $overdueSopCount = \App\Models\SopChecklist::active()
             ->where('deadline_time', '<', now()->toTimeString())
             ->whereDoesntHave('runs', function ($query) {
-                $query->whereDate('date', today()->toDateString())->where('status', 'approved');
+                $query->where('date', today()->toDateString())->where('status', 'approved');
             })
             ->count();
 
@@ -81,16 +81,16 @@ class DashboardController extends Controller
             ->exists();
 
         return [
-            'active_staff' => \App\Models\Attendance::whereDate('clock_in_time', today())->whereNull('clock_out_time')->count(),
+            'active_staff' => \App\Models\Attendance::whereDate('clock_in_time', today()->toDateString())->whereNull('clock_out_time')->count(),
             'total_recipes' => Recipe::count(),
             'pending_ingredients' => \App\Models\Ingredient::where('status', 'pending')->count() ?? 0,
-            'low_stock_count' => \App\Models\Ingredient::where(function($q) {
-                $q->where(function($subQ) {
+            'low_stock_count' => \App\Models\Ingredient::where(function ($q) {
+                $q->where(function ($subQ) {
                     // Low stock items
                     $subQ->whereColumn('current_stock', '<=', 'alert_threshold')
-                         ->where('current_stock', '>', 0)
-                         ->where('alert_threshold', '>', 0);
-                })->orWhere(function($subQ) {
+                        ->where('current_stock', '>', 0)
+                        ->where('alert_threshold', '>', 0);
+                })->orWhere(function ($subQ) {
                     // Out of stock items
                     $subQ->where('current_stock', '<=', 0);
                 });
@@ -101,12 +101,39 @@ class DashboardController extends Controller
             'overdue_sop_count' => $overdueSopCount,
             'pending_purchases_count' => \App\Models\Purchase::where('status', 'pending')->count(),
             'pos_synced_today' => $posSyncedToday,
+            'pending_onboarding_count' => \App\Models\User::where('role', 'staff')->where('onboarding_status', 'pending')->count(),
+            'pending_leaves_count' => \App\Models\LeaveRequest::where('status', 'pending')->count(),
         ];
     }
 
     private function staffDashboard()
     {
-        $myRecipesCount = Recipe::where('created_by', auth()->id())->count();
-        return view('dashboard.staff', compact('myRecipesCount'));
+        $user = auth()->user();
+
+        // Today's Shift
+        $todayShift = \App\Models\ShiftAssignment::with('shift')
+            ->where('user_id', $user->id)
+            ->where('date', today()->toDateString())
+            ->first();
+
+        // Pending Leaves
+        $pendingLeavesCount = \App\Models\LeaveRequest::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->count();
+
+        // Monthly Attendance
+        $monthDaysWorked = \App\Models\Attendance::where('user_id', $user->id)
+            ->whereMonth('clock_in_time', date('n'))
+            ->whereYear('clock_in_time', date('Y'))
+            ->count();
+
+        $myRecipesCount = Recipe::where('created_by', $user->id)->count();
+
+        return view('dashboard.staff', compact(
+            'todayShift',
+            'pendingLeavesCount',
+            'monthDaysWorked',
+            'myRecipesCount'
+        ));
     }
 }

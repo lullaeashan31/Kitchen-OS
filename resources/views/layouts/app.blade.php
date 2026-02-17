@@ -263,6 +263,31 @@
                         <i data-lucide="clipboard-list" class="nav-icon text-blue-500"></i> SOP Checklists
                     </a>
 
+                    <!-- Employee Portal Section -->
+                    <div
+                        style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                        My Portal
+                    </div>
+                    <a href="{{ route('employee.shifts.index') }}"
+                        class="nav-link {{ request()->routeIs('employee.shifts.index') ? 'active' : '' }}">
+                        <i data-lucide="user" class="nav-icon"></i> My Schedule
+                    </a>
+                    <a href="{{ route('employee.payroll.index') }}"
+                        class="nav-link {{ request()->routeIs('employee.payroll.index') ? 'active' : '' }}">
+                        <i data-lucide="file-text" class="nav-icon"></i> My Payslips
+                    </a>
+                    <a href="{{ route('employee.attendance.index') }}"
+                        class="nav-link {{ request()->routeIs('employee.attendance.index') ? 'active' : '' }}">
+                        <i data-lucide="clock" class="nav-icon"></i> My Attendance
+                    </a>
+                    <a href="{{ route('employee.leave.index') }}"
+                        class="nav-link {{ request()->routeIs('employee.leave.index') ? 'active' : '' }}">
+                        <i data-lucide="calendar-x" class="nav-icon"></i> My Leaves
+                    </a>
+                    <a href="{{ route('sop.index') }}" class="nav-link {{ request()->routeIs('sop.*') ? 'active' : '' }}">
+                        <i data-lucide="clipboard-list" class="nav-icon text-blue-500"></i> SOP Checklists
+                    </a>
+
                 @else
                     <!-- Admin & Manager Sidebar -->
                     <a href="{{ route('dashboard') }}"
@@ -358,16 +383,34 @@
                             style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
                             Administration
                         </div>
-                        <a href="{{ route('admin.staff.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-                            <i data-lucide="users" class="nav-icon"></i> Staff Profiles
-                        </a>
                         <a href="{{ route('audit_logs.index') }}"
                             class="nav-link {{ request()->routeIs('audit_logs.*') ? 'active' : '' }}">
                             <i data-lucide="shield-alert" class="nav-icon"></i> Audit Logs
                         </a>
                         <a href="https://drive.google.com" target="_blank" class="nav-link">
                             <i data-lucide="hard-drive" class="nav-icon"></i> Google Drive
+                        </a>
+
+                        <!-- HR & Payroll Section -->
+                        <div
+                            style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                            HR & Payroll
+                        </div>
+                        <a href="{{ route('admin.staff.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
+                            <i data-lucide="users" class="nav-icon text-blue-500"></i> Staff Profiles
+                        </a>
+                        <a href="{{ route('admin.payroll.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.payroll.*') ? 'active' : '' }}">
+                            <i data-lucide="pie-chart" class="nav-icon text-green-500"></i> Payroll Management
+                        </a>
+                        <a href="{{ route('admin.leave.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.leave.*') ? 'active' : '' }}">
+                            <i data-lucide="calendar-check" class="nav-icon text-orange-500"></i> Leave Approvals
+                        </a>
+                        <a href="{{ route('admin.performance.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.performance.*') ? 'active' : '' }}">
+                            <i data-lucide="award" class="nav-icon text-indigo-500"></i> Performance Reviews
                         </a>
                     @endif
 
@@ -498,7 +541,7 @@
         document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
 
         // Close sidebar on window resize if > 1024px
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
             if (window.innerWidth > 1024) {
                 const sidebar = document.querySelector('.sidebar');
                 const overlay = document.getElementById('sidebarOverlay');
