@@ -139,4 +139,13 @@ class StaffController extends Controller
 
         return redirect()->route('admin.staff.index')->with('success', 'Staff onboarding approved and account activated.');
     }
+
+    public function show(string $id)
+    {
+        $user = User::where('role', \App\Enums\UserRole::Staff)
+            ->with(['employeeProfile', 'permissions', 'hrPolicyLogs'])
+            ->findOrFail($id);
+        
+        return view('admin.staff.show', compact('user'));
+    }
 }

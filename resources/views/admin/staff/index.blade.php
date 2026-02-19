@@ -133,6 +133,11 @@
                             </td>
                             <td class="p-6 text-right">
                                 <div class="flex items-center justify-end gap-3 opacity-100 transition-opacity">
+                                    <button onclick="showStaffDetails({{ $user->id }})"
+                                            class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 transition-colors border border-purple-200 shadow-sm"
+                                            title="View Details">
+                                        <i data-lucide="eye" class="w-5 h-5"></i>
+                                    </button>
                                     @if($user->onboarding_status === 'onboarding_completed')
                                         <form action="{{ route('admin.staff.approve', $user->id) }}" method="POST" class="inline-block">
                                             @csrf
@@ -185,11 +190,54 @@
         @endif
     </div>
 
+    <!-- Staff Details Modal -->
+    <div id="staffDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">Staff Member Details</h2>
+                <button onclick="closeStaffDetails()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div id="staffDetailsContent" class="p-6">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <script>
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 alert('Onboarding link copied to clipboard!');
             });
         }
+
+        function showStaffDetails(userId) {
+            fetch(`/admin/staff/${userId}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('staffDetailsContent').innerHTML = html;
+                    document.getElementById('staffDetailsModal').classList.remove('hidden');
+                    // Reinitialize Lucide icons
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading staff details:', error);
+                    alert('Error loading staff details. Please try again.');
+                });
+        }
+
+        function closeStaffDetails() {
+            document.getElementById('staffDetailsModal').classList.add('hidden');
+        }
+
+        // Close modal on outside click
+        document.getElementById('staffDetailsModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeStaffDetails();
+            }
+        });
     </script>
 @endsection
