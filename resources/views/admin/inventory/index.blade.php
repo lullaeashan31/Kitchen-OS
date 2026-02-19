@@ -176,13 +176,13 @@
                             <td style="padding: 0.75rem 1rem; text-align: right; color: #ef4444; font-weight: 500;">
                                 {{ number_format($item->total_used, 3) }}
                             </td>
-                            <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; {{ $item->current_stock <= $item->alert_threshold ? 'color: #ef4444;' : '' }}">
-                                {{ number_format($item->current_stock, 3) }}
+                            <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; {{ $item->current_stock_display <= $item->alert_threshold ? 'color: #ef4444;' : '' }}">
+                                {{ number_format($item->current_stock_display, 3) }}
                             </td>
                             <td style="padding: 0.75rem 1rem;">{{ $item->measurement_unit }}</td>
                             <td style="padding: 0.75rem 1rem; text-align: right;">{{ number_format($item->price, 2) }}</td>
                             <td style="padding: 0.75rem 1rem;">
-                                @if($item->current_stock <= $item->alert_threshold)
+                                @if($item->current_stock_display <= $item->alert_threshold)
                                     <span style="display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: #fef2f2; color: #dc2626;">
                                         Low Stock
                                     </span>
@@ -201,7 +201,7 @@
                                    style="font-size: 0.85rem; color: #3b82f6; margin-right: 0.75rem; text-decoration: none;">
                                     Edit
                                 </a>
-                                <button type="button" onclick="openAdjustModal('{{ $item->id }}', '{{ addslashes($item->name) }}', '{{ $item->current_stock }}')" 
+                                <button type="button" onclick="openAdjustModal('{{ $item->id }}', '{{ addslashes($item->name) }}', '{{ $item->current_stock_display }}')" 
                                     style="font-size: 0.85rem; color: #3b82f6; background: none; border: none; cursor: pointer; text-decoration: underline;">
                                     Adjust
                                 </button>

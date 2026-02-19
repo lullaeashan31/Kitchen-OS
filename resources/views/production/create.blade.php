@@ -7,6 +7,18 @@
 
 @section('content')
     <div class="max-w-2xl mx-auto">
+        @if(session('success'))
+            <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 text-sm font-medium">
+                <i data-lucide="check-circle" class="w-5 h-5 inline mr-2"></i>
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm font-medium">
+                <i data-lucide="alert-circle" class="w-5 h-5 inline mr-2"></i>
+                {{ session('error') }}
+            </div>
+        @endif
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <form action="{{ route('production.store') }}" method="POST" class="p-8">
                 @csrf
@@ -27,8 +39,11 @@
                             required>
                             <option value="">-- Choose Approved Recipe --</option>
                             @foreach($recipes as $recipe)
-                                <option value="{{ $recipe->id }}" data-yields="{{ $recipe->yields }}">
-                                    {{ $recipe->name }} (Base: {{ $recipe->yields }} Portions)
+                                @php
+                                    $yieldValue = $recipe->yield_portions ?? $recipe->yields ?? 1;
+                                @endphp
+                                <option value="{{ $recipe->id }}" data-yields="{{ $yieldValue }}">
+                                    {{ $recipe->name }} (Base: {{ $yieldValue }} Portions)
                                 </option>
                             @endforeach
                         </select>
@@ -73,6 +88,51 @@
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- Excel Upload Section -->
+        <div class="mt-8 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i data-lucide="upload" class="w-5 h-5 text-blue-600"></i>
+                    Bulk Upload via Excel
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Upload multiple production entries at once using Excel file</p>
+            </div>
+            <div class="p-6">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="{{ route('production.template') }}"
+                        class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        Download Sample
+                    </a>
+                    <form action="{{ route('production.upload') }}" method="POST" enctype="multipart/form-data" class="flex-1">
+                        @csrf
+                        <div class="flex gap-2">
+                            <input type="file" name="file" id="excel_file" accept=".xlsx,.xls" required
+                                class="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                            <button type="submit"
+                                class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-500/30 transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="upload" class="w-5 h-5"></i>
+                                Upload
+                            </button>
+                        </div>
+                        @error('file')
+                            <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                        @enderror
+                    </form>
+                </div>
+                @if(session('upload_errors'))
+                    <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-sm font-bold text-red-800 mb-2">Upload Errors:</p>
+                        <ul class="text-xs text-red-700 space-y-1 max-h-40 overflow-y-auto">
+                            @foreach(session('upload_errors') as $error)
+                                <li>• {{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
         </div>
 
         <!-- Recent Logs (Mini View) -->

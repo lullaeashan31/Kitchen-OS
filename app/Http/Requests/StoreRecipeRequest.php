@@ -36,8 +36,8 @@ class StoreRecipeRequest extends FormRequest
             'stages.*.ingredients' => 'nullable|array',
             'stages.*.ingredients.*.name' => 'nullable|string', // For dynamic creation
             'stages.*.ingredients.*.ingredient_id' => 'required',
-            'stages.*.ingredients.*.quantity' => 'required|numeric|min:0',
-            'stages.*.ingredients.*.unit' => ['required', Rule::enum(Unit::class)],
+            'stages.*.ingredients.*.quantity' => 'required_with:stages.*.ingredients.*.ingredient_id|numeric|min:0',
+            'stages.*.ingredients.*.unit' => ['required_with:stages.*.ingredients.*.ingredient_id', Rule::enum(Unit::class)],
             'stages.*.ingredients.*.ingredient_group' => 'nullable|string',
             'stages.*.ingredients.*.cost' => 'nullable|numeric|min:0',
 

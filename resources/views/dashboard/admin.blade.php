@@ -228,7 +228,7 @@
                             <div class="text-xs text-gray-500">Min: {{ $item->alert_threshold }} {{ $item->measurement_unit }}</div>
                         </div>
                         <div class="text-right">
-                            <div class="font-bold text-red-600 text-lg">{{ $item->current_stock }}</div>
+                            <div class="font-bold text-red-600 text-lg">{{ $item->current_stock_display }}</div>
                             <div class="text-xs text-gray-400">{{ $item->measurement_unit }}</div>
                         </div>
                     </div>

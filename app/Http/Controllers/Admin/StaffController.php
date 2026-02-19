@@ -13,7 +13,9 @@ class StaffController extends Controller
 {
     public function index()
     {
-        $staff = User::where('role', \App\Enums\UserRole::Staff)->get();
+        $staff = User::where('role', \App\Enums\UserRole::Staff)
+            ->with('employeeProfile')
+            ->get();
         return view('admin.staff.index', compact('staff'));
     }
 

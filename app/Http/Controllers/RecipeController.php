@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Recipe;
 use App\Models\Category;
+use App\Models\Purchase;
 use App\Services\RecipeService;
 use App\Services\CostCalculationService;
 use App\Http\Requests\StoreRecipeRequest;
@@ -76,7 +77,18 @@ class RecipeController extends Controller
 
             $ingredients = \App\Models\Ingredient::whereNotIn('id', $producedIngredientIds)
                 ->orderBy('name')
-                ->get();
+                ->get()
+                ->map(function ($ingredient) {
+                    // Get last approved purchase price if available
+                    $lastPurchase = \App\Models\Purchase::where('ingredient_id', $ingredient->id)
+                        ->where('status', 'approved')
+                        ->latest('approved_at')
+                        ->first();
+
+                    // Use last purchase price OR current ingredient price OR 0
+                    $ingredient->latest_price = $lastPurchase ? $lastPurchase->unit_price : ($ingredient->price ?? 0);
+                    return $ingredient;
+                });
 
             return view('recipes.create', compact('categories', 'units', 'ingredients', 'subRecipes'));
         } catch (\Throwable $e) {
@@ -90,10 +102,22 @@ class RecipeController extends Controller
 
     public function store(StoreRecipeRequest $request)
     {
-        $recipe = $this->recipeService->createRecipe($request->validated(), $request->user());
+        try {
+            $recipe = $this->recipeService->createRecipe($request->validated(), $request->user());
 
-        return redirect()->route('recipes.show', $recipe)
-            ->with('success', 'Recipe draft created successfully and saved to Google Drive.');
+            return redirect()->route('recipes.show', $recipe)
+                ->with('success', 'Recipe draft created successfully and saved to Google Drive.');
+        } catch (\Exception $e) {
+            Log::error('Recipe creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->except(['_token']),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to create recipe: ' . $e->getMessage()]);
+        }
     }
 
     public function show(Recipe $recipe)

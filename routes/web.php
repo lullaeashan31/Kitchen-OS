@@ -112,6 +112,8 @@ Route::middleware(['auth'])->group(function () {
     // Production / Cooking
     Route::get('production/cook', [\App\Http\Controllers\ProductionController::class, 'create'])->name('production.create');
     Route::post('production/cook', [\App\Http\Controllers\ProductionController::class, 'store'])->name('production.store');
+    Route::get('production/template', [\App\Http\Controllers\ProductionController::class, 'downloadTemplate'])->name('production.template');
+    Route::post('production/upload', [\App\Http\Controllers\ProductionController::class, 'uploadExcel'])->name('production.upload');
 
     // Recipes
     Route::get('recipes/{recipe}/print', [RecipeController::class, 'print'])->name('recipes.print');

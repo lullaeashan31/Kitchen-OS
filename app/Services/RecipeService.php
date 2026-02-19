@@ -28,27 +28,43 @@ class RecipeService
     public function createRecipe(array $data, User $user): Recipe
     {
         return DB::transaction(function () use ($data, $user) {
-            $recipe = Recipe::create([
-                'name' => $data['name'],
-                'category_id' => $data['category_id'],
-                'method' => $data['method'] ?? '', // Legacy/Global method - default to empty string if null
-                // Map new yield fields to legacy 'yields' for compatibility/calculations
-                'yields' => $data['yield_portions'] ?? $data['yield_batches'] ?? 1,
-                'yield_portions' => $data['yield_portions'] ?? null,
-                'yield_weight' => $data['yield_weight'] ?? null,
-                'yield_weight_unit' => $data['yield_weight_unit'] ?? null,
-                'yield_volume' => $data['yield_volume'] ?? null,
-                'yield_volume_unit' => $data['yield_volume_unit'] ?? null,
-                'yield_batches' => $data['yield_batches'] ?? null,
-                'prep_time_minutes' => $data['prep_time_minutes'] ?? null,
-                'status' => RecipeStatus::Draft,
-                'created_by' => $user->id,
-                'version' => 1,
-                'is_sub_recipe' => $data['is_sub_recipe'] ?? false,
-                'produces_ingredient_id' => $data['produces_ingredient_id'] ?? null,
-                'output_quantity' => $data['output_quantity'] ?? null,
-                'output_unit' => $data['output_unit'] ?? null,
-            ]);
+            try {
+                Log::info('Creating recipe', [
+                    'name' => $data['name'] ?? 'N/A',
+                    'category_id' => $data['category_id'] ?? null,
+                    'stages_count' => count($data['stages'] ?? []),
+                ]);
+
+                $recipe = Recipe::create([
+                    'name' => $data['name'],
+                    'category_id' => $data['category_id'],
+                    'method' => $data['method'] ?? '', // Legacy/Global method - default to empty string if null
+                    // Map new yield fields to legacy 'yields' for compatibility/calculations
+                    'yields' => $data['yield_portions'] ?? $data['yield_batches'] ?? 1,
+                    'yield_portions' => $data['yield_portions'] ?? null,
+                    'yield_weight' => $data['yield_weight'] ?? null,
+                    'yield_weight_unit' => $data['yield_weight_unit'] ?? null,
+                    'yield_volume' => $data['yield_volume'] ?? null,
+                    'yield_volume_unit' => $data['yield_volume_unit'] ?? null,
+                    'yield_batches' => $data['yield_batches'] ?? null,
+                    'prep_time_minutes' => $data['prep_time_minutes'] ?? null,
+                    'status' => RecipeStatus::Draft,
+                    'created_by' => $user->id,
+                    'version' => 1,
+                    'is_sub_recipe' => $data['is_sub_recipe'] ?? false,
+                    'produces_ingredient_id' => $data['produces_ingredient_id'] ?? null,
+                    'output_quantity' => $data['output_quantity'] ?? null,
+                    'output_unit' => $data['output_unit'] ?? null,
+                ]);
+
+                Log::info('Recipe created successfully', ['recipe_id' => $recipe->id]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create recipe record', [
+                    'error' => $e->getMessage(),
+                    'data' => $data,
+                ]);
+                throw $e;
+            }
 
             // Auto-create ingredient if sub-recipe mode is on and no ingredient linked
             if ($recipe->is_sub_recipe && !$recipe->produces_ingredient_id) {
@@ -64,23 +80,59 @@ class RecipeService
                 $recipe->update(['produces_ingredient_id' => $ingredient->id]);
             }
 
-            $this->syncStages($recipe, $data['stages'] ?? []);
+            try {
+                $this->syncStages($recipe, $data['stages'] ?? []);
+                Log::info('Stages synced successfully', ['recipe_id' => $recipe->id]);
+            } catch (\Exception $e) {
+                Log::error('Failed to sync stages', [
+                    'recipe_id' => $recipe->id,
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
 
             // Calculate and save costs immediately
-            $totalCost = $recipe->recipeIngredients()->sum('cost');
-            $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
+            try {
+                $totalCost = $recipe->recipeIngredients()->sum('cost');
+                $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
 
-            $recipe->update([
-                'total_cost' => $totalCost,
-                'cost_per_portion' => $costPerPortion
-            ]);
+                $recipe->update([
+                    'total_cost' => $totalCost,
+                    'cost_per_portion' => $costPerPortion
+                ]);
+                Log::info('Costs calculated', [
+                    'recipe_id' => $recipe->id,
+                    'total_cost' => $totalCost,
+                    'cost_per_portion' => $costPerPortion,
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to calculate costs', [
+                    'recipe_id' => $recipe->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail recipe creation if cost calculation fails
+            }
 
-            \App\Models\AuditLog::log('Created Recipe', $recipe, null, $recipe->toArray());
+            try {
+                \App\Models\AuditLog::log('Created Recipe', $recipe, null, $recipe->toArray());
+            } catch (\Exception $e) {
+                Log::warning('Failed to create audit log', ['error' => $e->getMessage()]);
+                // Don't fail recipe creation if audit log fails
+            }
 
-            // Auto-save PDF to Google Drive
-            $driveFileId = $this->googleDriveService->saveRecipePdfToDrive($recipe);
-            if ($driveFileId) {
-                $recipe->update(['drive_file_id' => $driveFileId]);
+            // Auto-save PDF to Google Drive (optional, don't fail if it fails)
+            try {
+                $driveFileId = $this->googleDriveService->saveRecipePdfToDrive($recipe);
+                if ($driveFileId) {
+                    $recipe->update(['drive_file_id' => $driveFileId]);
+                    Log::info('Recipe PDF saved to Google Drive', ['recipe_id' => $recipe->id]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to save recipe PDF to Google Drive', [
+                    'recipe_id' => $recipe->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail recipe creation if Google Drive save fails
             }
 
             return $recipe;
@@ -205,9 +257,27 @@ class RecipeService
         // Use recipeIngredients() relation filtered by stage
         $stage->ingredients()->delete();
 
+        // Skip if no ingredients provided (stages can exist without ingredients)
+        if (empty($ingredients)) {
+            Log::info('No ingredients provided for stage - this is allowed', [
+                'recipe_id' => $recipe->id,
+                'stage_id' => $stage->id,
+            ]);
+            return;
+        }
+
         foreach ($ingredients as $item) {
             $ingredientId = $item['ingredient_id'] ?? null;
             $name = $item['name'] ?? null;
+
+            // Skip if ingredient_id is missing or empty
+            if (empty($ingredientId)) {
+                Log::warning('Skipping ingredient with missing ingredient_id', [
+                    'item' => $item,
+                    'stage_id' => $stage->id,
+                ]);
+                continue;
+            }
 
             // Handle Dynamic Creation
             if ($ingredientId && !is_numeric($ingredientId)) {
@@ -217,13 +287,25 @@ class RecipeService
                 if ($existing) {
                     $ingredientId = $existing->id;
                 } else {
-                    $newDetails = [
-                        'name' => $nameString,
-                        'status' => 'pending',
-                        'price' => 0,
-                    ];
-                    $newIng = \App\Models\Ingredient::create($newDetails);
-                    $ingredientId = $newIng->id;
+                    try {
+                        $newDetails = [
+                            'name' => $nameString,
+                            'status' => 'pending',
+                            'price' => 0,
+                        ];
+                        $newIng = \App\Models\Ingredient::create($newDetails);
+                        $ingredientId = $newIng->id;
+                        Log::info('Created new ingredient dynamically', [
+                            'ingredient_id' => $ingredientId,
+                            'name' => $nameString,
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create ingredient dynamically', [
+                            'name' => $nameString,
+                            'error' => $e->getMessage(),
+                        ]);
+                        continue;
+                    }
                 }
             }
 
@@ -236,12 +318,24 @@ class RecipeService
             }
 
             if (!$ingredientId) {
+                Log::warning('Could not resolve ingredient ID', [
+                    'item' => $item,
+                    'stage_id' => $stage->id,
+                ]);
                 continue;
             }
 
             $ingredient = \App\Models\Ingredient::find($ingredientId);
 
-            if ($ingredient) {
+            if (!$ingredient) {
+                Log::warning('Ingredient not found', [
+                    'ingredient_id' => $ingredientId,
+                    'stage_id' => $stage->id,
+                ]);
+                continue;
+            }
+
+            try {
                 $cost = 0;
                 $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : $ingredient->price;
 
@@ -256,6 +350,10 @@ class RecipeService
                             $cost = $quantityInBase * $unitCost;
                         }
                     } catch (\Exception $e) {
+                        Log::warning('Unit conversion failed for ingredient cost calculation', [
+                            'ingredient_id' => $ingredient->id,
+                            'error' => $e->getMessage(),
+                        ]);
                         $cost = 0;
                     }
                 }
@@ -269,6 +367,14 @@ class RecipeService
                     'cost' => $cost,
                     'ingredient_group' => $item['ingredient_group'] ?? null,
                 ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create recipe ingredient', [
+                    'recipe_id' => $recipe->id,
+                    'stage_id' => $stage->id,
+                    'ingredient_id' => $ingredient->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue with next ingredient instead of failing entire recipe
             }
         }
     }

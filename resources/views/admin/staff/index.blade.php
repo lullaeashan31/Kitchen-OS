@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 @section('header')
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
@@ -25,6 +29,7 @@
                         <th class="p-6 font-semibold">Employee Details</th>
                         <th class="p-6 font-semibold">Staff Code</th>
                         <th class="p-6 font-semibold">Status</th>
+                        <th class="p-6 font-semibold">Onboarding Data</th>
                         <th class="p-6 font-semibold">Role & Access</th>
                         <th class="p-6 font-semibold">Joined Date</th>
                         <th class="p-6 font-semibold text-right">Actions</th>
@@ -47,6 +52,13 @@
                                     <div>
                                         <div class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">{{ $user->name }}</div>
                                         <div class="text-sm text-gray-500">{{ $user->phone ?? 'N/A' }}</div>
+                                        @if($user->employeeProfile)
+                                            <div class="text-xs text-gray-400 mt-1">
+                                                @if($user->employeeProfile->address)
+                                                    <i data-lucide="map-pin" class="w-3 h-3 inline"></i> {{ Str::limit($user->employeeProfile->address, 30) }}
+                                                @endif
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -67,9 +79,39 @@
                                         @endif
                                     </div>
                                 @elseif($user->onboarding_status === 'onboarding_completed')
-                                    <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 uppercase">Wait Approval</span>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 uppercase">Wait Approval</span>
+                                        @if($user->employeeProfile)
+                                            <span class="text-[10px] text-gray-500 mt-1">✓ Form Completed</span>
+                                        @endif
+                                    </div>
                                 @else
-                                    <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase italic">Active</span>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase italic">Active</span>
+                                        @if($user->employeeProfile)
+                                            <span class="text-[10px] text-gray-500 mt-1">✓ Profile Complete</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="p-6">
+                                @if($user->employeeProfile)
+                                    <div class="flex flex-col gap-1 text-xs">
+                                        @if($user->employeeProfile->emergency_contact_name)
+                                            <div class="text-gray-600">
+                                                <i data-lucide="phone" class="w-3 h-3 inline"></i> 
+                                                {{ $user->employeeProfile->emergency_contact_name }}
+                                            </div>
+                                        @endif
+                                        @if($user->employeeProfile->bank_name)
+                                            <div class="text-gray-500">
+                                                <i data-lucide="credit-card" class="w-3 h-3 inline"></i> 
+                                                {{ $user->employeeProfile->bank_name }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400">No data yet</span>
                                 @endif
                             </td>
                             <td class="p-6">
