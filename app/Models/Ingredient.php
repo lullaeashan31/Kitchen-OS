@@ -77,6 +77,29 @@ class Ingredient extends Model
         return $this->purchases()->where('status', 'approved')->sum('quantity');
     }
 
+    /**
+     * Vendor-wise purchase summary: vendor name, price (last), total qty from that vendor.
+     * Only approved purchases; uses already loaded purchases when possible.
+     */
+    public function getVendorPurchaseSummaryAttribute()
+    {
+        $purchases = $this->relationLoaded('purchases')
+            ? $this->purchases
+            : $this->purchases()->where('status', 'approved')->with('vendor')->get();
+
+        $byVendor = [];
+        foreach ($purchases as $p) {
+            $vid = $p->vendor_id ?? 'legacy';
+            $vname = $p->vendor ? $p->vendor->name : ($p->vendor ?? 'N/A');
+            if (!isset($byVendor[$vid])) {
+                $byVendor[$vid] = ['name' => $vname, 'price' => $p->unit_price, 'quantity' => 0];
+            }
+            $byVendor[$vid]['quantity'] += (float) $p->quantity;
+            $byVendor[$vid]['price'] = $p->unit_price; // keep last price
+        }
+        return collect(array_values($byVendor));
+    }
+
     public function getTotalUsedAttribute()
     {
         // Sum all RECIPE_USE logs (quantity_change is negative for deductions)

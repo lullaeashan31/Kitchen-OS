@@ -24,7 +24,10 @@ class InventoryController extends Controller
 
     public function index(Request $request)
     {
-        $query = Ingredient::query()->with('category');
+        $query = Ingredient::query()->with([
+            'category',
+            'purchases' => fn ($q) => $q->where('status', 'approved')->with('vendor'),
+        ]);
 
         // Search by name
         if ($request->filled('search')) {

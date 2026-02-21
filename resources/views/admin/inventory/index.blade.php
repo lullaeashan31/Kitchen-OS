@@ -150,6 +150,7 @@
                         </th>
                         <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Item Name</th>
                         <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Category</th>
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Vendor / Price / Purchased</th>
                         <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Purchased</th>
                         <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Used</th>
                         <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Current Stock</th>
@@ -165,11 +166,22 @@
                             <td style="padding: 0.75rem 1rem;">
                                 <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="item-checkbox" onclick="toggleBulkBtn()">
                             </td>
-                            <td style="padding: 0.75rem 1rem; font-weight: 500;">
-                                {{ $item->name }}
-                                <div style="font-size: 0.75rem; color: #94a3b8;">{{ $item->vendor ?? 'No Vendor' }}</div>
-                            </td>
+                            <td style="padding: 0.75rem 1rem; font-weight: 500;">{{ $item->name }}</td>
                             <td style="padding: 0.75rem 1rem;">{{ $item->category->name ?? '-' }}</td>
+                            <td style="padding: 0.75rem 1rem; font-size: 0.8rem;">
+                                @php $vendorSummary = $item->vendor_purchase_summary; @endphp
+                                @if($vendorSummary->isEmpty())
+                                    <span style="color: #94a3b8;">—</span>
+                                @else
+                                    @foreach($vendorSummary as $v)
+                                        <div style="margin-bottom: 0.25rem;">
+                                            <span style="font-weight: 600; color: #1e293b;">{{ $v['name'] }}</span>
+                                            <span style="color: #64748b;"> · ₹{{ number_format($v['price'], 2) }}</span>
+                                            <span style="color: #16a34a; font-weight: 500;"> · {{ number_format($v['quantity'], 3) }} {{ $item->measurement_unit }}</span>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </td>
                             <td style="padding: 0.75rem 1rem; text-align: right; color: #16a34a; font-weight: 500;">
                                 {{ number_format($item->total_purchased, 3) }}
                             </td>
@@ -209,7 +221,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" style="padding: 2rem; text-align: center; color: #94a3b8;">
+                            <td colspan="11" style="padding: 2rem; text-align: center; color: #94a3b8;">
                                 No inventory items found. Please upload Excel or add items.
                             </td>
                         </tr>
