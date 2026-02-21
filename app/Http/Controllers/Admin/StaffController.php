@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,15 +15,16 @@ class StaffController extends Controller
     public function index()
     {
         $staff = User::where('role', \App\Enums\UserRole::Staff)
-            ->with('employeeProfile')
+            ->with(['employeeProfile', 'jobRole'])
             ->get();
         return view('admin.staff.index', compact('staff'));
     }
 
     public function create()
     {
-        $permissions = Permission::all();
-        return view('admin.staff.create', compact('permissions'));
+        $permissions = Permission::orderBy('name')->get();
+        $roles = Role::orderBy('name')->get();
+        return view('admin.staff.create', compact('permissions', 'roles'));
     }
 
     public function store(Request $request)
@@ -33,6 +35,7 @@ class StaffController extends Controller
             'staff_code' => 'required|string|max:6|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120', // Optional 5MB max
+            'job_role_id' => 'nullable|exists:roles,id',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
             'monthly_salary' => 'required|numeric|min:0',
@@ -53,6 +56,7 @@ class StaffController extends Controller
             'weekly_off_day' => $validated['weekly_off_day'],
             'onboarding_status' => 'pending',
             'is_password_changed' => false, // Force change
+            'job_role_id' => $validated['job_role_id'] ?? null,
         ];
 
         if ($request->hasFile('profile_photo')) {
@@ -62,9 +66,14 @@ class StaffController extends Controller
 
         $user = User::create($createData);
 
-        if (!empty($request->permissions)) {
-            $user->permissions()->sync($request->permissions);
+        $permissionIds = $request->permissions ?? [];
+        if (!empty($createData['job_role_id'])) {
+            $role = Role::find($createData['job_role_id']);
+            if ($role) {
+                $permissionIds = array_unique(array_merge($permissionIds, $role->permissions->pluck('id')->toArray()));
+            }
         }
+        $user->permissions()->sync($permissionIds);
 
         // Generate Onboarding Token
         $token = \Illuminate\Support\Str::random(32);
@@ -82,9 +91,12 @@ class StaffController extends Controller
 
     public function edit(string $id)
     {
-        $user = User::where('role', \App\Enums\UserRole::Staff)->findOrFail($id);
-        $permissions = Permission::all();
-        return view('admin.staff.edit', compact('user', 'permissions'));
+        $user = User::where('role', \App\Enums\UserRole::Staff)
+            ->with(['employeeProfile', 'jobRole'])
+            ->findOrFail($id);
+        $permissions = Permission::orderBy('name')->get();
+        $roles = Role::orderBy('name')->get();
+        return view('admin.staff.edit', compact('user', 'permissions', 'roles'));
     }
 
     public function update(Request $request, string $id)
@@ -97,8 +109,23 @@ class StaffController extends Controller
             'staff_code' => 'required|string|max:6|unique:users,staff_code,' . $id,
             'password' => 'nullable|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120',
+            'job_role_id' => 'nullable|exists:roles,id',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+            // Salary & employment (User)
+            'monthly_salary' => 'nullable|numeric|min:0',
+            'variable_enabled' => 'boolean',
+            'max_variable_amount' => 'nullable|numeric|min:0',
+            'weekly_off_day' => 'nullable|string|max:20',
+            // Employee profile / onboarding
+            'address' => 'nullable|string',
+            'secondary_phone' => 'nullable|string|max:20',
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_contact_phone' => 'nullable|string|max:20',
+            'bank_name' => 'nullable|string|max:255',
+            'account_number' => 'nullable|string|max:50',
+            'ifsc_code' => 'nullable|string|max:20',
+            'joining_date' => 'nullable|date',
         ]);
 
         if (!empty($request->password)) {
@@ -108,7 +135,6 @@ class StaffController extends Controller
         }
 
         if ($request->hasFile('profile_photo')) {
-            // Delete old photo if exists
             if ($user->profile_photo_path) {
                 Storage::disk('public')->delete($user->profile_photo_path);
             }
@@ -116,10 +142,48 @@ class StaffController extends Controller
             $validated['profile_photo_path'] = $path;
         }
 
-        $user->update($validated);
+        $userData = [
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'staff_code' => $validated['staff_code'],
+            'monthly_salary' => $validated['monthly_salary'] ?? 0,
+            'variable_enabled' => $request->boolean('variable_enabled'),
+            'max_variable_amount' => $validated['max_variable_amount'] ?? 0,
+            'weekly_off_day' => $validated['weekly_off_day'] ?? null,
+            'job_role_id' => $validated['job_role_id'] ?? null,
+        ];
+        if (isset($validated['password'])) {
+            $userData['password'] = $validated['password'];
+        }
+        if (isset($validated['profile_photo_path'])) {
+            $userData['profile_photo_path'] = $validated['profile_photo_path'];
+        }
+        $user->update($userData);
 
-        // Sync permissions (if empty, detach all)
-        $user->permissions()->sync($request->permissions ?? []);
+        $permissionIds = $request->permissions ?? [];
+        if (!empty($userData['job_role_id'])) {
+            $role = Role::find($userData['job_role_id']);
+            if ($role) {
+                $permissionIds = array_unique(array_merge($permissionIds, $role->permissions->pluck('id')->toArray()));
+            }
+        }
+        $user->permissions()->sync($permissionIds);
+
+        // Update or create employee profile (onboarding data)
+        $profileData = [
+            'address' => $validated['address'] ?? null,
+            'secondary_phone' => $validated['secondary_phone'] ?? null,
+            'emergency_contact_name' => $validated['emergency_contact_name'] ?? null,
+            'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
+            'bank_name' => $validated['bank_name'] ?? null,
+            'account_number' => $validated['account_number'] ?? null,
+            'ifsc_code' => $validated['ifsc_code'] ?? null,
+            'joining_date' => $validated['joining_date'] ?? null,
+        ];
+        $user->employeeProfile()->updateOrCreate(
+            ['user_id' => $user->id],
+            $profileData
+        );
 
         return redirect()->route('admin.staff.index')->with('success', 'Staff member updated successfully.');
     }

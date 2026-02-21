@@ -306,17 +306,6 @@
                         class="nav-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
                         <i data-lucide="list" class="nav-icon"></i> Attendance List
                     </a>
-                    @if(auth()->user()->isAdmin())
-                        <a href="{{ route('admin.settings.location') }}"
-                            class="nav-link {{ request()->routeIs('admin.settings.location') ? 'active' : '' }}">
-                            <i data-lucide="map-pin" class="nav-icon"></i> Location Settings
-                        </a>
-                        <a href="{{ route('admin.settings.devices') }}"
-                            class="nav-link {{ request()->routeIs('admin.settings.devices') ? 'active' : '' }}">
-                            <i data-lucide="smartphone" class="nav-icon"></i> Device List
-                        </a>
-                    @endif
-
                     <!-- Inventory & Stock Section -->
                     @if(auth()->user()->hasPermissionTo('module_inventory'))
                         <div
@@ -401,6 +390,14 @@
                             <a href="{{ route('admin.staff.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
                                 <i data-lucide="users" class="nav-icon text-blue-500"></i> Staff Profiles
+                            </a>
+                            <a href="{{ route('admin.roles.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                                <i data-lucide="briefcase" class="nav-icon text-indigo-500"></i> Roles
+                            </a>
+                            <a href="{{ route('admin.schedule.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.schedule.*') ? 'active' : '' }}">
+                                <i data-lucide="calendar" class="nav-icon text-amber-500"></i> Staff Schedule
                             </a>
                         @endif
 

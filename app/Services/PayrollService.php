@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use App\Models\PerformanceReview;
 use App\Models\PayrollRecord;
@@ -22,7 +23,7 @@ class PayrollService
      */
     public function generatePayroll($month, $year)
     {
-        $staff = User::where('role', 'staff')->where('onboarding_status', 'active')->get();
+        $staff = User::where('role', UserRole::Staff)->where('onboarding_status', 'active')->get();
         $results = [
             'total_processed' => 0,
             'errors' => []
@@ -31,16 +32,18 @@ class PayrollService
         foreach ($staff as $member) {
             try {
                 DB::transaction(function () use ($member, $month, $year, &$results) {
-                    if (!$member instanceof \App\Models\User) {
-                        // Fallback in case of unexpected collection type
-                        $member = \App\Models\User::find($member->id);
+                    $user = $member instanceof User ? $member : User::find($member->id);
+                    if (!$user) {
+                        return;
                     }
+                    // Use fresh data from DB so latest monthly_salary is used
+                    $user->refresh();
 
-                    // 1. Calculate Base Salary from Attendance
-                    $baseSalary = $this->attendanceService->calculateNetSalary($member, $month, $year);
+                    // 1. Calculate Base Salary (uses monthly_salary from staff profile)
+                    $baseSalary = $this->attendanceService->calculateNetSalary($user, $month, $year);
 
                     // 2. Fetch Performance Bonus
-                    $review = PerformanceReview::where('user_id', $member->id)
+                    $review = PerformanceReview::where('user_id', $user->id)
                         ->where('month', $month)
                         ->where('year', $year)
                         ->first();
@@ -49,7 +52,7 @@ class PayrollService
 
                     // 3. Create or Update Payroll Record
                     PayrollRecord::updateOrCreate(
-                        ['user_id' => $member->id, 'month' => $month, 'year' => $year],
+                        ['user_id' => $user->id, 'month' => $month, 'year' => $year],
                         [
                             'base_salary' => $baseSalary,
                             'bonus' => $bonus,

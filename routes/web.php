@@ -73,6 +73,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('payroll/export', [\App\Http\Controllers\Admin\PayrollController::class, 'export'])->name('payroll.export');
     Route::post('payroll/{payroll}/pay', [\App\Http\Controllers\Admin\PayrollController::class, 'markAsPaid'])->name('payroll.pay');
     Route::get('payroll/{payroll}/download', [\App\Http\Controllers\Admin\PayrollController::class, 'downloadPayslip'])->name('payroll.download');
+    Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->names('roles');
+    Route::get('schedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedule.index');
+    Route::post('schedule/requirements', [\App\Http\Controllers\Admin\ScheduleController::class, 'saveRequirements'])->name('schedule.requirements');
+    Route::post('schedule/assignments', [\App\Http\Controllers\Admin\ScheduleController::class, 'saveAssignments'])->name('schedule.assignments');
     Route::resource('staff', \App\Http\Controllers\Admin\StaffController::class);
     Route::post('staff/{staff}/approve', [\App\Http\Controllers\Admin\StaffController::class, 'approve'])->name('staff.approve');
 
@@ -105,6 +109,11 @@ Route::middleware(['auth'])->group(function () {
     // Password Change
     Route::get('change-password', [LoginController::class, 'changePasswordForm'])->name('password.change_form');
     Route::post('change-password', [LoginController::class, 'updatePassword'])->name('password.update');
+
+    // My Profile (staff / any logged-in user)
+    Route::get('my-profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::get('my-profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('my-profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

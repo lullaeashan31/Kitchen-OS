@@ -50,7 +50,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2">Secondary Phone (Optional)</label>
-                            <input type="text" name="secondary_phone"
+                            <input type="tel" name="secondary_phone" inputmode="numeric" pattern="[0-9]{10,15}" title="Numbers only" maxlength="15" placeholder="e.g. 9876500000"
                                 class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2">Contact Phone</label>
-                            <input type="text" name="emergency_contact_phone" required
+                            <input type="tel" name="emergency_contact_phone" required inputmode="numeric" pattern="[0-9]{10,15}" title="Enter 10-15 digit number" maxlength="15" placeholder="e.g. 9876512345"
                                 class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                         </div>
                     </div>
@@ -93,7 +93,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Account Number</label>
-                                <input type="text" name="account_number" required
+                                <input type="text" name="account_number" required inputmode="numeric" pattern="[0-9]*" title="Numbers only" maxlength="24" placeholder="e.g. 123456789012"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                             </div>
                             <div>

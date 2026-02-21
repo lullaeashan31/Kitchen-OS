@@ -64,7 +64,8 @@
 
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
-                                <input type="text" name="phone" value="{{ old('phone') }}" required
+                                <input type="tel" name="phone" value="{{ old('phone') }}" required
+                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Enter 10-15 digit phone number" maxlength="15" placeholder="e.g. 9876543210"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400 @error('phone') border-red-500 @enderror">
                                 @error('phone')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -166,13 +167,27 @@
                         </div>
                     </div>
 
-                    <!-- Permissions Section -->
+                    <!-- Role & Permissions Section -->
                     <div class="border-t border-gray-100 pt-8">
                         <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <i data-lucide="shield-check" class="w-5 h-5 text-purple-600"></i>
-                            Access Permissions
+                            <i data-lucide="briefcase" class="w-5 h-5 text-indigo-600"></i>
+                            Role & Access
                         </h3>
 
+                        @if($roles->isNotEmpty())
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Job Role</label>
+                            <select name="job_role_id" id="job_role_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none">
+                                <option value="">— No role —</option>
+                                @foreach($roles as $r)
+                                    <option value="{{ $r->id }}" {{ old('job_role_id') == $r->id ? 'selected' : '' }}>{{ $r->name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Role permissions are applied automatically. You can add more below.</p>
+                        </div>
+                        @endif
+
+                        <label class="block text-sm font-bold text-gray-700 mb-3">Access Permissions</label>
                         <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200">
                             @if(isset($permissions) && $permissions->count() > 0)
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

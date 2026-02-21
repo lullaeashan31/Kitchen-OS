@@ -37,6 +37,7 @@ class User extends Authenticatable
         'onboarding_status',
         'profile_photo_path',
         'is_password_changed',
+        'job_role_id',
     ];
 
     /**
@@ -101,8 +102,18 @@ class User extends Authenticatable
         if ($this->isAdmin()) {
             return true;
         }
+        if ($this->permissions()->where('slug', $permission)->exists()) {
+            return true;
+        }
+        if ($this->jobRole && $this->jobRole->permissions()->where('slug', $permission)->exists()) {
+            return true;
+        }
+        return false;
+    }
 
-        return $this->permissions()->where('slug', $permission)->exists();
+    public function jobRole()
+    {
+        return $this->belongsTo(Role::class, 'job_role_id');
     }
 
     // Accessor for profile photo URL

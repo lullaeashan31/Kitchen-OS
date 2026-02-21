@@ -48,32 +48,45 @@ class AttendanceService
 
     /**
      * Calculate Net Salary for a user based on worked days.
+     * Uses monthly_salary; if no attendance data, returns full monthly_salary as base so payroll overview shows correct amount.
      */
     public function calculateNetSalary(\App\Models\User $user, $month, $year)
     {
+        $monthlySalary = (float) ($user->monthly_salary ?? 0);
+        if ($monthlySalary <= 0) {
+            return 0;
+        }
+
         $startDate = Carbon::create($year, $month, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        $totalDaysInMonth = $startDate->daysInMonth;
+        $weeklyOff = $user->weekly_off_day ? trim($user->weekly_off_day) : null;
 
-        // Count weekly offs (e.g., Sundays)
+        // Count scheduled working days (exclude weekly off)
         $scheduledDays = 0;
         $tempDate = $startDate->copy();
         while ($tempDate <= $endDate) {
-            if ($tempDate->format('l') !== $user->weekly_off_day) {
+            $dayName = $tempDate->format('l');
+            if ($weeklyOff === null || strcasecmp($dayName, $weeklyOff) !== 0) {
                 $scheduledDays++;
             }
             $tempDate->addDay();
+        }
+
+        if ($scheduledDays <= 0) {
+            return round($monthlySalary, 2);
         }
 
         $daysWorked = Attendance::where('user_id', $user->id)
             ->whereBetween('clock_in_time', [$startDate, $endDate])
             ->count();
 
-        if ($scheduledDays <= 0)
-            return 0;
+        // If no attendance records, use full monthly salary as base (so payroll overview shows correct amount)
+        if ($daysWorked <= 0) {
+            return round($monthlySalary, 2);
+        }
 
-        $dailyRate = $user->monthly_salary / $scheduledDays;
+        $dailyRate = $monthlySalary / $scheduledDays;
         $netSalary = $dailyRate * $daysWorked;
 
         return round($netSalary, 2);

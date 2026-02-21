@@ -68,7 +68,8 @@
 
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
-                                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required
+                                <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" required
+                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Enter 10-15 digit phone number" maxlength="15" placeholder="e.g. 9876543210"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
                             </div>
                              <div>
@@ -78,6 +79,33 @@
                                  <p class="text-xs text-blue-500 mt-2 flex items-center gap-1 font-medium">
                                     <i data-lucide="info" class="w-3 h-3"></i> Required for Tablet Login
                                 </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Salary (₹)</label>
+                                <input type="number" name="monthly_salary" value="{{ old('monthly_salary', $user->monthly_salary) }}" min="0" step="0.01"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="variable_enabled" value="1" {{ old('variable_enabled', $user->variable_enabled) ? 'checked' : '' }}
+                                        class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-sm font-bold text-gray-700">Variable Pay Enabled</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Max Variable Amount (₹)</label>
+                                <input type="number" name="max_variable_amount" value="{{ old('max_variable_amount', $user->max_variable_amount) }}" min="0" step="0.01"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Weekly Off Day</label>
+                                <select name="weekly_off_day" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
+                                    <option value="">Select</option>
+                                    @foreach(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as $day)
+                                        <option value="{{ $day }}" {{ old('weekly_off_day', $user->weekly_off_day) == $day ? 'selected' : '' }}>{{ $day }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
 
@@ -99,13 +127,88 @@
                         </div>
                     </div>
 
-                    <!-- Permissions Section -->
+                    <!-- Onboarding / Employee Profile Section -->
+                    <div class="border-t border-gray-100 pt-8 mt-8">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-5 h-5 text-green-600"></i>
+                            Onboarding / Employee Profile
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-6">Data filled by staff via onboarding link. You can view and edit here.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Current Address</label>
+                                <textarea name="address" rows="3" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">{{ old('address', $user->employeeProfile?->address) }}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Secondary Phone</label>
+                                <input type="tel" name="secondary_phone" value="{{ old('secondary_phone', $user->employeeProfile?->secondary_phone) }}"
+                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Numbers only" maxlength="15" placeholder="e.g. 9876500000"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Joining Date</label>
+                                <input type="date" name="joining_date" value="{{ old('joining_date', $user->employeeProfile?->joining_date?->format('Y-m-d')) }}"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
+                            </div>
+                            <div class="md:col-span-2 flex items-center gap-2 mt-2 mb-2">
+                                <i data-lucide="phone-call" class="w-4 h-4 text-red-500"></i>
+                                <span class="font-bold text-gray-700">Emergency Contact</span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Emergency Contact Name</label>
+                                <input type="text" name="emergency_contact_name" value="{{ old('emergency_contact_name', $user->employeeProfile?->emergency_contact_name) }}"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Emergency Contact Phone</label>
+                                <input type="tel" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $user->employeeProfile?->emergency_contact_phone) }}"
+                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Numbers only" maxlength="15" placeholder="e.g. 9876512345"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
+                            </div>
+                            <div class="md:col-span-2 flex items-center gap-2 mt-4 mb-2">
+                                <i data-lucide="credit-card" class="w-4 h-4 text-green-500"></i>
+                                <span class="font-bold text-gray-700">Bank Account Details</span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Bank Name</label>
+                                <input type="text" name="bank_name" value="{{ old('bank_name', $user->employeeProfile?->bank_name) }}"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Account Number</label>
+                                <input type="text" name="account_number" value="{{ old('account_number', $user->employeeProfile?->account_number) }}"
+                                    inputmode="numeric" pattern="[0-9]*" title="Numbers only" maxlength="24" placeholder="e.g. 123456789012"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 font-mono placeholder-gray-400">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">IFSC Code</label>
+                                <input type="text" name="ifsc_code" value="{{ old('ifsc_code', $user->employeeProfile?->ifsc_code) }}"
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 font-mono placeholder-gray-400">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role & Permissions Section -->
                     <div class="border-t border-gray-100 pt-8">
                         <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <i data-lucide="shield-check" class="w-5 h-5 text-purple-600"></i>
-                            Access Permissions
+                            <i data-lucide="briefcase" class="w-5 h-5 text-indigo-600"></i>
+                            Role & Access
                         </h3>
-                        
+
+                        @if(isset($roles) && $roles->isNotEmpty())
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Job Role</label>
+                            <select name="job_role_id" id="job_role_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none">
+                                <option value="">— No role —</option>
+                                @foreach($roles as $r)
+                                    <option value="{{ $r->id }}" {{ old('job_role_id', $user->job_role_id) == $r->id ? 'selected' : '' }}>{{ $r->name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Role permissions are applied automatically. You can add more below.</p>
+                        </div>
+                        @endif
+
+                        <label class="block text-sm font-bold text-gray-700 mb-3">Access Permissions</label>
                         <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200">
                             @if($permissions->count() > 0)
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

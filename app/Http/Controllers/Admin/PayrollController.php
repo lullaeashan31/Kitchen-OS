@@ -11,12 +11,13 @@ class PayrollController extends Controller
 {
     public function index(Request $request)
     {
-        $month = $request->input('month', date('n'));
-        $year = $request->input('year', date('Y'));
+        $month = (int) $request->input('month', date('n'));
+        $year = (int) $request->input('year', date('Y'));
 
         $payrollRecords = PayrollRecord::with('user')
             ->where('month', $month)
             ->where('year', $year)
+            ->orderBy('user_id')
             ->get();
 
         return view('admin.payroll.index', compact('payrollRecords', 'month', 'year'));
@@ -32,10 +33,12 @@ class PayrollController extends Controller
         $results = $payrollService->generatePayroll($request->month, $request->year);
 
         if (count($results['errors']) > 0) {
-            return redirect()->back()->with('warning', "Generated {$results['total_processed']} records. " . count($results['errors']) . " errors occurred.");
+            return redirect()->route('admin.payroll.index', ['month' => $request->month, 'year' => $request->year])
+                ->with('warning', "Generated {$results['total_processed']} records. " . count($results['errors']) . " errors occurred.");
         }
 
-        return redirect()->back()->with('success', "Payroll generated successfully for {$results['total_processed']} staff members.");
+        return redirect()->route('admin.payroll.index', ['month' => $request->month, 'year' => $request->year])
+            ->with('success', "Payroll generated successfully for {$results['total_processed']} staff members.");
     }
 
     public function markAsPaid(string $id)

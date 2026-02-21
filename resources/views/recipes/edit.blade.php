@@ -22,7 +22,7 @@
             <span class="hidden sm:inline">Cancel</span>
             <span class="sm:hidden">✕</span>
         </button>
-        <button type="submit"
+        <button type="submit" form="recipeForm"
             class="px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-lg shadow-lg hover:shadow-blue-500/30 transition-all text-sm md:text-base">
             <span class="hidden sm:inline">Update Recipe</span>
             <span class="sm:hidden">Update</span>
@@ -811,6 +811,16 @@
         window.addedSubRecipes = window.initialSubRecipes || [];
         window.userIsAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
 
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.cost-display').forEach(el => {
+                const val = parseFloat(el.textContent.replace(/,/g, ''));
+                if (!isNaN(val)) total += val;
+            });
+            const display = document.getElementById('totalCostDisplay');
+            if (display) display.textContent = total.toFixed(2);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize existing rows
             document.querySelectorAll('.ingredient-row').forEach(row => {
@@ -877,6 +887,26 @@
             const form = document.getElementById('recipeForm');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    // Ensure every ingredient row has unit set (fix "unit required" validation)
+                    document.querySelectorAll('.ingredient-row').forEach(row => {
+                        const unitValueInput = row.querySelector('.unit-value-input');
+                        const unitDisplay = row.querySelector('.unit-display');
+                        if (!unitValueInput) return;
+                        if (unitValueInput.value && unitValueInput.value.trim() !== '') return;
+                        let unit = '';
+                        if (unitDisplay && unitDisplay.value) {
+                            const m = unitDisplay.value.match(/\((\w+)\)/);
+                            if (m) unit = m[1].trim();
+                            if (!unit && UNIT_LABELS) {
+                                const entries = Object.entries(UNIT_LABELS);
+                                const found = entries.find(([k, v]) => v === unitDisplay.value || (v && v.startsWith(unitDisplay.value)));
+                                if (found) unit = found[0];
+                            }
+                        }
+                        if (!unit) unit = 'pcs';
+                        unitValueInput.value = unit;
+                    });
+
                     // Inject Sub-Recipes as a special stage if any exist
                     if (window.addedSubRecipes.length > 0) {
                         const stageIdx = 999;
@@ -955,26 +985,27 @@
         function addStage() {
             const container = document.getElementById('stages-container');
             const template = document.getElementById('stageTemplate');
+            if (!container || !template) return;
             const clone = template.content.cloneNode(true);
 
+            const nextIndex = container.querySelectorAll('.stage-block').length;
             const stageBlock = clone.querySelector('.stage-block');
-            stageBlock.dataset.stageIndex = stageCount;
+            stageBlock.dataset.stageIndex = nextIndex;
 
-            // Update names
+            // Update names in stage block inputs/textarea
             const stageInputs = stageBlock.querySelectorAll('input, textarea');
             stageInputs.forEach(input => {
                 if (input.name) {
-                    input.name = input.name.replace('STAGE_INDEX', stageCount);
+                    input.name = input.name.replace('STAGE_INDEX', nextIndex);
                 }
             });
 
             // Add one default ingredient row
             const tbody = stageBlock.querySelector('.stage-ingredients-body');
-            addIngredientRowToTbody(tbody, stageCount);
+            addIngredientRowToTbody(tbody, nextIndex);
 
-            container.appendChild(stageBlock);
-            stageCount++;
-            lucide.createIcons();
+            container.appendChild(clone);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function removeStage(btn) {
@@ -1105,8 +1136,9 @@
         }
         
         // Override calculateTotal to include sub-recipes
-        const originalCalculateTotal = calculateTotal;
-        calculateTotal = function() {
+        (function() {
+            const baseCalculateTotal = calculateTotal;
+            calculateTotal = function() {
             let total = 0;
             // Raw ingredients
             document.querySelectorAll('.cost-display').forEach(el => {
@@ -1122,6 +1154,7 @@
             const display = document.getElementById('totalCostDisplay');
             if(display) display.textContent = total.toFixed(2);
         };
+        })();
 
         // Helper function to update unit when ingredient is selected
         function updateUnitForIngredient(value, row, ingSelect, optionDataMap, tomSelectInstance) {
@@ -1140,10 +1173,10 @@
             console.log('updateUnitForIngredient called with value:', value);
             let ingredientUnit = null;
             
-            // Method 1: Get from our data map
-            if (optionDataMap && optionDataMap[value]) {
-                ingredientUnit = optionDataMap[value].unit;
-                console.log('✓ Unit from data map:', ingredientUnit);
+            // Method 1: Get from our data map (support both string and number key)
+            if (optionDataMap && (optionDataMap[value] || optionDataMap[String(value)])) {
+                const data = optionDataMap[value] || optionDataMap[String(value)];
+                ingredientUnit = data.unit;
             }
             
             // Method 2: Get from original select element (most reliable)
@@ -1174,30 +1207,18 @@
                 }
             }
             
-            if (ingredientUnit) {
-                const unitLabel = UNIT_LABELS[ingredientUnit] || ingredientUnit;
-                console.log('Setting unit label:', unitLabel);
-                
-                // Update hidden input
-                const unitValueInput = row.querySelector('.unit-value-input');
-                if (unitValueInput) {
-                    unitValueInput.value = ingredientUnit;
-                    console.log('✓ Hidden input updated:', unitValueInput.value);
-                } else {
-                    console.error('❌ Unit value input not found');
-                }
-                
-                // Update display field
-                const unitDisplay = row.querySelector('.unit-display');
-                if (unitDisplay) {
-                    unitDisplay.value = unitLabel;
-                    unitDisplay.removeAttribute('placeholder');
-                    console.log('✓ Unit display updated to:', unitDisplay.value);
-                } else {
-                    console.error('❌ Unit display field not found in row');
-                }
-            } else {
-                console.warn('⚠ Unit not found for ingredient:', value);
+            if (!ingredientUnit) {
+                ingredientUnit = 'pcs';
+            }
+            const unitLabel = UNIT_LABELS[ingredientUnit] || ingredientUnit;
+            const unitValueInput = row.querySelector('.unit-value-input');
+            if (unitValueInput) {
+                unitValueInput.value = ingredientUnit;
+            }
+            const unitDisplay = row.querySelector('.unit-display');
+            if (unitDisplay) {
+                unitDisplay.value = unitLabel;
+                unitDisplay.removeAttribute('placeholder');
             }
         }
 

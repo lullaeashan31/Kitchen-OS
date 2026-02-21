@@ -116,12 +116,18 @@
                             </td>
                             <td class="p-6">
                                 <div class="flex flex-col gap-1">
+                                    @if($user->jobRole)
+                                        <span class="inline-flex items-center w-fit gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                                            <i data-lucide="briefcase" class="w-3 h-3"></i>
+                                            {{ $user->jobRole->name }}
+                                        </span>
+                                    @endif
                                     <span class="inline-flex items-center w-fit gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
                                         <i data-lucide="badge-check" class="w-3 h-3"></i>
                                         {{ $user->role->label() }}
                                     </span>
                                     @if($user->permissions->count() > 0)
-                                        <span class="text-xs text-gray-400 mt-1">+{{ $user->permissions->count() }} Custom Permissions</span>
+                                        <span class="text-xs text-gray-400 mt-1">+{{ $user->permissions->count() }} Permissions</span>
                                     @endif
                                 </div>
                             </td>

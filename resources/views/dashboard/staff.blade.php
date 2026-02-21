@@ -1,9 +1,16 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Staff Portal</h1>
-        <p class="text-gray-500 mt-1">Manage your shifts, attendance, and leave requests.</p>
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Staff Portal</h1>
+            <p class="text-gray-500 mt-1">Manage your shifts, attendance, and leave requests.</p>
+        </div>
+        <a href="{{ route('profile.show') }}"
+           class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border-2 border-blue-200 text-blue-700 font-bold shadow-sm hover:bg-blue-50 hover:border-blue-300 transition-all shrink-0">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span>My Profile</span>
+        </a>
     </div>
 @endsection
 
@@ -62,21 +69,21 @@
             </div>
         </div>
 
-        <!-- Recipe Card -->
-        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group">
+        <!-- SOP / Checklists Card -->
+        <a href="{{ route('sop.index') }}" class="block bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group hover:shadow-2xl hover:border-indigo-200 transition-all">
             <div
-                class="absolute -right-4 -top-4 w-24 h-24 bg-purple-50 rounded-full opacity-50 transition-transform group-hover:scale-125">
+                class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full opacity-50 transition-transform group-hover:scale-125">
             </div>
             <div class="relative">
                 <div
-                    class="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg shadow-purple-200">
-                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                    class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg shadow-indigo-200">
+                    <i data-lucide="clipboard-check" class="w-6 h-6"></i>
                 </div>
-                <div class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">My Recipes</div>
-                <div class="text-xl font-black text-gray-900">{{ $myRecipesCount }} Items</div>
-                <div class="text-xs text-gray-400 mt-1">Created by me</div>
+                <div class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">SOP Checklists</div>
+                <div class="text-xl font-black text-gray-900">{{ $todaySopCount ?? 0 }} Today</div>
+                <div class="text-xs text-gray-400 mt-1">Complete your checklists</div>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- Quick Actions -->
@@ -90,10 +97,10 @@
             <i data-lucide="clock" class="w-10 h-10 mb-3 group-hover:rotate-12 transition-transform"></i>
             <span class="font-bold">Time Clock</span>
         </a>
-        <a href="{{ route('recipes.index') }}"
-            class="flex flex-col items-center justify-center p-8 bg-red-600 rounded-3xl shadow-lg hover:bg-red-700 transition-all text-white group transform hover:scale-[1.05]">
-            <i data-lucide="book-open" class="w-10 h-10 mb-3 group-hover:rotate-12 transition-transform"></i>
-            <span class="font-bold">My Recipes</span>
+        <a href="{{ route('sop.index') }}"
+            class="flex flex-col items-center justify-center p-8 bg-indigo-600 rounded-3xl shadow-lg hover:bg-indigo-700 transition-all text-white group transform hover:scale-[1.05]">
+            <i data-lucide="clipboard-check" class="w-10 h-10 mb-3 group-hover:rotate-12 transition-transform"></i>
+            <span class="font-bold">SOP Checklists</span>
         </a>
         <a href="{{ route('employee.leave.create') }}"
             class="flex flex-col items-center justify-center p-8 bg-orange-600 rounded-3xl shadow-lg hover:bg-orange-700 transition-all text-white group transform hover:scale-[1.05]">

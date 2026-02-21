@@ -4,29 +4,36 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
             <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Payroll Overview</h1>
-            <p class="text-gray-500 mt-1">Manage monthly salary disbursements and performance bonuses.</p>
+            <p class="text-gray-500 mt-1">Showing {{ date('F Y', mktime(0, 0, 0, $month, 1, $year)) }} — Manage monthly salary disbursements and performance bonuses.</p>
         </div>
-        <form action="{{ route('admin.payroll.generate') }}" method="POST" class="flex gap-2 items-center bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
-            @csrf
-            <select name="month" class="bg-transparent font-bold text-gray-700 outline-none px-2">
-                @foreach(range(1, 12) as $m)
-                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
-                @endforeach
-            </select>
-            <select name="year" class="bg-transparent font-bold text-gray-700 outline-none px-2 border-l border-gray-100">
-                @foreach(range(date('Y')-1, date('Y')+1) as $y)
-                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                @endforeach
-            </select>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all text-xs flex items-center gap-2">
-                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                Generate Payroll
-            </button>
+        <div class="flex flex-wrap gap-2 items-center bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+            {{-- View month/year: GET form so changing dropdown shows that month's data --}}
+            <form action="{{ route('admin.payroll.index') }}" method="GET" class="flex gap-2 items-center" id="payrollViewForm">
+                <select name="month" class="bg-transparent font-bold text-gray-700 outline-none px-2 rounded border border-gray-200" onchange="this.form.submit()">
+                    @foreach(range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ (int)$month == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                    @endforeach
+                </select>
+                <select name="year" class="bg-transparent font-bold text-gray-700 outline-none px-2 border-l border-gray-100 rounded border border-gray-200" onchange="this.form.submit()">
+                    @foreach(range(date('Y')-1, date('Y')+1) as $y)
+                        <option value="{{ $y }}" {{ (int)$year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </form>
+            <form action="{{ route('admin.payroll.generate') }}" method="POST" class="flex gap-2 items-center">
+                @csrf
+                <input type="hidden" name="month" value="{{ $month }}">
+                <input type="hidden" name="year" value="{{ $year }}">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all text-xs flex items-center gap-2" title="Recalculate base salary from Staff Monthly Salary. Run again after editing staff salary.">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    Generate Payroll
+                </button>
+            </form>
             <a href="{{ route('admin.payroll.export', ['month' => $month, 'year' => $year]) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all text-xs flex items-center gap-2">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                 Export Excel
             </a>
-        </form>
+        </div>
     </div>
 @endsection
 

@@ -127,13 +127,17 @@ class DashboardController extends Controller
             ->whereYear('clock_in_time', date('Y'))
             ->count();
 
-        $myRecipesCount = Recipe::where('created_by', $user->id)->count();
+        // Today's SOP checklists (for staff's assigned shifts)
+        $todayAssignments = $user->shiftAssignments()->where('date', today())->pluck('shift_id');
+        $todaySopCount = \App\Models\SopChecklist::active()
+            ->whereIn('shift_id', $todayAssignments)
+            ->count();
 
         return view('dashboard.staff', compact(
             'todayShift',
             'pendingLeavesCount',
             'monthDaysWorked',
-            'myRecipesCount'
+            'todaySopCount'
         ));
     }
 }
