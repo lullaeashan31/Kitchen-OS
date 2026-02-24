@@ -61,7 +61,8 @@ class PurchaseController extends Controller
             'purchase_date' => 'required|date',
             'vendor_id' => 'required|exists:vendors,id',
             'invoice_photo' => 'required|image|max:4096', // 4MB
-            'goods_photo' => 'required|image|max:4096',
+            'goods_photo' => 'required|array|min:1',
+            'goods_photo.*' => 'required|image|max:4096',
             'items' => 'required|array|min:1',
             'items.*.ingredient_id' => 'required|exists:ingredients,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
@@ -81,15 +82,21 @@ class PurchaseController extends Controller
                 throw new \Exception('Failed to upload invoice photo.');
             $uploadedFiles[] = $invoicePath;
 
-            $goodsPath = $request->file('goods_photo')->store('purchases/goods', $disk);
-            if (!$goodsPath)
-                throw new \Exception('Failed to upload goods photo.');
-            $uploadedFiles[] = $goodsPath;
+            $goodsPaths = [];
+            if ($request->hasFile('goods_photo')) {
+                foreach ($request->file('goods_photo') as $file) {
+                    $path = $file->store('purchases/goods', $disk);
+                    if (!$path)
+                        throw new \Exception('Failed to upload a goods photo.');
+                    $goodsPaths[] = $path;
+                    $uploadedFiles[] = $path;
+                }
+            }
 
             // Unit Service
             $unitService = app(\App\Services\UnitConversionService::class);
 
-            DB::transaction(function () use ($request, $invoicePath, $goodsPath, $unitService) {
+            DB::transaction(function () use ($request, $invoicePath, $goodsPaths, $unitService) {
                 foreach ($request->items as $item) {
                     $ingredient = Ingredient::findOrFail($item['ingredient_id']);
                     $inputQty = $item['quantity'];
@@ -129,7 +136,7 @@ class PurchaseController extends Controller
                         'vendor' => \App\Models\Vendor::find($request->vendor_id)->name, // Keep for legacy/display compatibility if views use it
                         'created_by' => Auth::id(),
                         'invoice_photo_path' => $invoicePath,
-                        'goods_photo_path' => $goodsPath,
+                        'goods_photo_path' => $goodsPaths,
                         'status' => 'pending',
                     ]);
                 }
@@ -227,7 +234,7 @@ class PurchaseController extends Controller
         }
 
         $disk = config('filesystems.default');
-        
+
         if (!Storage::disk($disk)->exists($purchase->invoice_photo_path)) {
             return back()->with('error', 'Invoice file not found.');
         }
@@ -250,7 +257,7 @@ class PurchaseController extends Controller
         $this->authorize('viewAny', Purchase::class);
 
         $startDate = now()->subDays(90);
-        
+
         $query = Purchase::where('purchase_date', '>=', $startDate)
             ->whereNotNull('invoice_photo_path');
 
@@ -266,7 +273,7 @@ class PurchaseController extends Controller
 
         $disk = config('filesystems.default');
         $zipPath = storage_path('app/temp/invoices_90days_' . now()->format('Y-m-d_His') . '.zip');
-        
+
         // Create temp directory if not exists
         $tempDir = dirname($zipPath);
         if (!is_dir($tempDir)) {

@@ -15,8 +15,8 @@ class EnsureUserIsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || !$request->user()->isAdmin()) {
-            abort(403, 'Unauthorized. Admin access required.');
+        if (!$request->user() || (!$request->user()->isAdmin() && !$request->user()->isManager())) {
+            abort(403, 'Access Denied. Admin or Manager access required.');
         }
 
         return $next($request);

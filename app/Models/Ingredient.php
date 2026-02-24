@@ -90,7 +90,7 @@ class Ingredient extends Model
         $byVendor = [];
         foreach ($purchases as $p) {
             $vid = $p->vendor_id ?? 'legacy';
-            $vname = $p->vendor ? $p->vendor->name : ($p->vendor ?? 'N/A');
+            $vname = (is_object($p->vendor) && $p->vendor !== null) ? $p->vendor->name : (is_string($p->vendor) ? $p->vendor : 'N/A');
             if (!isset($byVendor[$vid])) {
                 $byVendor[$vid] = ['name' => $vname, 'price' => $p->unit_price, 'quantity' => 0];
             }
@@ -107,7 +107,7 @@ class Ingredient extends Model
         $totalUsed = $this->logs()
             ->where('action', 'RECIPE_USE')
             ->sum('quantity_change');
-        
+
         // Since quantity_change is negative, we need to convert to positive
         return abs($totalUsed);
     }
@@ -131,10 +131,10 @@ class Ingredient extends Model
         $logCount = $this->logs()->count();
         $logsSum = $this->logs()->sum('quantity_change');
         $approvedPurchases = $this->purchases()->where('status', 'approved')->sum('quantity');
-        
+
         // Check if purchases are logged (purchase_approved action exists)
         $purchaseLogsExist = $this->logs()->where('action', 'purchase_approved')->exists();
-        
+
         if ($logCount === 0) {
             // No logs at all - prioritize approved purchases over database value
             // If purchases exist, use them; otherwise use database value
@@ -143,7 +143,7 @@ class Ingredient extends Model
             }
             return $this->attributes['current_stock'] ?? 0;
         }
-        
+
         if ($purchaseLogsExist) {
             // Purchases are logged, so logs sum includes everything
             return $logsSum;
@@ -161,7 +161,7 @@ class Ingredient extends Model
     {
         // Use calculated stock for accuracy
         $calculated = $this->getCalculatedCurrentStockAttribute();
-        
+
         // Ensure stock is not negative (but allow 0)
         return max(0, $calculated);
     }

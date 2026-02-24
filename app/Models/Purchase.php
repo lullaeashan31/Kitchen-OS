@@ -34,6 +34,7 @@ class Purchase extends Model
         'quantity' => 'decimal:3',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
+        'goods_photo_path' => 'array',  // Multiple goods photos stored as JSON
     ];
 
     public function vendor()
@@ -89,26 +90,38 @@ class Purchase extends Model
         return \Illuminate\Support\Facades\Storage::disk($disk)->url($this->invoice_photo_path);
     }
 
-    public function getGoodsUrlAttribute()
+    /**
+     * Returns an array of URLs for all goods photos.
+     */
+    public function getGoodsUrlsAttribute(): array
     {
-        if (!$this->goods_photo_path) {
-            return null;
-        }
+        $paths = $this->goods_photo_path;
+        if (empty($paths))
+            return [];
+        // Handle legacy single-string paths
+        if (is_string($paths))
+            $paths = [$paths];
 
         $disk = config('filesystems.default');
-
-        // Check if file actually exists before generating URL
-        if (!\Illuminate\Support\Facades\Storage::disk($disk)->exists($this->goods_photo_path)) {
-            return null;
+        $urls = [];
+        foreach ($paths as $path) {
+            if (!$path || !\Illuminate\Support\Facades\Storage::disk($disk)->exists($path))
+                continue;
+            if (config("filesystems.disks.{$disk}.driver") === 's3') {
+                $urls[] = \Illuminate\Support\Facades\Storage::disk($disk)->temporaryUrl($path, now()->addMinutes(30));
+            } else {
+                $urls[] = \Illuminate\Support\Facades\Storage::disk($disk)->url($path);
+            }
         }
+        return $urls;
+    }
 
-        if (config("filesystems.disks.{$disk}.driver") === 's3') {
-            return \Illuminate\Support\Facades\Storage::disk($disk)->temporaryUrl(
-                $this->goods_photo_path,
-                now()->addMinutes(30)
-            );
-        }
-
-        return \Illuminate\Support\Facades\Storage::disk($disk)->url($this->goods_photo_path);
+    /**
+     * Legacy: returns first goods photo URL (backward compat).
+     */
+    public function getGoodsUrlAttribute(): ?string
+    {
+        $urls = $this->getGoodsUrlsAttribute();
+        return $urls[0] ?? null;
     }
 }

@@ -16,7 +16,7 @@
             @foreach(range(0, 6) as $i)
                 @php
                     $date = $startDate->copy()->addDays($i);
-                    $assignment = $assignments->firstWhere('date', $date->toDateString());
+                    $assignment = $assignments->get($date->toDateString());
                 @endphp
                 <div class="p-6 {{ $date->isToday() ? 'bg-blue-50/50' : '' }}">
                     <div
@@ -27,10 +27,9 @@
 
                     @if($assignment)
                         <div class="bg-white p-3 rounded-2xl border border-blue-100 shadow-sm">
-                            <div class="text-sm font-bold text-blue-900">{{ $assignment->shift->name }}</div>
+                            <div class="text-sm font-bold text-blue-900">{{ $assignment->role->name ?? 'Scheduled' }}</div>
                             <div class="text-[10px] text-blue-500 mt-1 uppercase font-bold tracking-tighter">
-                                {{ \Carbon\Carbon::parse($assignment->shift->start_time)->format('g:i A') }} -
-                                {{ \Carbon\Carbon::parse($assignment->shift->end_time)->format('g:i A') }}
+                                Slot #{{ $assignment->slot_index }}
                             </div>
                         </div>
                     @else

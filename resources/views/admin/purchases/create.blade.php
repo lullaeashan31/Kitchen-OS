@@ -39,17 +39,48 @@
                         </div>
                         @error('vendor_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
+                    {{-- Invoice Photo --}}
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Invoice Photo <span class="text-red-500">*</span></label>
-                        <input type="file" name="invoice_photo" accept="image/*" required
-                            class="w-full px-4 py-2 rounded-lg border {{ $errors->has('invoice_photo') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none transition-all">
+                        <div class="flex gap-2 items-center">
+                            <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border {{ $errors->has('invoice_photo') ? 'border-red-500' : 'border-gray-200' }} bg-white hover:bg-gray-50 transition-all">
+                                <i data-lucide="folder-open" class="w-4 h-4 text-gray-500"></i>
+                                <span class="text-sm text-gray-500" id="invoice_photo_label">Choose File</span>
+                                <input type="file" name="invoice_photo" id="invoice_photo" accept="image/*" required class="hidden"
+                                    onchange="handleFileSelect(this, 'invoice_preview', 'invoice_photo_label')">
+                            </label>
+                            <button type="button" onclick="openCamera('invoice')"
+                                class="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex items-center gap-2 text-sm font-semibold">
+                                <i data-lucide="camera" class="w-4 h-4"></i> Live Camera
+                            </button>
+                        </div>
+                        <div id="invoice_preview" class="mt-2 hidden">
+                            <img src="" alt="Invoice Preview" class="h-24 rounded-lg border border-gray-200 object-cover">
+                            <button type="button" onclick="clearPhoto('invoice_photo','invoice_preview','invoice_photo_label')" class="ml-2 text-xs text-red-500 hover:underline">Remove</button>
+                        </div>
                         @error('invoice_photo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
+
+                    {{-- Goods Photo --}}
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Goods Photo <span class="text-red-500">*</span></label>
-                        <input type="file" name="goods_photo" accept="image/*" required
-                            class="w-full px-4 py-2 rounded-lg border {{ $errors->has('goods_photo') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none transition-all">
+                        <div class="flex gap-2 items-center">
+                            <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border {{ $errors->has('goods_photo') || $errors->has('goods_photo.*') ? 'border-red-500' : 'border-gray-200' }} bg-white hover:bg-gray-50 transition-all">
+                                <i data-lucide="folder-open" class="w-4 h-4 text-gray-500"></i>
+                                <span class="text-sm text-gray-500" id="goods_photo_label">Choose Files (Multiple)</span>
+                                <input type="file" name="goods_photo[]" id="goods_photo" accept="image/*" multiple required class="hidden"
+                                    onchange="handleMultipleFileSelect(this, 'goods_preview_grid', 'goods_photo_label')">
+                            </label>
+                            <button type="button" onclick="openCamera('goods')"
+                                class="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
+                                <i data-lucide="camera" class="w-4 h-4"></i> Live Camera
+                            </button>
+                        </div>
+                        <div id="goods_preview_grid" class="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {{-- Multiple previews will appear here --}}
+                        </div>
                         @error('goods_photo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('goods_photo.*') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
@@ -258,6 +289,47 @@
                 </div>
             </div>
         </div>
+    {{-- ===== CAMERA MODAL ===== --}}
+    <div id="cameraModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i data-lucide="camera" class="w-5 h-5 text-blue-600"></i>
+                    <span id="cameraModalTitle">Take Photo</span>
+                </h3>
+                <button type="button" onclick="closeCamera()" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            {{-- Live Feed --}}
+            <div id="cameraFeedWrap" class="">
+                <video id="cameraFeed" autoplay playsinline class="w-full rounded-xl bg-black" style="max-height:340px;"></video>
+                <div class="mt-4 flex gap-3">
+                    <button type="button" onclick="capturePhoto()"
+                        class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition">
+                        <i data-lucide="aperture" class="w-5 h-5"></i> Capture
+                    </button>
+                    <button type="button" onclick="closeCamera()"
+                        class="px-5 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 transition">Cancel</button>
+                </div>
+            </div>
+
+            {{-- Preview after capture --}}
+            <div id="cameraPreviewWrap" class="hidden">
+                <canvas id="captureCanvas" class="w-full rounded-xl border border-gray-200" style="max-height:340px;"></canvas>
+                <div class="mt-4 flex gap-3">
+                    <button type="button" onclick="retakePhoto()"
+                        class="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition font-semibold">Retake</button>
+                    <button type="button" onclick="usePhoto()"
+                        class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition">
+                        <i data-lucide="check" class="w-5 h-5"></i> Use Photo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
     @push('scripts')
@@ -580,6 +652,177 @@
                     }
                     errorDiv.classList.remove('hidden');
                 });
+            }
+            // ===== CAMERA LOGIC =====
+            let cameraStream = null;
+            let activeField = null; // 'invoice' or 'goods'
+
+            function openCamera(field) {
+                activeField = field;
+                const title = field === 'invoice' ? 'Invoice Photo' : 'Goods Photo';
+                document.getElementById('cameraModalTitle').textContent = 'Capture ' + title;
+                document.getElementById('cameraModal').classList.remove('hidden');
+                document.getElementById('cameraFeedWrap').classList.remove('hidden');
+                document.getElementById('cameraPreviewWrap').classList.add('hidden');
+                lucide.createIcons();
+
+                const constraints = {
+                    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } }
+                };
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(stream => {
+                        cameraStream = stream;
+                        document.getElementById('cameraFeed').srcObject = stream;
+                    })
+                    .catch(err => {
+                        alert('Camera access denied or not available: ' + err.message);
+                        closeCamera();
+                    });
+            }
+
+            function capturePhoto() {
+                const video = document.getElementById('cameraFeed');
+                const canvas = document.getElementById('captureCanvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+
+                // Stop stream to save battery
+                if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+
+                document.getElementById('cameraFeedWrap').classList.add('hidden');
+                document.getElementById('cameraPreviewWrap').classList.remove('hidden');
+                lucide.createIcons();
+            }
+
+            function retakePhoto() {
+                document.getElementById('cameraFeedWrap').classList.remove('hidden');
+                document.getElementById('cameraPreviewWrap').classList.add('hidden');
+                openCamera(activeField); // restart stream
+                // openCamera will re-open; avoid double modal
+                document.getElementById('cameraModal').classList.remove('hidden');
+            }
+
+            function usePhoto() {
+                const canvas = document.getElementById('captureCanvas');
+                const fieldId = activeField + '_photo';
+                const previewId = activeField + '_preview';
+                const labelId = activeField + '_photo_label';
+
+                canvas.toBlob(blob => {
+                    const filename = activeField + '_capture_' + Date.now() + '.jpg';
+                    const file = new File([blob], filename, { type: 'image/jpeg' });
+
+                    if (activeField === 'invoice') {
+                        // Single file logic for invoice
+                        const input = document.getElementById('invoice_photo');
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        input.files = dt.files;
+
+                        const previewDiv = document.getElementById('invoice_preview');
+                        previewDiv.querySelector('img').src = canvas.toDataURL('image/jpeg');
+                        previewDiv.classList.remove('hidden');
+                        document.getElementById('invoice_photo_label').textContent = filename;
+                    } else {
+                        // Multiple file logic for goods
+                        const input = document.getElementById('goods_photo');
+                        const dt = new DataTransfer();
+                        
+                        // Keep existing files
+                        if (input.files.length > 0) {
+                            for (let i = 0; i < input.files.length; i++) {
+                                dt.items.add(input.files[i]);
+                            }
+                        }
+                        dt.items.add(file);
+                        input.files = dt.files;
+
+                        addGoodsPreview(canvas.toDataURL('image/jpeg'), filename, input.files.length - 1);
+                        document.getElementById('goods_photo_label').textContent = input.files.length + ' files selected';
+                    }
+
+                    closeCamera();
+                }, 'image/jpeg', 0.92);
+            }
+
+            function closeCamera() {
+                if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+                document.getElementById('cameraModal').classList.add('hidden');
+            }
+
+            function handleMultipleFileSelect(input, gridId, labelId) {
+                const grid = document.getElementById(gridId);
+                // We DON'T clear the input. We accumulate files if the user picks more?
+                // Actually, standard input behavior replaces files. Let's make it accumulate.
+                
+                // For 'goods_photo', we want to show all files in the grid
+                renderGoodsGrid(input);
+                document.getElementById(labelId).textContent = input.files.length + ' files selected';
+            }
+
+            function renderGoodsGrid(input) {
+                const grid = document.getElementById('goods_preview_grid');
+                grid.innerHTML = '';
+                
+                for (let i = 0; i < input.files.length; i++) {
+                    const file = input.files[i];
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        addGoodsPreview(e.target.result, file.name, i);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            function addGoodsPreview(src, filename, index) {
+                const grid = document.getElementById('goods_preview_grid');
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative group';
+                wrapper.innerHTML = `
+                    <img src="${src}" class="w-full h-20 object-cover rounded-lg border border-gray-200">
+                    <button type="button" onclick="removeGoodsPhoto(${index})" 
+                        class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                `;
+                grid.appendChild(wrapper);
+            }
+
+            function removeGoodsPhoto(index) {
+                const input = document.getElementById('goods_photo');
+                const dt = new DataTransfer();
+                
+                for (let i = 0; i < input.files.length; i++) {
+                    if (i !== index) {
+                        dt.items.add(input.files[i]);
+                    }
+                }
+                
+                input.files = dt.files;
+                renderGoodsGrid(input);
+                document.getElementById('goods_photo_label').textContent = input.files.length > 0 ? input.files.length + ' files selected' : 'Choose Files (Multiple)';
+            }
+
+            function handleFileSelect(input, previewId, labelId) {
+                if (input.files && input.files[0]) {
+                    document.getElementById(labelId).textContent = input.files[0].name;
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const div = document.getElementById(previewId);
+                        div.querySelector('img').src = e.target.result;
+                        div.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+
+            function clearPhoto(inputId, previewId, labelId) {
+                document.getElementById(inputId).value = '';
+                const div = document.getElementById(previewId);
+                div.querySelector('img').src = '';
+                div.classList.add('hidden');
+                document.getElementById(labelId).textContent = 'Choose File';
             }
         </script>
     @endpush

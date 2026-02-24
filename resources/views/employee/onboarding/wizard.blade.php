@@ -50,7 +50,8 @@
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2">Secondary Phone (Optional)</label>
-                            <input type="tel" name="secondary_phone" inputmode="numeric" pattern="[0-9]{10,15}" title="Numbers only" maxlength="15" placeholder="e.g. 9876500000"
+                            <input type="tel" name="secondary_phone" inputmode="numeric" pattern="[0-9]{10,15}"
+                                title="Numbers only" maxlength="15" placeholder="e.g. 9876500000"
                                 class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                         </div>
                     </div>
@@ -71,7 +72,9 @@
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2">Contact Phone</label>
-                            <input type="tel" name="emergency_contact_phone" required inputmode="numeric" pattern="[0-9]{10,15}" title="Enter 10-15 digit number" maxlength="15" placeholder="e.g. 9876512345"
+                            <input type="tel" name="emergency_contact_phone" required inputmode="numeric"
+                                pattern="[0-9]{10,15}" title="Enter 10-15 digit number" maxlength="15"
+                                placeholder="e.g. 9876512345"
                                 class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                         </div>
                     </div>
@@ -93,7 +96,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Account Number</label>
-                                <input type="text" name="account_number" required inputmode="numeric" pattern="[0-9]*" title="Numbers only" maxlength="24" placeholder="e.g. 123456789012"
+                                <input type="text" name="account_number" required inputmode="numeric" pattern="[0-9]*"
+                                    title="Numbers only" maxlength="24" placeholder="e.g. 123456789012"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                             </div>
                             <div>
@@ -138,15 +142,17 @@
                             <div class="text-center italic mt-4 text-xs">Scroll to the bottom to accept.</div>
                         </div>
 
-                        <label
-                            class="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl border border-blue-200 cursor-pointer group">
-                            <input type="checkbox" name="policy_accepted" value="1" id="policy_checkbox" disabled
-                                required
-                                class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 transition-colors">
+                        <label id="policy_label"
+                            class="flex items-center space-x-3 p-4 bg-gray-100 rounded-xl border border-gray-300 cursor-not-allowed opacity-60 group"
+                            id="policy_label">
+                            <input type="checkbox" name="policy_accepted" value="1" id="policy_checkbox" required
+                                class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 transition-colors"
+                                style="pointer-events: none;">
                             <div>
                                 <span class="text-sm font-bold text-blue-800">I have read and accept the HR
                                     Policy</span>
-                                <p class="text-xs text-blue-600">This will log your timestamp and IP address.</p>
+                                <p class="text-xs text-blue-600" id="policy_hint">⬆ Scroll up to read the full policy
+                                    first.</p>
                             </div>
                         </label>
                     </div>
@@ -192,9 +198,15 @@
         function validateStep(step) {
             const inputs = document.querySelectorAll(`#step_${step} [required]`);
             for (let input of inputs) {
-                if (!input.value) {
+                // For checkboxes, check .checked; for others check .value
+                const isValid = input.type === 'checkbox' ? input.checked : input.value.trim() !== '';
+                if (!isValid) {
                     input.classList.add('border-red-500');
-                    alert('Please fill all required fields.');
+                    if (input.type === 'checkbox') {
+                        alert('Please scroll through and accept the HR Policy to continue.');
+                    } else {
+                        alert('Please fill all required fields.');
+                    }
                     return false;
                 }
                 input.classList.remove('border-red-500');
@@ -223,9 +235,18 @@
         const policyViewer = document.getElementById('policy_viewer');
         const policyCheckbox = document.getElementById('policy_checkbox');
 
+        // Initially lock the checkbox until policy is scrolled
+        policyCheckbox.checked = false;
+        policyCheckbox.style.pointerEvents = 'none';
+
         policyViewer.addEventListener('scroll', function () {
             if (policyViewer.scrollHeight - policyViewer.scrollTop <= policyViewer.clientHeight + 10) {
-                policyCheckbox.disabled = false;
+                // Unlock checkbox
+                policyCheckbox.style.pointerEvents = 'auto';
+                const label = document.getElementById('policy_label');
+                label.classList.remove('bg-gray-100', 'border-gray-300', 'cursor-not-allowed', 'opacity-60');
+                label.classList.add('bg-blue-50', 'border-blue-200', 'cursor-pointer');
+                document.getElementById('policy_hint').textContent = 'This will log your timestamp and IP address.';
             }
         });
     </script>

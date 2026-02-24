@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ScheduleAssignment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ShiftController extends Controller
@@ -87,11 +89,15 @@ class ShiftController extends Controller
      */
     public function mySchedule()
     {
-        $assignments = \App\Models\ShiftAssignment::with('shift')
+        $startDate = today();
+        $endDate = today()->addDays(6);
+
+        $assignments = ScheduleAssignment::with('role')
             ->where('user_id', auth()->id())
-            ->where('date', '>=', today()->toDateString())
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
             ->orderBy('date', 'asc')
-            ->get();
+            ->get()
+            ->keyBy(fn($a) => Carbon::parse($a->date)->format('Y-m-d'));
 
         return view('employee.shifts.index', compact('assignments'));
     }

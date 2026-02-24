@@ -87,13 +87,15 @@
                             @endif
                         </td>
                         <td style="padding: 0.75rem 1rem; text-align: center;">
-                            @if($purchase->goods_url)
-                                <a href="{{ $purchase->goods_url }}" target="_blank" title="View Goods" style="color: #3b82f6;">
-                                    <i data-lucide="package" style="width: 1.25rem; height: 1.25rem; margin: 0 auto;"></i>
-                                </a>
-                            @else
-                                <span style="color: #cbd5e1;">-</span>
-                            @endif
+                            <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; max-width: 80px; margin: 0 auto;">
+                                @forelse($purchase->goods_urls as $url)
+                                    <a href="{{ $url }}" target="_blank" title="View Goods Photo" style="color: #3b82f6;">
+                                        <i data-lucide="package" style="width: 1.25rem; height: 1.25rem;"></i>
+                                    </a>
+                                @empty
+                                    <span style="color: #cbd5e1;">-</span>
+                                @endforelse
+                            </div>
                         </td>
                         <td style="padding: 0.75rem 1rem; text-align: center;">
                             @if($purchase->status == 'approved')
