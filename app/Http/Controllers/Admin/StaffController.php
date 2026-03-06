@@ -31,8 +31,8 @@ class StaffController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:15|unique:users',
-            'staff_code' => 'required|string|max:6|unique:users',
+            'phone' => 'required|digits:10|unique:users',
+            'staff_code' => 'required|numeric|digits:6|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120', // Optional 5MB max
             'job_role_id' => 'nullable|exists:roles,id',
@@ -41,7 +41,7 @@ class StaffController extends Controller
             'monthly_salary' => 'required|numeric|min:0',
             'variable_enabled' => 'boolean',
             'max_variable_amount' => 'nullable|numeric|min:0',
-            'weekly_off_day' => 'required|string',
+            'weekly_off_day' => 'required|string|max:20',
         ]);
 
         $createData = [
@@ -105,8 +105,8 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:15|unique:users,phone,' . $id,
-            'staff_code' => 'required|string|max:6|unique:users,staff_code,' . $id,
+            'phone' => 'required|digits:10|unique:users,phone,' . $id,
+            'staff_code' => 'required|numeric|digits:6|unique:users,staff_code,' . $id,
             'password' => 'nullable|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120',
             'job_role_id' => 'nullable|exists:roles,id',
@@ -119,9 +119,9 @@ class StaffController extends Controller
             'weekly_off_day' => 'nullable|string|max:20',
             // Employee profile / onboarding
             'address' => 'nullable|string',
-            'secondary_phone' => 'nullable|string|max:20',
+            'secondary_phone' => 'nullable|digits:10',
             'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_phone' => 'nullable|digits:10',
             'bank_name' => 'nullable|string|max:255',
             'account_number' => 'nullable|string|max:50',
             'ifsc_code' => 'nullable|string|max:20',
@@ -209,7 +209,7 @@ class StaffController extends Controller
         $user = User::where('role', \App\Enums\UserRole::Staff)
             ->with(['employeeProfile', 'permissions', 'hrPolicyLogs'])
             ->findOrFail($id);
-        
+
         return view('admin.staff.show', compact('user'));
     }
 }

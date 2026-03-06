@@ -64,8 +64,11 @@
 
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" name="phone" value="{{ old('phone') }}" required
-                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Enter 10-15 digit phone number" maxlength="15" placeholder="e.g. 9876543210"
+                                <input type="tel" name="phone" value="{{ old('phone') }}" required inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)"
+                                    title="Enter 10 digit phone number" maxlength="10" minlength="10"
+                                    placeholder="e.g. 9876543210"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400 @error('phone') border-red-500 @enderror">
                                 @error('phone')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -74,6 +77,9 @@
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Staff Code (Login ID)</label>
                                 <input type="text" name="staff_code" value="{{ old('staff_code') }}" required maxlength="6"
+                                    inputmode="numeric" pattern="[0-9]*"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    title="Enter 6 digit staff code"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono tracking-widest text-center text-lg @error('staff_code') border-red-500 @enderror">
                                 @error('staff_code')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -128,13 +134,12 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Weekly Off Day</label>
-                                <select name="weekly_off_day" required
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Off Days</label>
+                                <input type="number" name="weekly_off_day" value="{{ old('weekly_off_day', 7) }}" min="1"
+                                    max="7" required
                                     class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
-                                    @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
-                                        <option value="{{ $day }}" {{ old('weekly_off_day', 'Sunday') == $day ? 'selected' : '' }}>{{ $day }}</option>
-                                    @endforeach
-                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Total off days to deduct per month (e.g. 4)
+                                </p>
                             </div>
 
                             <div class="md:col-span-2">
@@ -175,16 +180,20 @@
                         </h3>
 
                         @if($roles->isNotEmpty())
-                        <div class="mb-6">
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Job Role</label>
-                            <select name="job_role_id" id="job_role_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none">
-                                <option value="">— No role —</option>
-                                @foreach($roles as $r)
-                                    <option value="{{ $r->id }}" {{ old('job_role_id') == $r->id ? 'selected' : '' }}>{{ $r->name }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Role permissions are applied automatically. You can add more below.</p>
-                        </div>
+                            <div class="mb-6">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Job Role</label>
+                                <select name="job_role_id" id="job_role_id"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none">
+                                    <option value="">— No role —</option>
+                                    @foreach($roles as $r)
+                                        <option value="{{ $r->id }}" {{ old('job_role_id') == $r->id ? 'selected' : '' }}>
+                                            {{ $r->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Role permissions are applied automatically. You can add
+                                    more below.</p>
+                            </div>
                         @endif
 
                         <label class="block text-sm font-bold text-gray-700 mb-3">Access Permissions</label>

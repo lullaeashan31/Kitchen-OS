@@ -33,12 +33,13 @@
                     $isRejected = $completion && $completion->status === 'rejected';
                 @endphp
                 <div class="item-card bg-white p-5 rounded-xl border {{ $isDone ? 'border-green-200 bg-green-50/30' : ($isRejected ? 'border-red-200 bg-red-50/30' : 'border-gray-200') }} shadow-sm transition-all"
-                    data-item-id="{{ $item->id }}" data-photo-required="{{ $item->is_photo_required ? 'true' : 'false' }}">
+                    data-item-id="{{ $item->id }}" data-photo-required="{{ $item->is_photo_required ? 'true' : 'false' }}"
+                    data-completed="{{ $isDone ? 'true' : 'false' }}">
                     <div class="flex items-start gap-4">
                         <div class="mt-1">
                             <div class="checkbox-container w-6 h-6 rounded-md border-2 
-                                    {{ $isDone ? 'bg-green-500 border-green-500 text-white' : ($isRejected ? 'bg-red-500 border-red-500 text-white' : 'border-gray-300') }} 
-                                    flex items-center justify-center transition-colors">
+                                                    {{ $isDone ? 'bg-green-500 border-green-500 text-white' : ($isRejected ? 'bg-red-500 border-red-500 text-white' : 'border-gray-300') }} 
+                                                    flex items-center justify-center transition-colors">
                                 @if($isRejected)
                                     <i data-lucide="x" class="w-4 h-4"></i>
                                 @else
@@ -49,7 +50,8 @@
 
                         <div class="flex-1">
                             <h4 class="font-bold text-gray-900 {{ $isDone ? 'line-through text-gray-500' : '' }}">
-                                {{ $item->name }}</h4>
+                                {{ $item->name }}
+                            </h4>
                             @if($item->description)
                                 <p class="text-sm text-gray-500 mt-1">{{ $item->description }}</p>
                             @endif
@@ -71,8 +73,7 @@
                                         <div
                                             class="photo-preview w-20 h-20 bg-gray-100 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
                                             @if(($isDone || $isRejected) && $completion->photo_path)
-                                                <img src="{{ Storage::url($completion->photo_path) }}"
-                                                    class="w-full h-full object-cover">
+                                                <img src="{{ $completion->photo_url }}" class="w-full h-full object-cover">
                                             @else
                                                 <i data-lucide="image" class="w-6 h-6 text-gray-300"></i>
                                             @endif
@@ -122,14 +123,21 @@
         <script>
             function updateProgress() {
                 const total = {{ $checklist->items->count() }};
-                const done = document.querySelectorAll('.checkbox-container.bg-green-500').length;
+                const done = document.querySelectorAll('.item-card[data-completed="true"]').length;
                 const percent = Math.round((done / total) * 100);
 
-                document.getElementById('progress-bar').style.width = percent + '%';
-                document.getElementById('progress-text').textContent = percent + '%';
-                document.getElementById('items-done-count').textContent = done;
+                const progressBar = document.getElementById('progress-bar');
+                if (progressBar) progressBar.style.width = percent + '%';
+
+                const progressText = document.getElementById('progress-text');
+                if (progressText) progressText.textContent = percent + '%';
+
+                const itemsDoneCount = document.getElementById('items-done-count');
+                if (itemsDoneCount) itemsDoneCount.textContent = done;
 
                 const btn = document.getElementById('submit-btn');
+                if (!btn) return;
+
                 if (percent === 100) {
                     btn.disabled = false;
                     btn.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
@@ -158,21 +166,44 @@
 
                     const result = await response.json();
                     if (result.success) {
-                        // Update UI
+                        // Update UI state
+                        card.setAttribute('data-completed', 'true');
                         card.classList.add('border-green-200', 'bg-green-50/30');
-                        card.classList.remove('border-gray-200');
-                        card.querySelector('.checkbox-container').classList.add('bg-green-500', 'border-green-500', 'text-white');
-                        card.querySelector('.checkbox-container').classList.remove('border-gray-300');
-                        card.querySelector('.checkbox-container i').classList.remove('hidden');
+                        card.classList.remove('border-gray-200', 'border-red-200', 'bg-red-50/30');
+
+                        const checkbox = card.querySelector('.checkbox-container');
+                        checkbox.classList.add('bg-green-500', 'border-green-500', 'text-white');
+                        checkbox.classList.remove('border-gray-300', 'bg-red-500', 'border-red-500');
+
+                        // Update Icon
+                        checkbox.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                        if (window.lucide) window.lucide.createIcons();
+
                         card.querySelector('h4').classList.add('line-through', 'text-gray-500');
 
-                        // Remove buttons/inputs if photo was uploaded
+                        // Remove buttons/inputs
                         const btn = card.querySelector('button');
                         if (btn) btn.remove();
                         const label = card.querySelector('label.cursor-pointer');
                         if (label) label.remove();
 
+                        // Hide rejection reason if present
+                        const rejectionBox = card.querySelector('.bg-red-100\\/50');
+                        if (rejectionBox) rejectionBox.remove();
+
                         updateProgress();
+
+                        // Reliability fallback: if server says all_done, force enable submit
+                        if (result.all_done) {
+                            const submitBtn = document.getElementById('submit-btn');
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+                                submitBtn.classList.add('bg-success', 'text-white', 'shadow-lg', 'shadow-green-100');
+                            }
+                        }
+                    } else {
+                        alert(result.message || 'Something went wrong.');
                     }
                 } catch (error) {
                     console.error('Error updating item:', error);

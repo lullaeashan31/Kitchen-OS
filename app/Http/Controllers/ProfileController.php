@@ -35,13 +35,13 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:15|unique:users,phone,' . $user->id,
+            'phone' => 'required|digits:10|unique:users,phone,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120',
             'address' => 'nullable|string',
-            'secondary_phone' => 'nullable|string|max:20',
+            'secondary_phone' => 'nullable|digits:10',
             'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_phone' => 'nullable|digits:10',
             'bank_name' => 'nullable|string|max:255',
             'account_number' => 'nullable|string|max:50',
             'ifsc_code' => 'nullable|string|max:20',

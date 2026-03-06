@@ -61,16 +61,22 @@ class AttendanceService
         $endDate = $startDate->copy()->endOfMonth();
 
         $weeklyOff = $user->weekly_off_day ? trim($user->weekly_off_day) : null;
+        $totalDaysInMonth = $startDate->daysInMonth;
 
-        // Count scheduled working days (exclude weekly off)
-        $scheduledDays = 0;
-        $tempDate = $startDate->copy();
-        while ($tempDate <= $endDate) {
-            $dayName = $tempDate->format('l');
-            if ($weeklyOff === null || strcasecmp($dayName, $weeklyOff) !== 0) {
-                $scheduledDays++;
+        if (is_numeric($weeklyOff)) {
+            $offDaysCount = (int) $weeklyOff;
+            $scheduledDays = max(0, $totalDaysInMonth - $offDaysCount);
+        } else {
+            // Legacy string-based logic (e.g. "Sunday")
+            $scheduledDays = 0;
+            $tempDate = $startDate->copy();
+            while ($tempDate <= $endDate) {
+                $dayName = $tempDate->format('l');
+                if ($weeklyOff === null || strcasecmp($dayName, $weeklyOff) !== 0) {
+                    $scheduledDays++;
+                }
+                $tempDate->addDay();
             }
-            $tempDate->addDay();
         }
 
         if ($scheduledDays <= 0) {

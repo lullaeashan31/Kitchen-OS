@@ -24,7 +24,7 @@ class IngredientController extends Controller
 
     public function index(Request $request)
     {
-        $query = Ingredient::query();
+        $query = Ingredient::query()->withCount('recipes');
 
         if ($request->has('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -49,7 +49,7 @@ class IngredientController extends Controller
 
         try {
             $data = $request->validated();
-            
+
             // Set default values for optional fields that might be empty
             $data['current_stock'] = isset($data['current_stock']) ? $data['current_stock'] : 0;
             $data['alert_threshold'] = isset($data['alert_threshold']) && $data['alert_threshold'] !== '' ? $data['alert_threshold'] : 0;
@@ -58,7 +58,7 @@ class IngredientController extends Controller
             $data['purchase_unit'] = $data['purchase_unit'] ?? null;
             $data['vendor'] = $data['vendor'] ?? null;
             $data['storage_location'] = $data['storage_location'] ?? null;
-            
+
             // Handle allergen_tags - ensure it's properly formatted as array or null
             if (isset($data['allergen_tags']) && is_array($data['allergen_tags']) && !empty($data['allergen_tags'])) {
                 $data['allergen_tags'] = array_values(array_filter($data['allergen_tags']));
@@ -75,7 +75,7 @@ class IngredientController extends Controller
                 'data' => $request->all(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()
                 ->withInput()
                 ->withErrors(['error' => 'Failed to create ingredient. Please check all required fields are filled.']);

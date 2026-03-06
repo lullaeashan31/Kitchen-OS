@@ -16,6 +16,10 @@ class SopChecklistItem extends Model
         'sort_order',
     ];
 
+    protected $casts = [
+        'is_photo_required' => 'boolean',
+    ];
+
     public function checklist()
     {
         return $this->belongsTo(SopChecklist::class);

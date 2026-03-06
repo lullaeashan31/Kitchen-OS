@@ -79,11 +79,12 @@ class SchedulingService
     private function getAvailableStaffForDate($staff, $date)
     {
         $dayName = $date->format('l');
-
         return $staff->filter(function ($user) use ($date, $dayName) {
-            // 1. Check Weekly Off
-            if ($user->weekly_off_day === $dayName) {
-                return false;
+            // 1. Check Weekly Off (Only for legacy string values)
+            if (!is_numeric($user->weekly_off_day)) {
+                if ($user->weekly_off_day === $dayName) {
+                    return false;
+                }
             }
 
             // 2. Check Approved Leave

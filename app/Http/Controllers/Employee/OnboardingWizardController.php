@@ -39,10 +39,10 @@ class OnboardingWizardController extends Controller
         $validated = $request->validate([
             // Step 1: Personal
             'address' => 'required|string',
-            'secondary_phone' => 'nullable|string',
+            'secondary_phone' => 'nullable|string|digits:10',
             // Step 2: Emergency
             'emergency_contact_name' => 'required|string',
-            'emergency_contact_phone' => 'required|string',
+            'emergency_contact_phone' => 'required|string|digits:10',
             // Step 3: Bank
             'bank_name' => 'required|string',
             'account_number' => 'required|string',

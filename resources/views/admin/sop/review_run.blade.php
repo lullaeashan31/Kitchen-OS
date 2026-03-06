@@ -40,9 +40,9 @@
                             @if($completion)
                                 <span
                                     class="px-2 py-0.5 rounded-full text-xs font-bold 
-                                                        {{ $completion->status === 'completed' ? 'bg-green-100 text-green-700' : '' }}
-                                                        {{ $completion->status === 'rejected' ? 'bg-red-100 text-red-700' : '' }}
-                                                        {{ $completion->status === 'resubmitted' ? 'bg-blue-100 text-blue-700' : '' }}">
+                                                                                {{ $completion->status === 'completed' ? 'bg-green-100 text-green-700' : '' }}
+                                                                                {{ $completion->status === 'rejected' ? 'bg-red-100 text-red-700' : '' }}
+                                                                                {{ $completion->status === 'resubmitted' ? 'bg-blue-100 text-blue-700' : '' }}">
                                     {{ ucfirst($completion->status) }}
                                 </span>
                             @else
@@ -65,9 +65,9 @@
                     @if($completion && $completion->photo_path)
                         <div class="w-full md:w-48">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Photo Proof</label>
-                            <a href="{{ Storage::url($completion->photo_path) }}" target="_blank"
+                            <a href="{{ $completion->photo_url }}" target="_blank"
                                 class="block bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group">
-                                <img src="{{ Storage::url($completion->photo_path) }}"
+                                <img src="{{ $completion->photo_url }}"
                                     class="w-full h-32 object-cover group-hover:opacity-90 transition-opacity">
                             </a>
 
@@ -165,20 +165,20 @@
 
                 completion.photo_history.forEach((h, index) => {
                     content.innerHTML += `
-                                <div class="border-b border-gray-100 pb-4 last:border-0">
-                                    <div class="flex justify-between items-start mb-3">
-                                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Version ${index + 1}</span>
-                                        <span class="text-xs text-gray-400">${h.rejected_at}</span>
-                                    </div>
-                                    <div class="flex gap-4">
-                                        <img src="/storage/${h.path.replace('public/', '')}" class="w-32 h-32 object-cover rounded-lg border">
-                                        <div class="flex-1">
-                                            <span class="text-xs font-bold text-red-500">Rejection Reason:</span>
-                                            <p class="text-sm text-gray-600 mt-1">${h.reason}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                                                <div class="border-b border-gray-100 pb-4 last:border-0">
+                                                    <div class="flex justify-between items-start mb-3">
+                                                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Version ${index + 1}</span>
+                                                        <span class="text-xs text-gray-400">${h.rejected_at}</span>
+                                                    </div>
+                                                    <div class="flex gap-4">
+                                                        <img src="${h.path.startsWith('http') ? h.path : (h.path.includes('public/') ? '/storage/' + h.path.replace('public/', '') : '/storage/' + h.path)}" class="w-32 h-32 object-cover rounded-lg border">
+                                                        <div class="flex-1">
+                                                            <span class="text-xs font-bold text-red-500">Rejection Reason:</span>
+                                                            <p class="text-sm text-gray-600 mt-1">${h.reason}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `;
                 });
 
                 document.getElementById('historyModal').classList.remove('hidden');

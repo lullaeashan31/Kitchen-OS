@@ -270,7 +270,8 @@
                                         </div>
                                         <div class="mb-4">
                                             <label class="block text-sm font-medium text-gray-700">Phone (Optional)</label>
-                                            <input type="text" name="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                                            <input type="tel" name="phone" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digit phone number" maxlength="10" minlength="10"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
                                         </div>
                                         <div id="vendorError" class="text-red-500 text-sm hidden mb-2"></div>
                                     </form>

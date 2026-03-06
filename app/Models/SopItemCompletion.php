@@ -25,6 +25,26 @@ class SopItemCompletion extends Model
         'completed_at' => 'datetime',
     ];
 
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute()
+    {
+        if (!$this->photo_path) {
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->item->name ?? 'SOP') . '&color=7F9CF5&background=EBF4FF';
+        }
+
+        // Handle the case where "0" was saved due to a bug
+        if ($this->photo_path === '0') {
+            return null;
+        }
+
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->photo_path)) {
+            return '/storage/' . $this->photo_path;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('s3')->url($this->photo_path);
+    }
+
     public function run()
     {
         return $this->belongsTo(SopDailyRun::class, 'run_id');

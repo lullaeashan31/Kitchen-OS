@@ -11,7 +11,7 @@ class VendorController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:vendors,name',
             'contact_person' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|digits:10',
         ]);
 
         $vendor = \App\Models\Vendor::create($request->only(['name', 'contact_person', 'phone']));

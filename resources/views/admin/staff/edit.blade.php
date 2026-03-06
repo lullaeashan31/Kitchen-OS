@@ -69,12 +69,13 @@
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
                                 <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" required
-                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Enter 10-15 digit phone number" maxlength="15" placeholder="e.g. 9876543210"
+                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digit phone number" maxlength="10" minlength="10" placeholder="e.g. 9876543210"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
                             </div>
                              <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Staff Code (Login ID)</label>
                                 <input type="text" name="staff_code" value="{{ old('staff_code', $user->staff_code) }}" required maxlength="6"
+                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Enter 6 digit staff code"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono tracking-widest text-center text-lg">
                                  <p class="text-xs text-blue-500 mt-2 flex items-center gap-1 font-medium">
                                     <i data-lucide="info" class="w-3 h-3"></i> Required for Tablet Login
@@ -99,13 +100,11 @@
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Weekly Off Day</label>
-                                <select name="weekly_off_day" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
-                                    <option value="">Select</option>
-                                    @foreach(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as $day)
-                                        <option value="{{ $day }}" {{ old('weekly_off_day', $user->weekly_off_day) == $day ? 'selected' : '' }}>{{ $day }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Off Days</label>
+                                <input type="number" name="weekly_off_day" value="{{ old('weekly_off_day', $user->weekly_off_day) }}" 
+                                    min="0" required
+                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
+                                <p class="text-xs text-gray-500 mt-1">Total off days to deduct per month (e.g. 4)</p>
                             </div>
                         </div>
 
@@ -142,12 +141,12 @@
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Secondary Phone</label>
                                 <input type="tel" name="secondary_phone" value="{{ old('secondary_phone', $user->employeeProfile?->secondary_phone) }}"
-                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Numbers only" maxlength="15" placeholder="e.g. 9876500000"
+                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digits" maxlength="10" minlength="10" placeholder="e.g. 9876500000"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Joining Date</label>
-                                <input type="date" name="joining_date" value="{{ old('joining_date', $user->employeeProfile?->joining_date?->format('Y-m-d')) }}"
+                                <input type="date" name="joining_date" value="{{ old('joining_date', $user->employeeProfile?->joining_date ? \Carbon\Carbon::parse($user->employeeProfile->joining_date)->format('Y-m-d') : '') }}"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
                             </div>
                             <div class="md:col-span-2 flex items-center gap-2 mt-2 mb-2">
@@ -162,7 +161,7 @@
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Emergency Contact Phone</label>
                                 <input type="tel" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $user->employeeProfile?->emergency_contact_phone) }}"
-                                    inputmode="numeric" pattern="[0-9]{10,15}" title="Numbers only" maxlength="15" placeholder="e.g. 9876512345"
+                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digits" maxlength="10" minlength="10" placeholder="e.g. 9876512345"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
                             </div>
                             <div class="md:col-span-2 flex items-center gap-2 mt-4 mb-2">
@@ -177,7 +176,7 @@
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Account Number</label>
                                 <input type="text" name="account_number" value="{{ old('account_number', $user->employeeProfile?->account_number) }}"
-                                    inputmode="numeric" pattern="[0-9]*" title="Numbers only" maxlength="24" placeholder="e.g. 123456789012"
+                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Numbers only" maxlength="50" placeholder="e.g. 123456789012"
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 font-mono placeholder-gray-400">
                             </div>
                             <div>

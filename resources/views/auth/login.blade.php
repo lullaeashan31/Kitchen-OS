@@ -28,8 +28,10 @@
             <div class="form-group">
                 <label class="form-label">Phone Number</label>
                 <input type="tel" name="phone" class="form-control" value="{{ old('phone') }}" required autofocus
-                    inputmode="numeric" pattern="[0-9]{10,15}" title="Enter 10-15 digit phone number" maxlength="15"
-                    placeholder="Enter your phone number">
+                    inputmode="numeric" pattern="[0-9]*"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)"
+                    title="Enter 10 digit phone number" maxlength="10" minlength="10"
+                    placeholder="Enter your 10-digit phone number">
                 @error('phone')
                     <span style="color: var(--danger-color); font-size: 0.8rem;">{{ $message }}</span>
                 @enderror

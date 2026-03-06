@@ -38,52 +38,52 @@
         function addNewSet() {
             try {
                 console.log('addNewSet function called');
-                
+
                 var container = document.getElementById('stages-container');
                 var template = document.getElementById('stageTemplate');
-                
+
                 if (!container) {
                     alert('Error: stages-container not found');
                     return false;
                 }
-                
+
                 if (!template) {
                     alert('Error: stageTemplate not found');
                     return false;
                 }
-                
+
                 var clone = template.content.cloneNode(true);
                 var stageBlock = clone.querySelector('.stage-block');
-                
+
                 if (!stageBlock) {
                     alert('Error: stage-block not found in template');
                     return false;
                 }
-                
+
                 // Count existing stages
                 var existingStages = container.querySelectorAll('.stage-block');
                 var nextSetNumber = existingStages.length + 1;
                 var stageIndex = existingStages.length;
-                
+
                 stageBlock.dataset.stageIndex = stageIndex;
-                
+
                 // Replace STAGE_INDEX in all inputs
                 var allInputs = stageBlock.querySelectorAll('[name*="STAGE_INDEX"]');
                 for (var i = 0; i < allInputs.length; i++) {
                     allInputs[i].name = allInputs[i].name.replace('STAGE_INDEX', stageIndex);
                 }
-                
+
                 // Set the set name
                 var setNameInput = stageBlock.querySelector('input[name*="[name]"]');
                 if (setNameInput) {
                     setNameInput.value = 'Set ' + nextSetNumber;
                 }
-                
+
                 // Add to container
                 container.appendChild(stageBlock);
-                
+
                 // Add initial ingredient row immediately
-                setTimeout(function() {
+                setTimeout(function () {
                     var tbody = stageBlock.querySelector('.stage-ingredients-body');
                     if (tbody) {
                         // Create a simple button to trigger addIngredientRowNow
@@ -98,19 +98,19 @@
                         }
                     }
                 }, 300);
-                
+
                 // Initialize icons if available
                 if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         lucide.createIcons();
                     }, 100);
                 }
-                
+
                 // Scroll to new stage
-                setTimeout(function() {
+                setTimeout(function () {
                     stageBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 200);
-                
+
                 console.log('Set added successfully');
                 return false;
             } catch (error) {
@@ -119,12 +119,12 @@
                 return false;
             }
         }
-        
+
         // Make it globally accessible
         window.addNewSet = addNewSet;
         window.addStageSimple = addNewSet;
         window.addStage = addNewSet;
-        
+
         // Unit labels mapping
         var UNIT_LABELS_MAP = {
             'g': 'Gram (g)',
@@ -138,7 +138,7 @@
             'oz': 'Ounce (oz)',
             'lb': 'Pound (lb)'
         };
-        
+
         // Simple function to add ingredient row - available immediately
         function addIngredientRowNow(btn) {
             try {
@@ -148,36 +148,36 @@
                     alert('Error: Could not find stage block');
                     return false;
                 }
-                
+
                 var tbody = stageBlock.querySelector('.stage-ingredients-body');
                 if (!tbody) {
                     alert('Error: Could not find tbody');
                     return false;
                 }
-                
+
                 var stageIndex = stageBlock.dataset.stageIndex || '0';
                 var template = document.getElementById('ingredientRowTemplate');
                 if (!template) {
                     alert('Error: Template not found');
                     return false;
                 }
-                
+
                 var clone = template.content.cloneNode(true);
                 var tr = clone.querySelector('tr');
                 if (!tr) {
                     alert('Error: Row not found in template');
                     return false;
                 }
-                
+
                 // Generate unique row index
                 var rowIndex = Date.now() + Math.random();
-                
+
                 // Replace STAGE_INDEX and ROW_INDEX
                 var allInputs = tr.querySelectorAll('[name*="STAGE_INDEX"], [name*="ROW_INDEX"]');
                 for (var i = 0; i < allInputs.length; i++) {
                     allInputs[i].name = allInputs[i].name.replace('STAGE_INDEX', stageIndex).replace('ROW_INDEX', rowIndex);
                 }
-                
+
                 // Remove empty state row if exists
                 var emptyRows = tbody.querySelectorAll('tr');
                 for (var k = 0; k < emptyRows.length; k++) {
@@ -187,10 +187,10 @@
                         break;
                     }
                 }
-                
+
                 // Add the row
                 tbody.appendChild(tr);
-                
+
                 // Populate ingredient options
                 var select = tr.querySelector('.ingredient-select');
                 if (select) {
@@ -199,18 +199,18 @@
                         var options = ingredientOptions.querySelectorAll('option');
                         for (var j = 0; j < options.length; j++) {
                             var opt = options[j].cloneNode(true);
-                            
+
                             // Explicitly preserve data attributes
                             var priceAttr = options[j].getAttribute('data-price');
                             var unitAttr = options[j].getAttribute('data-unit');
-                            
+
                             console.log('Cloning option:', {
                                 value: options[j].value,
                                 text: options[j].textContent,
                                 priceAttr: priceAttr,
                                 unitAttr: unitAttr
                             });
-                            
+
                             if (priceAttr) {
                                 opt.setAttribute('data-price', priceAttr);
                                 // Also set dataset for compatibility
@@ -224,22 +224,22 @@
                                     opt.dataset.unit = unitAttr;
                                 }
                             }
-                            
+
                             select.appendChild(opt);
                         }
                     }
-                    
+
                     // Add change event listener to update unit and cost when ingredient is selected
-                    select.addEventListener('change', function() {
+                    select.addEventListener('change', function () {
                         var selectedValue = this.value;
                         var currentRow = this.closest('tr');
                         if (!currentRow) {
                             console.error('Could not find row for ingredient select');
                             return;
                         }
-                        
+
                         var selectedOption = this.querySelector('option[value="' + selectedValue + '"]');
-                        
+
                         if (selectedOption && selectedValue) {
                             // Get unit from data-unit attribute or extract from text
                             var unitValue = selectedOption.getAttribute('data-unit') || selectedOption.dataset.unit;
@@ -250,16 +250,16 @@
                                     unitValue = match[1].trim();
                                 }
                             }
-                            
+
                             if (unitValue) {
                                 var unitLabel = UNIT_LABELS_MAP[unitValue] || unitValue;
-                                
+
                                 // Update hidden input
                                 var unitValueInput = currentRow.querySelector('.unit-value-input');
                                 if (unitValueInput) {
                                     unitValueInput.value = unitValue;
                                 }
-                                
+
                                 // Update display field
                                 var unitDisplay = currentRow.querySelector('.unit-display');
                                 if (unitDisplay) {
@@ -267,29 +267,29 @@
                                     unitDisplay.removeAttribute('placeholder');
                                 }
                             }
-                            
+
                             // Calculate cost IMMEDIATELY - don't wait
                             var costDisplay = currentRow.querySelector('.cost-display');
                             var qtyInput = currentRow.querySelector('.quantity-input');
-                            
+
                             if (costDisplay && selectedOption) {
                                 // Get price directly from the option
                                 var priceAttr = selectedOption.getAttribute('data-price');
                                 var price = parseFloat(priceAttr) || 0;
                                 var qty = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
                                 var cost = price * qty;
-                                
+
                                 costDisplay.textContent = cost.toFixed(2);
-                                
+
                                 console.log('Cost calculated:', {
                                     price: price,
                                     qty: qty,
                                     cost: cost,
                                     priceAttr: priceAttr
                                 });
-                                
+
                                 // Also call the main function if it exists
-                                setTimeout(function() {
+                                setTimeout(function () {
                                     if (typeof window.calculateRowCost === 'function') {
                                         window.calculateRowCost(currentRow);
                                     } else if (typeof calculateRowCost === 'function') {
@@ -306,7 +306,7 @@
                                 unitDisplay.value = '';
                                 unitDisplay.setAttribute('placeholder', 'Select item first');
                             }
-                            
+
                             // Clear cost if no selection
                             var costDisplay = currentRow.querySelector('.cost-display');
                             if (costDisplay) {
@@ -314,15 +314,15 @@
                             }
                         }
                     });
-                    
+
                     // Also add input listener for quantity changes
                     var qtyInput = tr.querySelector('.quantity-input');
                     if (qtyInput) {
-                        qtyInput.addEventListener('input', function() {
+                        qtyInput.addEventListener('input', function () {
                             var currentRow = this.closest('tr');
                             var select = currentRow.querySelector('.ingredient-select');
                             var costDisplay = currentRow.querySelector('.cost-display');
-                            
+
                             if (select && costDisplay && select.value) {
                                 var selectedOption = select.querySelector('option[value="' + select.value + '"]');
                                 if (selectedOption) {
@@ -331,7 +331,7 @@
                                     var qty = parseFloat(this.value) || 0;
                                     var cost = price * qty;
                                     costDisplay.textContent = cost.toFixed(2);
-                                    
+
                                     if (typeof calculateTotal === 'function') {
                                         calculateTotal();
                                     }
@@ -339,13 +339,13 @@
                             }
                         });
                     }
-                    
+
                     // Also add change listener for quantity input to recalculate cost
                     var qtyInput = tr.querySelector('.quantity-input');
                     if (qtyInput) {
-                        qtyInput.addEventListener('input', function() {
+                        qtyInput.addEventListener('input', function () {
                             var currentRow = this.closest('tr');
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 if (typeof calculateRowCost === 'function') {
                                     calculateRowCost(currentRow);
                                 } else if (typeof window.calculateRowCost === 'function') {
@@ -355,14 +355,14 @@
                         });
                     }
                 }
-                
+
                 // Initialize icons
                 if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         lucide.createIcons();
                     }, 100);
                 }
-                
+
                 console.log('Ingredient row added successfully');
                 return false;
             } catch (error) {
@@ -371,12 +371,13 @@
                 return false;
             }
         }
-        
+
         window.addIngredientRowNow = addIngredientRowNow;
         window.addIngredientRow = addIngredientRowNow;
     </script>
-    
-    <form action="{{ route('recipes.store') }}" method="POST" id="recipeForm" class="flex flex-col xl:flex-row gap-6 md:gap-8 pb-20">
+
+    <form action="{{ route('recipes.store') }}" method="POST" id="recipeForm"
+        class="flex flex-col xl:flex-row gap-6 md:gap-8 pb-20">
         @csrf
 
         <!-- LEFT SIDEBAR: Basic Info & Settings -->
@@ -411,7 +412,8 @@
                         <div class="relative">
                             <select name="category_id" required id="category-select"
                                 class="w-full px-4 py-3 rounded-xl bg-gray-50 border {{ $errors->has('category_id') ? 'border-red-500' : 'border-gray-200' }} focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none font-medium text-gray-700 cursor-pointer pr-10">
-                                <option value="" disabled {{ old('category_id') ? '' : 'selected' }}>Select a category...</option>
+                                <option value="" disabled {{ old('category_id') ? '' : 'selected' }}>Select a category...
+                                </option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                         {{ $category->name }}
@@ -421,7 +423,8 @@
                             <!-- Dropdown arrow icon -->
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </div>
                         </div>
@@ -437,16 +440,16 @@
                         <div class="mb-4">
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Scaling Mode</label>
                             <div class="flex gap-2">
-                                <button type="button" onclick="setMultiplier(0.5)" 
+                                <button type="button" onclick="setMultiplier(0.5)"
                                     class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
                                     data-multiplier="0.5">0.5x</button>
-                                <button type="button" onclick="setMultiplier(1)" 
+                                <button type="button" onclick="setMultiplier(1)"
                                     class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-blue-500 bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-all active"
                                     data-multiplier="1">1x</button>
-                                <button type="button" onclick="setMultiplier(2)" 
+                                <button type="button" onclick="setMultiplier(2)"
                                     class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
                                     data-multiplier="2">2x</button>
-                                <button type="button" onclick="setMultiplier(3)" 
+                                <button type="button" onclick="setMultiplier(3)"
                                     class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
                                     data-multiplier="3">3x</button>
                             </div>
@@ -505,7 +508,24 @@
 
                         <input type="hidden" name="is_sub_recipe" id="is_sub_recipe" value="{{ old('is_sub_recipe', 0) }}">
 
-                        <div id="subRecipeFields" class="{{ old('is_sub_recipe') ? '' : 'hidden' }} space-y-4 pt-4 border-t border-indigo-100 mt-2">
+                        <div id="subRecipeFields"
+                            class="{{ old('is_sub_recipe') ? '' : 'hidden' }} space-y-4 pt-4 border-t border-indigo-100 mt-2">
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Produced
+                                    Ingredient</label>
+                                <select name="produces_ingredient_id" id="produces_ingredient_id"
+                                    class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
+                                    <option value="">-- Select Ingredient This Recipe Produces --</option>
+                                    @foreach($ingredients as $ing)
+                                        <option value="{{ $ing->id }}" {{ old('produces_ingredient_id') == $ing->id ? 'selected' : '' }}>
+                                            {{ $ing->name }} ({{ $ing->measurement_unit }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-[10px] text-indigo-500 mt-1">Select the item that is created by this
+                                    sub-recipe.</p>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output
@@ -578,30 +598,38 @@
                             <div class="p-6 space-y-6">
                                 <!-- Ingredients Table -->
                                 <div class="rounded-xl border border-gray-100 overflow-x-auto -mx-2 md:mx-0">
-                                    <table class="w-full text-sm text-left min-w-[600px]" style="table-layout: auto; border-collapse: collapse;">
+                                    <table class="w-full text-sm text-left min-w-[600px]"
+                                        style="table-layout: auto; border-collapse: collapse;">
                                         <thead class="bg-gray-50 text-gray-500 font-semibold uppercase text-xs">
                                             <tr>
-                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[50%]" style="display: table-cell; visibility: visible;">Item</th>
-                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]" style="display: table-cell; visibility: visible;">Qty</th>
-                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]" style="display: table-cell; visibility: visible;">Unit</th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[50%]"
+                                                    style="display: table-cell; visibility: visible;">Item</th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]"
+                                                    style="display: table-cell; visibility: visible;">Qty</th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]"
+                                                    style="display: table-cell; visibility: visible;">Unit</th>
                                                 @if(auth()->user()->isAdmin())
-                                                    <th class="px-2 md:px-4 py-2 md:py-3 w-[10%] text-right" style="display: table-cell; visibility: visible;">Cost</th>
+                                                    <th class="px-2 md:px-4 py-2 md:py-3 w-[10%] text-right"
+                                                        style="display: table-cell; visibility: visible;">Cost</th>
                                                 @endif
-                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[5%]" style="display: table-cell; visibility: visible;"></th>
+                                                <th class="px-2 md:px-4 py-2 md:py-3 w-[5%]"
+                                                    style="display: table-cell; visibility: visible;"></th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-100 stage-ingredients-body bg-white" style="display: table-row-group;">
+                                        <tbody class="divide-y divide-gray-100 stage-ingredients-body bg-white"
+                                            style="display: table-row-group;">
                                             @if(isset($stage['ingredients']) && is_array($stage['ingredients']) && count($stage['ingredients']) > 0)
                                                 @foreach($stage['ingredients'] as $rIndex => $ingredient)
-                                                    <tr class="group hover:bg-blue-50/20 transition-colors ingredient-row" style="display: table-row;">
+                                                    <tr class="group hover:bg-blue-50/20 transition-colors ingredient-row"
+                                                        style="display: table-row;">
                                                         <td class="px-4 py-2" style="display: table-cell; visibility: visible;">
                                                             <div
                                                                 class="w-full {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.ingredient_id') ? 'border border-red-500 rounded-lg' : '' }}">
                                                                 <div class="relative">
-                                                                    <select class="ingredient-select w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-white cursor-pointer pr-8 text-gray-900 font-medium"
+                                                                    <select
+                                                                        class="ingredient-select w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-white cursor-pointer pr-8 text-gray-900 font-medium"
                                                                         name="stages[{{ $index }}][ingredients][{{ $rIndex }}][ingredient_id]"
-                                                                        required
-                                                                        style="display: block; visibility: visible; opacity: 1;">
+                                                                        required style="display: block; visibility: visible; opacity: 1;">
                                                                         <option value="">Select Ingredient...</option>
                                                                         @foreach($ingredients as $ing)
                                                                             <option value="{{ $ing->id }}"
@@ -612,9 +640,12 @@
                                                                         @endforeach
                                                                     </select>
                                                                     <!-- Dropdown arrow -->
-                                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                                    <div
+                                                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                                                         </svg>
                                                                     </div>
                                                                 </div>
@@ -629,17 +660,16 @@
                                                                 value="{{ $ingredient['quantity'] ?? '' }}" required
                                                                 data-base-qty="{{ $ingredient['quantity'] ?? '' }}"
                                                                 class="quantity-input w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.quantity') ? 'border-red-500' : 'border-gray-300' }} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-sm md:text-base text-gray-900 transition-all bg-white"
-                                                                style="display: block; visibility: visible; opacity: 1;"
-                                                                placeholder="0">
+                                                                style="display: block; visibility: visible; opacity: 1;" placeholder="0">
                                                             @error('stages.' . $index . '.ingredients.' . $rIndex . '.quantity')
                                                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                                             @enderror
                                                         </td>
                                                         <td class="px-2 md:px-4 py-2" style="display: table-cell; visibility: visible;">
                                                             <!-- Hidden input for form submission -->
-                                                            <input type="hidden" name="stages[{{ $index }}][ingredients][{{ $rIndex }}][unit]" 
-                                                                value="{{ $ingredient['unit'] ?? '' }}" 
-                                                                class="unit-value-input">
+                                                            <input type="hidden"
+                                                                name="stages[{{ $index }}][ingredients][{{ $rIndex }}][unit]"
+                                                                value="{{ $ingredient['unit'] ?? '' }}" class="unit-value-input">
                                                             <!-- Display field (readonly) -->
                                                             @php
                                                                 $unitDisplayValue = '';
@@ -652,9 +682,7 @@
                                                                     }
                                                                 }
                                                             @endphp
-                                                            <input type="text" 
-                                                                readonly
-                                                                value="{{ $unitDisplayValue }}"
+                                                            <input type="text" readonly value="{{ $unitDisplayValue }}"
                                                                 class="unit-display w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 {{ $errors->has('stages.' . $index . '.ingredients.' . $rIndex . '.unit') ? 'border-red-500' : 'border-gray-300' }} bg-gray-50 font-bold text-sm md:text-base text-gray-700 cursor-not-allowed"
                                                                 placeholder="Select item first"
                                                                 style="display: block; visibility: visible; opacity: 1;">
@@ -667,7 +695,9 @@
                                                             name="stages[{{ $index }}][ingredients][{{ $rIndex }}][ingredient_group]"
                                                             value="{{ $ingredient['ingredient_group'] ?? '' }}">
                                                         @if(auth()->user()->isAdmin())
-                                                            <td class="px-2 md:px-4 py-2 text-right font-medium text-gray-700 cost-display text-sm">0.00</td>
+                                                            <td
+                                                                class="px-2 md:px-4 py-2 text-right font-medium text-gray-700 cost-display text-sm">
+                                                                0.00</td>
                                                         @endif
                                                         <td class="px-2 md:px-4 py-2 text-center">
                                                             <button type="button" onclick="removeRow(this)"
@@ -680,10 +710,12 @@
                                             @else
                                                 <!-- Empty state - show message -->
                                                 <tr>
-                                                    <td colspan="{{ auth()->user()->isAdmin() ? '5' : '4' }}" class="px-4 py-8 text-center text-gray-400">
+                                                    <td colspan="{{ auth()->user()->isAdmin() ? '5' : '4' }}"
+                                                        class="px-4 py-8 text-center text-gray-400">
                                                         <div class="flex flex-col items-center gap-2">
                                                             <i data-lucide="package" class="w-8 h-8 text-gray-300"></i>
-                                                            <p class="text-sm">No ingredients added yet. Click "Add Ingredient" below to start.</p>
+                                                            <p class="text-sm">No ingredients added yet. Click "Add Ingredient" below to
+                                                                start.</p>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -692,7 +724,7 @@
                                     </table>
                                     <button type="button" onclick="return addIngredientRowNow(this);"
                                         class="w-full py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 text-base font-bold border-t-2 border-blue-200 transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
-                                        <i data-lucide="plus-circle" class="w-5 h-5"></i> 
+                                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
                                         <span>+ Add Ingredient</span>
                                     </button>
                                 </div>
@@ -727,16 +759,7 @@
                         <i data-lucide="component" class="w-5 h-5 text-indigo-500"></i>
                         Sub-Recipes Used
                     </h2>
-                    <script>
-                        function openSubRecipeModalNow() {
-                            var modal = document.getElementById('addSubRecipeModal');
-                            if (modal) {
-                                modal.classList.remove('hidden');
-                            }
-                        }
-                        window.openSubRecipeModalSimple = openSubRecipeModalNow;
-                    </script>
-                    <button type="button" id="addSubRecipeBtnTop" onclick="openSubRecipeModalNow(); return false;"
+                    <button type="button" id="addSubRecipeBtnTop" onclick="openSubRecipeModal(); return false;"
                         class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 font-medium transition-colors flex items-center gap-2 cursor-pointer">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Add Sub-Recipe</span>
@@ -782,8 +805,8 @@
                             class="bg-transparent border-none text-lg font-bold text-gray-800 focus:ring-0 placeholder-gray-400 w-full"
                             placeholder="Set Name (e.g. Sauce Prep)">
                         <!-- Note: JS generated validation errors for new stages are hard to target server-side before submit, 
-                                      but on re-render (old), they will rely on the main loop. 
-                                      For JS-added stages that haven't been submitted, no server errors exist yet. -->
+                                                                                                                          but on re-render (old), they will rely on the main loop. 
+                                                                                                                          For JS-added stages that haven't been submitted, no server errors exist yet. -->
                     </div>
                 </div>
                 <button type="button" onclick="removeStage(this)"
@@ -793,27 +816,34 @@
             </div>
 
             <div class="p-6 space-y-6">
-                                <!-- Ingredients Table -->
-                                <div class="rounded-xl border border-gray-100 overflow-x-auto -mx-2 md:mx-0">
-                                    <table class="w-full text-sm text-left min-w-[600px]" style="table-layout: auto; border-collapse: collapse;">
+                <!-- Ingredients Table -->
+                <div class="rounded-xl border border-gray-100 overflow-x-auto -mx-2 md:mx-0">
+                    <table class="w-full text-sm text-left min-w-[600px]"
+                        style="table-layout: auto; border-collapse: collapse;">
                         <thead class="bg-gray-50 text-gray-500 font-semibold uppercase text-xs">
                             <tr>
-                                <th class="px-2 md:px-4 py-2 md:py-3 w-[50%]" style="display: table-cell; visibility: visible;">Item</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]" style="display: table-cell; visibility: visible;">Qty</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]" style="display: table-cell; visibility: visible;">Unit</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[50%]"
+                                    style="display: table-cell; visibility: visible;">Item</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]"
+                                    style="display: table-cell; visibility: visible;">Qty</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[20%]"
+                                    style="display: table-cell; visibility: visible;">Unit</th>
                                 @if(auth()->user()->isAdmin())
-                                    <th class="px-2 md:px-4 py-2 md:py-3 w-[10%] text-right" style="display: table-cell; visibility: visible;">Cost</th>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 w-[10%] text-right"
+                                        style="display: table-cell; visibility: visible;">Cost</th>
                                 @endif
-                                <th class="px-2 md:px-4 py-2 md:py-3 w-[5%]" style="display: table-cell; visibility: visible;"></th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 w-[5%]"
+                                    style="display: table-cell; visibility: visible;"></th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 stage-ingredients-body bg-white" style="display: table-row-group;">
+                        <tbody class="divide-y divide-gray-100 stage-ingredients-body bg-white"
+                            style="display: table-row-group;">
                             <!-- Rows go here -->
                         </tbody>
                     </table>
                     <button type="button" onclick="return addIngredientRowNow(this);"
                         class="w-full py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 text-base font-bold border-t-2 border-blue-200 transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
-                        <i data-lucide="plus-circle" class="w-5 h-5"></i> 
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
                         <span>+ Add Ingredient</span>
                     </button>
                 </div>
@@ -835,9 +865,9 @@
             <td class="px-4 py-2" style="display: table-cell; visibility: visible;">
                 <!-- Ingredient Select -->
                 <div class="relative w-full">
-                    <select class="ingredient-select w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-white cursor-pointer pr-8 text-gray-900 font-medium"
-                        name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_id]"
-                        required
+                    <select
+                        class="ingredient-select w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-white cursor-pointer pr-8 text-gray-900 font-medium"
+                        name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_id]" required
                         style="display: block; visibility: visible; opacity: 1;">
                         <option value="">Select Ingredient...</option>
                     </select>
@@ -850,33 +880,25 @@
                 </div>
             </td>
             <td class="px-2 md:px-4 py-2" style="display: table-cell; visibility: visible;">
-                <input type="number" 
-                    step="any" 
-                    name="stages[STAGE_INDEX][ingredients][ROW_INDEX][quantity]" 
-                    required
-                    data-base-qty=""
-                    value=""
+                <input type="number" step="any" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][quantity]" required
+                    data-base-qty="" value=""
                     class="quantity-input w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-bold text-sm md:text-base text-gray-900 transition-all bg-white"
-                    style="display: block; visibility: visible; opacity: 1;"
-                    placeholder="0">
+                    style="display: block; visibility: visible; opacity: 1;" placeholder="0">
             </td>
             <td class="px-2 md:px-4 py-2" style="display: table-cell; visibility: visible;">
                 <!-- Hidden input for form submission -->
-                <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" 
-                    value="" 
+                <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" value=""
                     class="unit-value-input">
                 <!-- Display field (readonly) -->
-                <input type="text" 
-                    readonly
-                    value=""
+                <input type="text" readonly value=""
                     class="unit-display w-full h-[40px] md:h-[44px] px-2 md:px-3 rounded-xl border-2 border-gray-300 bg-gray-50 font-bold text-sm md:text-base text-gray-700 cursor-not-allowed"
-                    placeholder="Select item first"
-                    style="display: block; visibility: visible; opacity: 1;">
+                    placeholder="Select item first" style="display: block; visibility: visible; opacity: 1;">
             </td>
             <!-- Hidden field to preserve data, not shown in UI -->
             <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_group]" value="">
             @if(auth()->user()->isAdmin())
-                <td class="px-2 md:px-4 py-2 text-right font-medium text-gray-700 cost-display text-sm" style="display: table-cell; visibility: visible;">0.00</td>
+                <td class="px-2 md:px-4 py-2 text-right font-medium text-gray-700 cost-display text-sm"
+                    style="display: table-cell; visibility: visible;">0.00</td>
             @endif
             <td class="px-2 md:px-4 py-2 text-center" style="display: table-cell; visibility: visible;">
                 <button type="button" onclick="removeRow(this)"
@@ -899,8 +921,9 @@
     </div>
 
     <!-- Sub-Recipe Modal -->
-    <div id="addSubRecipeModal" class="fixed inset-0 bg-gray-900/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 animate-fade-in">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100 hover:scale-[1.01]">
+    <div id="addSubRecipeModal"
+        class="fixed inset-0 bg-gray-900/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl transform transition-all scale-100 hover:scale-[1.01]">
             <!-- Enhanced Header with Gradient -->
             <div class="relative p-8 bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 overflow-hidden">
                 <div class="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]"></div>
@@ -914,13 +937,13 @@
                         </h3>
                         <p class="text-indigo-100 text-sm">Include a pre-made recipe component</p>
                     </div>
-                    <button type="button" onclick="closeSubRecipeModal()" 
+                    <button type="button" onclick="closeSubRecipeModal()"
                         class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
-            
+
             <div class="p-8 space-y-8">
                 <!-- Sub-Recipe Selector -->
                 <div>
@@ -931,16 +954,17 @@
                         Select Sub-Recipe
                     </label>
                     <div class="relative">
-                        <select id="sub-recipe-selector" class="w-full h-[56px] px-5 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-base font-semibold shadow-sm hover:border-indigo-300">
+                        <select id="sub-recipe-selector" onchange="window.handleSubRecipeSelect(this)"
+                            class="w-full h-[56px] px-5 rounded-xl border-2 border-gray-200 focus:border-indigo-500 py-3 appearance-none bg-white cursor-pointer focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-base font-semibold shadow-sm hover:border-indigo-300">
                             <option value="">🔍 Search Sub-Recipes...</option>
                             @if(count($subRecipes) > 0)
                                 @foreach($subRecipes as $sub)
-                                    <option value="{{ $sub->id }}" 
-                                        data-name="{{ $sub->name }}"
+                                    <option value="{{ $sub->id }}" data-name="{{ $sub->name }}"
                                         data-ing-id="{{ $sub->produces_ingredient_id }}"
                                         data-unit="{{ $sub->producesIngredient->measurement_unit ?? 'pcs' }}"
                                         data-price="{{ $sub->producesIngredient->latest_price ?? $sub->producesIngredient->price ?? 0 }}">
-                                        {{ $sub->name }} @if($sub->producesIngredient)({{ $sub->producesIngredient->measurement_unit ?? 'pcs' }})@endif
+                                        {{ $sub->name }}
+                                        @if($sub->producesIngredient)({{ $sub->producesIngredient->measurement_unit ?? 'pcs' }})@endif
                                     </option>
                                 @endforeach
                             @else
@@ -948,10 +972,11 @@
                             @endif
                         </select>
                     </div>
-                    
+
                     <!-- Enhanced Empty State -->
                     @if(count($subRecipes) === 0)
-                        <div class="mt-4 p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl shadow-sm">
+                        <div
+                            class="mt-4 p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl shadow-sm">
                             <div class="flex items-start gap-4">
                                 <div class="p-3 bg-amber-100 rounded-xl flex-shrink-0">
                                     <i data-lucide="alert-circle" class="w-6 h-6 text-amber-600"></i>
@@ -976,7 +1001,7 @@
                         </div>
                     @endif
                 </div>
-                
+
                 <!-- Quantity and Unit Fields -->
                 <div class="grid grid-cols-2 gap-6">
                     <div>
@@ -1001,7 +1026,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Enhanced Footer -->
             <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex gap-4">
                 <button type="button" onclick="closeSubRecipeModal()"
@@ -1101,7 +1126,7 @@
         .ts-control .item:hover {
             background-color: #f3f4f6 !important;
         }
-        
+
         /* Make sure selected items are clickable */
         .ts-control .item[data-value] {
             cursor: pointer !important;
@@ -1172,16 +1197,16 @@
             opacity: 0.5 !important;
             cursor: not-allowed !important;
         }
-        
+
         /* Ensure all TomSelect wrappers are clickable */
         .ts-wrapper {
             cursor: pointer !important;
             position: relative !important;
         }
-        
+
         /* Fix for category and sub-recipe selectors */
-        #category-select + .ts-wrapper,
-        #sub-recipe-selector + .ts-wrapper {
+        #category-select+.ts-wrapper,
+        #sub-recipe-selector+.ts-wrapper {
             cursor: pointer !important;
         }
 
@@ -1232,139 +1257,8 @@
             font-weight: 700 !important;
         }
     </style>
-    
-    <!-- CRITICAL: Define functions BEFORE buttons are rendered -->
-    <script>
-        // Define functions immediately so buttons can access them
-        window.addStageSimple = function() {
-            try {
-                console.log('addStageSimple called, stageCount:', stageCount);
-                const container = document.getElementById('stages-container');
-                const template = document.getElementById('stageTemplate');
-                
-                if (!container) {
-                    console.error('stages-container not found!');
-                    return;
-                }
-                
-                if (!template) {
-                    console.error('stageTemplate not found!');
-                    return;
-                }
-                
-                const clone = template.content.cloneNode(true);
-                const stageBlock = clone.querySelector('.stage-block');
-                if (!stageBlock) {
-                    console.error('stage-block not found in template!');
-                    return;
-                }
-                
-                stageBlock.dataset.stageIndex = stageCount;
-                const existingStages = container.querySelectorAll('.stage-block');
-                const nextSetNumber = existingStages.length + 1;
-                console.log('Next set number:', nextSetNumber);
-                
-                stageBlock.querySelectorAll('[name*="STAGE_INDEX"]').forEach(el => {
-                    el.name = el.name.replace('STAGE_INDEX', stageCount);
-                });
-                
-                const setNameInput = stageBlock.querySelector('input[name*="[name]"]');
-                if (setNameInput) {
-                    setNameInput.value = `Set ${nextSetNumber}`;
-                }
-                
-                const tbody = stageBlock.querySelector('.stage-ingredients-body');
-                if (tbody) {
-                    // Wait a bit for addIngredientRowToTbody to be available
-                    setTimeout(() => {
-                        if (typeof addIngredientRowToTbody === 'function') {
-                            addIngredientRowToTbody(tbody, stageCount);
-                        } else {
-                            console.warn('addIngredientRowToTbody not available yet');
-                        }
-                    }, 50);
-                }
-                
-                container.appendChild(stageBlock);
-                stageCount++;
-                console.log('Stage added successfully, new stageCount:', stageCount);
-                
-                // Initialize Lucide icons
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-                
-                // Scroll to new stage
-                if (stageCount > 1) {
-                    setTimeout(() => {
-                        stageBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 100);
-                }
-            } catch (error) {
-                console.error('Error in addStageSimple:', error);
-            }
-        };
-        
-        window.openSubRecipeModalSimple = function() {
-            try {
-                console.log('openSubRecipeModalSimple called');
-                const modal = document.getElementById('addSubRecipeModal');
-                if (modal) {
-                    modal.classList.remove('hidden');
-                    
-                    const subSelEl = document.getElementById('sub-recipe-selector');
-                    if (subSelEl && !window.subRecipeSelector) {
-                        const availableOptions = subSelEl.querySelectorAll('option:not([value=""]):not([disabled])');
-                        if (availableOptions.length > 0 && typeof TomSelect !== 'undefined') {
-                            try {
-                                window.subRecipeSelector = new TomSelect(subSelEl, {
-                                    create: false,
-                                    sortField: { field: "text", direction: "asc" },
-                                    placeholder: 'Search for a sub-recipe...',
-                                    plugins: [],
-                                    onChange: function (val) {
-                                        if (!val) {
-                                            const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                            if (unitDisplay) unitDisplay.value = '';
-                                            const addBtn = document.getElementById('addSubRecipeBtn');
-                                            if (addBtn) {
-                                                addBtn.disabled = true;
-                                                addBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                                            }
-                                            return;
-                                        }
-                                        const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
-                                        if (originalOpt) {
-                                            const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                            if (unitDisplay) {
-                                                unitDisplay.value = originalOpt.dataset?.unit || 'pcs';
-                                            }
-                                            const addBtn = document.getElementById('addSubRecipeBtn');
-                                            if (addBtn) {
-                                                addBtn.disabled = false;
-                                                addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                                            }
-                                        }
-                                    }
-                                });
-                            } catch (error) {
-                                console.error('TomSelect error:', error);
-                            }
-                        }
-                    }
-                    
-                    setTimeout(() => {
-                        if (window.subRecipeSelector && window.subRecipeSelector.focus) {
-                            window.subRecipeSelector.focus();
-                        }
-                    }, 100);
-                }
-            } catch (error) {
-                console.error('Error in openSubRecipeModalSimple:', error);
-            }
-        };
-    </script>
-    
+
+
     <script>
         // --- Core Application Logic ---
         let stageCount = {{ count(old('stages', [])) }};
@@ -1372,7 +1266,7 @@
         let ingredientOptionsHTML = '';
         const UNIT_FACTORS = { 'g': 1, 'kg': 1000, 'ml': 1, 'l': 1000, 'tbsp': 15, 'tsp': 5, 'cup': 240, 'pcs': 1, 'oz': 28.35, 'lb': 453.6 };
         const UNIT_LABELS = {
-            'g': 'Gram (g)',
+            'g': 'Gram (g            )',
             'kg': 'Kilogram (kg)',
             'ml': 'Milliliter (ml)',
             'l': 'Liter (l)',
@@ -1384,16 +1278,15 @@
 
         let subRecipeSelector = null;
         window.addedSubRecipes = [];
-        
-        // Make sure functions are accessible
-        if (!window.addStageSimple) {
-            window.addStageSimple = function() {
 
-        // Backup function definition
-        window.addStage = window.addStageSimple;
+        // Make sure functions are accessible
+        window.addStageSimple = function () {
+
+            // Backup function definition
+            window.addStage = window.addStageSimple;
             try {
                 console.log('addStage() called, stageCount:', stageCount);
-                
+
                 const container = document.getElementById('stages-container');
                 if (!container) {
                     console.error('stages-container not found!');
@@ -1408,7 +1301,7 @@
 
                 const clone = template.content.cloneNode(true);
                 const stageBlock = clone.querySelector('.stage-block');
-                
+
                 if (!stageBlock) {
                     console.error('stage-block not found in template!');
                     return;
@@ -1443,7 +1336,7 @@
                 container.appendChild(stageBlock);
                 stageCount++;
                 console.log('Stage added successfully, new stageCount:', stageCount);
-                
+
                 // Initialize Lucide icons for the new stage
                 if (typeof lucide !== 'undefined' && lucide.createIcons) {
                     lucide.createIcons();
@@ -1460,149 +1353,6 @@
             }
         };
 
-        // SIMPLE FUNCTION for Sub-Recipe Modal
-        function openSubRecipeModalSimple() {
-            console.log('openSubRecipeModalSimple called');
-            const modal = document.getElementById('addSubRecipeModal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                
-                const subSelEl = document.getElementById('sub-recipe-selector');
-                if (subSelEl && !subRecipeSelector) {
-                    const availableOptions = subSelEl.querySelectorAll('option:not([value=""]):not([disabled])');
-                    if (availableOptions.length > 0 && typeof TomSelect !== 'undefined') {
-                        try {
-                            subRecipeSelector = new TomSelect(subSelEl, {
-                                create: false,
-                                sortField: { field: "text", direction: "asc" },
-                                placeholder: 'Search for a sub-recipe...',
-                                plugins: [],
-                                onChange: function (val) {
-                                    if (!val) {
-                                        const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                        if (unitDisplay) unitDisplay.value = '';
-                                        const addBtn = document.getElementById('addSubRecipeBtn');
-                                        if (addBtn) {
-                                            addBtn.disabled = true;
-                                            addBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                                        }
-                                        return;
-                                    }
-                                    const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
-                                    if (originalOpt) {
-                                        const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                        if (unitDisplay) {
-                                            unitDisplay.value = originalOpt.dataset?.unit || 'pcs';
-                                        }
-                                        const addBtn = document.getElementById('addSubRecipeBtn');
-                                        if (addBtn) {
-                                            addBtn.disabled = false;
-                                            addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                                        }
-                                    }
-                                }
-                            });
-                        } catch (error) {
-                            console.error('TomSelect error:', error);
-                        }
-                    }
-                }
-                
-                setTimeout(() => {
-                    if (subRecipeSelector && subRecipeSelector.focus) {
-                        subRecipeSelector.focus();
-                    }
-                }, 100);
-            }
-        }
-        
-        // Make it globally accessible
-        window.openSubRecipeModal = openSubRecipeModalSimple;
-        window.openSubRecipeModalSimple = openSubRecipeModalSimple;
-
-        window.openSubRecipeModal = function() {
-            try {
-                console.log('openSubRecipeModal() called');
-                
-                const modal = document.getElementById('addSubRecipeModal');
-                if (!modal) {
-                    console.error('addSubRecipeModal not found!');
-                    return;
-                }
-
-                console.log('Modal found, removing hidden class');
-                modal.classList.remove('hidden');
-                
-                // Re-initialize TomSelect if not already initialized
-                const subSelEl = document.getElementById('sub-recipe-selector');
-                if (!subSelEl) {
-                    console.error('sub-recipe-selector not found!');
-                    return;
-                }
-
-                if (!subRecipeSelector) {
-                    const availableOptions = subSelEl.querySelectorAll('option:not([value=""]):not([disabled])');
-                    console.log('Available sub-recipe options:', availableOptions.length);
-                    
-                    if (availableOptions.length > 0) {
-                        try {
-                            subRecipeSelector = new TomSelect(subSelEl, {
-                                create: false,
-                                sortField: { field: "text", direction: "asc" },
-                                placeholder: 'Search for a sub-recipe...',
-                                plugins: [],
-                                onChange: function (val) {
-                                    if (!val) {
-                                        const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                        if (unitDisplay) unitDisplay.value = '';
-                                        const addBtn = document.getElementById('addSubRecipeBtn');
-                                        if (addBtn) {
-                                            addBtn.disabled = true;
-                                            addBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                                        }
-                                        return;
-                                    }
-                                    const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
-                                    if (originalOpt) {
-                                        const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                        if (unitDisplay) {
-                                            unitDisplay.value = originalOpt.dataset?.unit || 'pcs';
-                                        }
-                                        const addBtn = document.getElementById('addSubRecipeBtn');
-                                        if (addBtn) {
-                                            addBtn.disabled = false;
-                                            addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                                        }
-                                    }
-                                }
-                            });
-                            console.log('TomSelect initialized successfully');
-                        } catch (error) {
-                            console.error('Error initializing TomSelect:', error);
-                            alert('Error initializing sub-recipe selector: ' + error.message);
-                        }
-                    } else {
-                        console.warn('No sub-recipe options available');
-                        alert('No sub-recipes available. Please create a sub-recipe first.');
-                    }
-                } else {
-                    console.log('TomSelect already initialized');
-                }
-                
-                // Focus after a short delay to ensure modal is visible
-                setTimeout(() => {
-                    if (subRecipeSelector) {
-                        try {
-                            subRecipeSelector.focus();
-                        } catch (error) {
-                            console.warn('Could not focus sub-recipe selector:', error);
-                        }
-                    }
-                }, 100);
-            } catch (error) {
-                console.error('Error in openSubRecipeModal():', error);
-            }
-        };
 
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize ingredientOptionsHTML after DOM is loaded
@@ -1617,7 +1367,7 @@
             // Attach event listeners to buttons
             const addStageBtn = document.getElementById('addStageBtn');
             if (addStageBtn) {
-                addStageBtn.addEventListener('click', function(e) {
+                addStageBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('Add Stage button clicked via event listener');
@@ -1640,7 +1390,7 @@
             } else {
                 console.error('addStageBtn not found!');
             }
-            
+
             // Also add inline onclick as backup
             if (addStageBtn) {
                 addStageBtn.setAttribute('onclick', 'if(typeof window.addStage === "function") { window.addStage(); } else if(typeof addStage === "function") { addStage(); } return false;');
@@ -1648,7 +1398,7 @@
 
             const addSubRecipeBtnTop = document.getElementById('addSubRecipeBtnTop');
             if (addSubRecipeBtnTop) {
-                addSubRecipeBtnTop.addEventListener('click', function(e) {
+                addSubRecipeBtnTop.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('Add Sub-Recipe button clicked via event listener');
@@ -1694,7 +1444,7 @@
                 // Initialize existing ingredients and auto-populate units
                 document.querySelectorAll('.ingredient-row').forEach(row => {
                     initRow(row);
-                    
+
                     // Auto-populate unit for already selected ingredients (native select)
                     const ingSelect = row.querySelector('.ingredient-select');
                     if (ingSelect && ingSelect.value) {
@@ -1705,7 +1455,7 @@
                                 const unitValueInput = row.querySelector('.unit-value-input');
                                 const unitDisplay = row.querySelector('.unit-display');
                                 const unitLabel = UNIT_LABELS[unitValue] || unitValue;
-                                
+
                                 if (unitValueInput && (!unitValueInput.value || unitValueInput.value === '')) {
                                     unitValueInput.value = unitValue;
                                 }
@@ -1743,1156 +1493,1006 @@
                 });
             }
 
-            // Initialize Sub-Recipe Selector
-            const subSelEl = document.getElementById('sub-recipe-selector');
-            const addBtn = document.getElementById('addSubRecipeBtn');
-            
-            if (subSelEl) {
-                // Check if there are any options (excluding the empty placeholder and disabled options)
-                const availableOptions = subSelEl.querySelectorAll('option:not([value=""]):not([disabled])');
-                const hasOptions = availableOptions.length > 0;
-                
-                if (hasOptions) {
-                    subRecipeSelector = new TomSelect(subSelEl, {
-                        create: false,
-                        sortField: { field: "text", direction: "asc" },
-                        placeholder: 'Search for a sub-recipe...',
-                        plugins: [],
-                        openOnFocus: true,
-                        onChange: function (val) {
-                            if (!val) {
-                                const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                if (unitDisplay) unitDisplay.value = '';
-                                if (addBtn) {
-                                    addBtn.disabled = true;
-                                    addBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            // (Removed redundant subRecipeSel        ect or TomSelect initialization here)
+
+                // Form Submit Override
+                const form = document.getElementById('recipeForm');
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        console.log('Form submit triggered');
+
+                        // Basic validation before submit
+                        const recipeName = form.querySelector('input[name="name"]').value.trim();
+                        if (!recipeName) {
+                            e.preventDefault();
+                            alert('Please enter a recipe name');
+                            return false;
+                        }
+
+                        const categoryId = form.querySelector('select[name="category_id"]').value;
+                        if (!categoryId) {
+                            e.preventDefault();
+                            alert('Please select a category');
+                            return false;
+                        }
+
+                        // Check if at least one stage exists
+                        const stageInputs = form.querySelectorAll('input[name^="stages["][name$="[name]"]');
+                        if (stageInputs.length === 0) {
+                            e.preventDefault();
+                            alert('Please add at least one stage');
+                            return false;
+                        }
+
+                        // Inject Sub-Recipes as a special stage if any exist
+                        if (window.addedSubRecipes && window.addedSubRecipes.length > 0) {
+                            const stageIdx = 999;
+                            const container = document.createElement('div');
+                            container.style.display = 'none';
+
+                            const nameInput = document.createElement('input');
+                            nameInput.type = 'hidden';
+                            nameInput.name = `stages[${stageIdx}][name]`;
+                            nameInput.value = 'Sub-Recipes';
+                            container.appendChild(nameInput);
+
+                            const methodInput = document.createElement('input');
+                            methodInput.type = 'hidden';
+                            methodInput.name = `stages[${stageIdx}][method]`;
+                            methodInput.value = 'Included sub-recipes';
+                            container.appendChild(methodInput);
+
+                            window.addedSubRecipes.forEach((sub, idx) => {
+                                const idInput = document.createElement('input');
+                                idInput.type = 'hidden';
+                                idInput.name = `stages[${stageIdx}][ingredients][${idx}][ingredient_id]`;
+                                idInput.value = sub.ingId;
+                                container.appendChild(idInput);
+
+                                const qtyInput = document.createElement('input');
+                                qtyInput.type = 'hidden';
+                                qtyInput.name = `stages[${stageIdx}][ingredients][${idx}][quantity]`;
+                                qtyInput.value = sub.qty;
+                                container.appendChild(qtyInput);
+
+                                const unitInput = document.createElement('input');
+                                unitInput.type = 'hidden';
+                                unitInput.name = `stages[${stageIdx}][ingredients][${idx}][unit]`;
+                                unitInput.value = sub.unit;
+                                container.appendChild(unitInput);
+
+                                const groupInput = document.createElement('input');
+                                groupInput.type = 'hidden';
+                                groupInput.name = `stages[${stageIdx}][ingredients][${idx}][ingredient_group]`;
+                                groupInput.value = 'Sub-Recipe';
+                                container.appendChild(groupInput);
+                            });
+                            form.appendChild(container);
+                        }
+
+                        // Show loading state
+                        const submitBtn = form.querySelector('button[type="submit"], button[onclick*="submit"]');
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.textContent = 'Saving...';
+                        }
+
+                        // Allow form to submit normally
+                        return true;
+                    });
+                }
+
+                // Set initial base portions if yield_portions has value
+                const yieldInputInit = document.getElementById('yield_portions');
+                if (yieldInputInit && yieldInputInit.value) {
+                    window.basePortions = parseFloat(yieldInputInit.value) || 10;
+                } else {
+                    window.basePortions = 10; // Default fallback
+                }
+
+                // STEP 1: Base quantity + original state on form load
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    if (!input.dataset.baseQty || input.dataset.baseQty === '') {
+                        const v = input.value || '';
+                        if (v) input.dataset.baseQty = v;
+                    }
+                    setQuantityHighlight(input, 'original');
+                });
+
+                // Sub-recipe toggle logic restoration
+                if (document.getElementById('produces_ingredient_id').value) {
+                    toggleSubRecipe(true);
+                }
+            });
+
+            function toggleSubRecipe(forceState = null) {
+                const fields = document.getElementById('subRecipeFields');
+                const bg = document.getElementById('subRecipeToggleBg');
+                const dot = document.getElementById('subRecipeToggleDot');
+                const input = document.getElementById('is_sub_recipe');
+
+                const isHidden = fields.classList.contains('hidden');
+                const newState = forceState !== null ? forceState : isHidden;
+
+                if (newState) {
+                    fields.classList.remove('hidden');
+                    bg.classList.remove('bg-gray-200');
+                    bg.classList.add('bg-indigo-500');
+                    dot.classList.add('translate-x-4');
+                    dot.classList.remove('translate-x-0');
+                    input.value = "1";
+                } else {
+                    fields.classList.add('hidden');
+                    bg.classList.remove('bg-indigo-500');
+                    bg.classList.add('bg-gray-200');
+                    dot.classList.remove('translate-x-4');
+                    dot.classList.add('translate-x-0');
+                    input.value = "0";
+
+                    // Clear values if hiding
+                    if (forceState === null) {
+                        document.getElementById('produces_ingredient_id').value = '';
+                    }
+                }
+            }
+
+            // --- Stage Management ---
+            function addStage() {
+                try {
+                    console.log('addStage() function called, stageCount:', stageCount);
+
+                    const container = document.getElementById('stages-container');
+                    if (!container) {
+                        console.error('stages-container not found!');
+                        return;
+                    }
+
+                    const template = document.getElementById('stageTemplate');
+                    if (!template) {
+                        console.error('stageTemplate not found!');
+                        return;
+                    }
+
+                    const clone = template.content.cloneNode(true);
+                    const stageBlock = clone.querySelector('.stage-block');
+
+                    if (!stageBlock) {
+                        console.error('stage-block not found in template!');
+                        return;
+                    }
+
+                    stageBlock.dataset.stageIndex = stageCount;
+
+                    const existingStages = container.querySelectorAll('.stage-block');
+                    const nextSetNumber = existingStages.length + 1;
+                    console.log('Next set number:', nextSetNumber);
+
+                    stageBlock.querySelectorAll('[name*="STAGE_INDEX"]').forEach(el => {
+                        el.name = el.name.replace('STAGE_INDEX', stageCount);
+                    });
+
+                    const setNameInput = stageBlock.querySelector('input[name*="[name]"]');
+                    if (setNameInput) {
+                        setNameInput.value = setNameInput.value.replace('SET_NUMBER_PLACEHOLDER', `Set ${nextSetNumber}`);
+                    }
+
+                    const tbody = stageBlock.querySelector('.stage-ingredients-body');
+                    if (tbody) {
+                        addIngredientRowToTbody(tbody, stageCount);
+                    }
+
+                    container.appendChild(stageBlock);
+                    stageCount++;
+                    console.log('Stage added successfully, new stageCount:', stageCount);
+
+                    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                        lucide.createIcons();
+                    }
+
+                    if (stageCount > 1) {
+                        stageBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } catch (error) {
+                    console.error('Error in addStage():', error);
+                }
+            }
+
+            // Make it globally accessible - override window.addStage with this implementation
+            window.addStage = addStage;
+
+            function removeStage(btn) {
+                const container = document.getElementById('stages-container');
+                if (container.children.length <= 1) {
+                    alert('You need at least one stage!');
+                    return;
+                }
+                if (confirm('Remove this stage?')) {
+                    btn.closest('.stage-block').remove();
+                    calculateTotal();
+                }
+            }
+
+            // --- Ingredient Row Management ---
+            function addIngredientRow(btn) {
+                const tbody = btn.closest('.stage-block').querySelector('tbody');
+                const stageIndex = btn.closest('.stage-block').dataset.stageIndex;
+                addIngredientRowToTbody(tbody, stageIndex);
+            }
+
+            function addIngredientRowToTbody(tbody, stageIndex) {
+                try {
+                    if (!tbody) {
+                        console.error('addIngredientRowToTbody: tbody is null');
+                        return;
+                    }
+
+                    const template = document.getElementById('ingredientRowTemplate');
+                    if (!template) {
+                        console.error('ingredientRowTemplate not found!');
+                        alert('Error: Could not find ingredient template. Please refresh the page.');
+                        return;
+                    }
+
+                    const clone = template.content.cloneNode(true);
+                    const tr = clone.querySelector('tr');
+
+                    if (!tr) {
+                        console.error('tr not found in ingredientRowTemplate!');
+                        return;
+                    }
+
+                    const rowIndex = Date.now() + Math.floor(Math.random() * 1000);
+
+                    tr.querySelectorAll('[name*="STAGE_INDEX"]').forEach(el => {
+                        el.name = el.name.replace('STAGE_INDEX', stageIndex).replace('ROW_INDEX', rowIndex);
+                    });
+
+                    // Populate select options (only ingredients, no sub-recipes)
+                    const ingSelect = tr.querySelector('.ingredient-select');
+
+                    if (!ingSelect) {
+                        console.error('ingredient-select not found in row template!');
+                        return;
+                    }
+
+                    // Clear existing options first (except placeholder)
+                    const placeholderOption = ingSelect.querySelector('option[value=""]');
+                    ingSelect.innerHTML = '';
+                    if (placeholderOption) {
+                        ingSelect.appendChild(placeholderOption);
+                    }
+
+                    // Add ingredient options using proper DOM methods
+                    if (typeof ingredientOptionsHTML === 'undefined' || !ingredientOptionsHTML) {
+                        console.error('ingredientOptionsHTML is not defined!');
+                        return;
+                    }
+
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = ingredientOptionsHTML;
+                    const optionsToAdd = tempDiv.querySelectorAll('option');
+                    optionsToAdd.forEach(opt => {
+                        if (opt.value) {
+                            // Clone and ensure data attributes are preserved
+                            const clonedOpt = opt.cloneNode(true);
+
+                            // Ensure data-unit attribute is preserved
+                            const unitAttr = opt.getAttribute('data-unit');
+                            if (unitAttr) {
+                                clonedOpt.setAttribute('data-unit', unitAttr);
+                            } else if (opt.dataset && opt.dataset.unit) {
+                                clonedOpt.setAttribute('data-unit', opt.dataset.unit);
+                            } else {
+                                // Fallback: Extract from text like "Milk (l)"
+                                const match = opt.textContent.match(/\(([^)]+)\)/);
+                                if (match && match[1]) {
+                                    clonedOpt.setAttribute('data-unit', match[1].trim());
                                 }
-                                return;
                             }
-                            const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
-                            if (originalOpt) {
-                                const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                if (unitDisplay) {
-                                    unitDisplay.value = originalOpt.dataset?.unit || 'pcs';
-                                }
-                                if (addBtn) {
-                                    addBtn.disabled = false;
-                                    addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                                }
+
+                            // Ensure data-price attribute is preserved
+                            const priceAttr = opt.getAttribute('data-price');
+                            if (priceAttr) {
+                                clonedOpt.setAttribute('data-price', priceAttr);
+                            } else if (opt.dataset && opt.dataset.price) {
+                                clonedOpt.setAttribute('data-price', opt.dataset.price);
                             }
-                            
-                            // Close dropdown after selection
-                            setTimeout(() => {
-                                if (this.isOpen) {
-                                    this.close();
-                                }
-                                this.blur();
-                            }, 150);
-                        },
-                        onFocus: function() {
-                            if (!this.isOpen) {
-                                this.open();
-                            }
-                        },
-                        onBlur: function() {
-                            setTimeout(() => {
-                                const dropdown = document.querySelector('#sub-recipe-selector + .ts-dropdown');
-                                if (dropdown) {
-                                    dropdown.style.display = 'none';
-                                    dropdown.style.visibility = 'hidden';
-                                    dropdown.style.opacity = '0';
-                                }
-                            }, 200);
-                        },
-                        onInitialize: function() {
-                            // Enable/disable add button based on selection
-                            const val = this.getValue();
-                            if (addBtn) {
-                                addBtn.disabled = !val;
-                                if (!val) {
-                                    addBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                                } else {
-                                    addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                                }
-                            }
+
+                            ingSelect.appendChild(clonedOpt);
                         }
                     });
-                    
-                    // Store reference globally for global click handler
-                    window.subRecipeSelector = subRecipeSelector;
-                    
-                    // Click handler for sub-recipe selector - force open dropdown
-                    setTimeout(() => {
-                        const subWrapper = subSelEl.closest('.ts-wrapper');
-                        const subControl = subWrapper ? subWrapper.querySelector('.ts-control') : null;
-                        const subInput = subWrapper ? subWrapper.querySelector('input.ts-input') : null;
-                        
-                        const openSubRecipe = function(e) {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            
-                            // Focus first, then open
-                            if (subInput) {
-                                subInput.focus();
-                            }
-                            
-                            setTimeout(() => {
-                                subRecipeSelector.focus();
-                                subRecipeSelector.open();
-                            }, 10);
-                        };
-                        
-                        if (subWrapper) {
-                            subWrapper.style.cursor = 'pointer';
-                            subWrapper.addEventListener('click', openSubRecipe);
+
+                    tbody.appendChild(tr);
+                    initRow(tr);
+
+                    // Initialize Lucide icons for the new row
+                    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                        lucide.createIcons();
+                    }
+                } catch (error) {
+                    console.error('Error in addIngredientRowToTbody():', error);
+                    alert('Error adding ingredient row: ' + error.message + '\nPlease check the browser console for details.');
+                }
+            }
+
+            // Helper function to update unit when ingredient is selected (for native select)
+            function updateUnitForIngredient(value, row, ingSelect) {
+                if (!value) {
+                    // Clear unit if no value
+                    const unitValueInput = row.querySelector('.unit-value-input');
+                    const unitDisplay = row.querySelector('.unit-display');
+                    if (unitValueInput) unitValueInput.value = '';
+                    if (unitDisplay) {
+                        unitDisplay.value = '';
+                        unitDisplay.setAttribute('placeholder', 'Select item first');
+                    }
+                    return;
+                }
+
+                // Get unit from selected option
+                const selectedOption = ingSelect.querySelector(`option[value="${value}"]`);
+                if (selectedOption) {
+                    const unitValue = selectedOption.getAttribute('data-unit') || selectedOption.dataset.unit;
+                    if (unitValue) {
+                        const unitLabel = UNIT_LABELS[unitValue] || unitValue;
+
+                        // Update hidden input
+                        const unitValueInput = row.querySelector('.unit-value-input');
+                        if (unitValueInput) {
+                            unitValueInput.value = unitValue;
                         }
-                        
-                        if (subControl) {
-                            subControl.style.cursor = 'pointer';
-                            subControl.addEventListener('click', openSubRecipe);
-                            
-                            // Also handle mousedown to prevent blur
-                            subControl.addEventListener('mousedown', function(e) {
-                                e.preventDefault();
-                                setTimeout(() => openSubRecipe(e), 10);
+
+                        // Update display field
+                        const unitDisplay = row.querySelector('.unit-display');
+                        if (unitDisplay) {
+                            unitDisplay.value = unitLabel;
+                            unitDisplay.removeAttribute('placeholder');
+                        }
+                    }
+                }
+            }
+
+            function initRow(row) {
+                const ingSelect = row.querySelector('.ingredient-select');
+
+                // Simple native select - no TomSelect
+                if (ingSelect && !ingSelect.hasAttribute('data-initialized')) {
+                    ingSelect.setAttribute('data-initialized', 'true');
+
+                    // Populate options from ingredientOptions if empty
+                    if (ingSelect.querySelectorAll('option').length <= 1) {
+                        const ingredientOptionsHTML = document.getElementById('ingredientOptions');
+                        if (ingredientOptionsHTML) {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = ingredientOptionsHTML.innerHTML;
+                            const options = tempDiv.querySelectorAll('option');
+                            options.forEach(opt => {
+                                if (opt.value) {
+                                    const newOpt = opt.cloneNode(true);
+
+                                    // Ensure data-unit attribute is preserved
+                                    const unitAttr = opt.getAttribute('data-unit');
+                                    if (unitAttr) {
+                                        newOpt.setAttribute('data-unit', unitAttr);
+                                    } else if (opt.dataset && opt.dataset.unit) {
+                                        newOpt.setAttribute('data-unit', opt.dataset.unit);
+                                    } else {
+                                        // Fallback: Extract from text like "Milk (l)"
+                                        const match = opt.textContent.match(/\(([^)]+)\)/);
+                                        if (match && match[1]) {
+                                            newOpt.setAttribute('data-unit', match[1].trim());
+                                        }
+                                    }
+
+                                    // Ensure data-price attribute is preserved
+                                    const priceAttr = opt.getAttribute('data-price');
+                                    if (priceAttr) {
+                                        newOpt.setAttribute('data-price', priceAttr);
+                                    } else if (opt.dataset && opt.dataset.price) {
+                                        newOpt.setAttribute('data-price', opt.dataset.price);
+                                    }
+
+                                    ingSelect.appendChild(newOpt);
+                                }
                             });
                         }
-                    }, 300);
+                    }
+
+                    // Add change handler for unit and cost update
+                    // Use arrow function to preserve 'row' reference, or find row dynamically
+                    ingSelect.addEventListener('change', function () {
+                        const selectedValue = this.value;
+                        // Find the row dynamically to ensure we get the correct row
+                        const currentRow = this.closest('tr.ingredient-row') || this.closest('tr');
+
+                        if (!currentRow) {
+                            console.error('Row not found for ingredient select');
+                            return;
+                        }
+
+                        console.log('Item changed to:', selectedValue, 'in row:', currentRow);
+
+                        if (selectedValue) {
+                            const selectedOption = this.querySelector(`option[value="${selectedValue}"]`);
+                            console.log('Selected option:', selectedOption);
+
+                            if (selectedOption) {
+                                // Try multiple methods to get unit
+                                let unitValue = selectedOption.getAttribute('data-unit');
+                                if (!unitValue && selectedOption.dataset) {
+                                    unitValue = selectedOption.dataset.unit;
+                                }
+
+                                // Fallback: Extract from text like "Milk (l)"
+                                if (!unitValue && selectedOption.textContent) {
+                                    const match = selectedOption.textContent.match(/\(([^)]+)\)/);
+                                    if (match && match[1]) {
+                                        unitValue = match[1].trim();
+                                        console.log('Unit extracted from text:', unitValue);
+                                    }
+                                }
+
+                                console.log('Unit value found:', unitValue);
+
+                                if (unitValue) {
+                                    const unitValueInput = currentRow.querySelector('.unit-value-input');
+                                    const unitDisplay = currentRow.querySelector('.unit-display');
+
+                                    console.log('Unit input found:', unitValueInput, 'in row:', currentRow);
+                                    console.log('Unit display found:', unitDisplay, 'in row:', currentRow);
+
+                                    if (unitValueInput) {
+                                        unitValueInput.value = unitValue;
+                                        console.log('Unit input set to:', unitValue);
+                                    } else {
+                                        console.error('Unit value input not found in row');
+                                    }
+
+                                    if (unitDisplay) {
+                                        const unitLabel = UNIT_LABELS[unitValue] || unitValue;
+                                        unitDisplay.value = unitLabel;
+                                        unitDisplay.removeAttribute('placeholder');
+                                        console.log('Unit display set to:', unitLabel);
+                                    } else {
+                                        console.error('Unit display not found in row');
+                                    }
+                                } else {
+                                    console.warn('No unit found for selected option');
+                                }
+
+                                // Calculate cost
+                                calculateRowCost(currentRow);
+                            } else {
+                                console.error('Selected option not found for value:', selectedValue);
+                            }
+                        } else {
+                            // Clear unit if no selection
+                            const unitValueInput = currentRow.querySelector('.unit-value-input');
+                            const unitDisplay = currentRow.querySelector('.unit-display');
+                            if (unitValueInput) unitValueInput.value = '';
+                            if (unitDisplay) {
+                                unitDisplay.value = '';
+                                unitDisplay.setAttribute('placeholder', 'Select item first');
+                            }
+                            calculateRowCost(currentRow);
+                        }
+                    });
+
+                    // Add global click handler to close TomSelect dropdowns when clicking outside (only for sub-recipe selector now)
+                    if (!window.dropdownCloseHandlerAdded) {
+                        window.dropdownCloseHandlerAdded = true;
+                        document.addEventListener('click', function (e) {
+                            // Check what was clicked
+                            const isDropdown = e.target.closest('.ts-dropdown');
+                            const isTomSelectControl = e.target.closest('.ts-control');
+                            const isTomSelectWrapper = e.target.closest('.ts-wrapper');
+                            const isOption = e.target.classList.contains('option') || e.target.closest('.option');
+
+                            // If clicking on option, let TomSelect handle it
+                            if (isOption) {
+                                return;
+                            }
+
+                            // If clicking outside TomSelect area, close sub-recipe selector dropdown
+                            if (!isDropdown && !isTomSelectControl && !isTomSelectWrapper) {
+                                setTimeout(() => {
+                                    // Close sub-recipe selector
+                                    if (window.subRecipeSelector) {
+                                        try {
+                                            if (window.subRecipeSelector.isOpen) {
+                                                window.subRecipeSelector.close();
+                                            }
+                                            window.subRecipeSelector.blur();
+                                        } catch (err) {
+                                            console.log('Error closing sub-recipe:', err);
+                                        }
+                                    }
+
+                                    // Hide all TomSelect dropdowns manually
+                                    const dropdowns = document.querySelectorAll('.ts-dropdown');
+                                    dropdowns.forEach(dropdown => {
+                                        dropdown.style.display = 'none';
+                                        dropdown.style.visibility = 'hidden';
+                                        dropdown.style.opacity = '0';
+                                        dropdown.classList.remove('active');
+                                        dropdown.classList.add('hidden');
+                                    });
+                                }, 150);
+                            }
+                        }, false); // Bubble phase
+                    }
+                }
+
+                // Listeners for cost recalc and highlights
+                const qty = row.querySelector('.quantity-input');
+                if (qty) {
+                    // Initialize base quantity if not set
+                    if (!qty.dataset.baseQty || qty.dataset.baseQty === '') {
+                        const currentValue = qty.value || '';
+                        if (currentValue) {
+                            qty.dataset.baseQty = currentValue;
+                        }
+                    }
+                    setQuantityHighlight(qty, 'original');
+                    qty.addEventListener('input', () => {
+                        if (document.activeElement === qty) {
+                            qty.dataset.manuallyEdited = 'true';
+                            qty.dataset.baseQty = qty.value;
+                            setQuantityHighlight(qty, 'manual');
+                        }
+                        calculateRowCost(row);
+                    });
+                }
+                // Unit is now readonly, no need for change listeners
+
+                // Calculate initial cost
+                calculateRowCost(row);
+            }
+
+            function removeRow(btn) {
+                btn.closest('tr').remove();
+                calculateTotal();
+            }
+
+            // --- Cost Calculation Logic ---
+            function calculateRowCost(row) {
+                const select = row.querySelector('.ingredient-select');
+                const qtyInput = row.querySelector('.quantity-input');
+                const unitValueInput = row.querySelector('.unit-value-input');
+                const costDisplay = row.querySelector('.cost-display');
+
+                if (!costDisplay) {
+                    console.warn('calculateRowCost: cost-display element not found in row');
+                    return;
+                }
+
+                if (!select) {
+                    console.warn('calculateRowCost: ingredient-select element not found in row');
+                    costDisplay.textContent = '0.00';
+                    if (typeof calculateTotal === 'function') calculateTotal();
+                    return;
+                }
+
+                // Logic: Get Price per Base Unit -> Convert Qty to Base Unit -> Multiply
+                const selectedIndex = select.selectedIndex;
+                const opt = select.options[selectedIndex];
+
+                if (!opt || !opt.value) {
+                    console.log('calculateRowCost: No option selected', { selectedIndex });
+                    costDisplay.textContent = '0.00';
+                    if (typeof calculateTotal === 'function') calculateTotal();
+                    return;
+                }
+
+                // Try multiple ways to get price
+                let price = 0;
+                const priceAttr = opt.getAttribute('data-price');
+                const priceDataset = opt.dataset ? opt.dataset.price : null;
+
+                if (priceAttr) {
+                    price = parseFloat(priceAttr);
+                } else if (priceDataset) {
+                    price = parseFloat(priceDataset);
+                }
+
+                console.log('calculateRowCost: Price detection', {
+                    optionValue: opt.value,
+                    optionText: opt.textContent,
+                    priceAttr: priceAttr,
+                    priceDataset: priceDataset,
+                    parsedPrice: price,
+                    isNaN: isNaN(price)
+                });
+
+                if (!price || isNaN(price) || price <= 0) {
+                    console.warn('calculateRowCost: Invalid or zero price', {
+                        price,
+                        priceAttr,
+                        priceDataset,
+                        optionText: opt.textContent
+                    });
+                    costDisplay.textContent = '0.00';
+                    if (typeof calculateTotal === 'function') calculateTotal();
+                    return;
+                }
+
+                // Get unit from data-unit attribute
+                const invUnit = opt.getAttribute('data-unit') || (opt.dataset ? opt.dataset.unit : '') || '';
+                const qty = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+                const useUnit = unitValueInput ? unitValueInput.value : '';
+
+                // Simple Factor Conversion
+                const UNIT_FACTORS = { 'g': 1, 'kg': 1000, 'ml': 1, 'l': 1000, 'tbsp': 15, 'tsp': 5, 'cup': 240, 'pcs': 1, 'oz': 28.35, 'lb': 453.6 };
+                const priceFactor = UNIT_FACTORS[invUnit] || 1;
+                const useFactor = UNIT_FACTORS[useUnit] || 1;
+
+                let finalCost = 0;
+
+                // If units match or are compatible
+                if (invUnit === useUnit || !useUnit) {
+                    finalCost = price * qty;
                 } else {
-                    // No sub-recipes available - disable the selector and show message
-                    subSelEl.disabled = true;
-                    subSelEl.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
+                    // Price per 1 base unit
+                    const basePrice = price / priceFactor;
+                    // Qty in base units
+                    const baseQty = qty * useFactor;
+                    finalCost = basePrice * baseQty;
+                }
+
+                console.log('calculateRowCost: Final calculation', {
+                    price,
+                    qty,
+                    invUnit,
+                    useUnit,
+                    finalCost
+                });
+
+                costDisplay.textContent = finalCost.toFixed(2);
+                if (typeof calculateTotal === 'function') {
+                    calculateTotal();
+                }
+            }
+
+            // Make calculateRowCost globally accessible
+            window.calculateRowCost = calculateRowCost;
+
+            function calculateTotal() {
+                let total = 0;
+                document.querySelectorAll('.cost-display').forEach(el => total += parseFloat(el.textContent));
+                const display = document.getElementById('totalCostDisplay');
+                if (display) display.textContent = total.toFixed(2);
+            }
+
+            // --- Scaling Highlight (per spec: original=white/grey, scaled=yellow/orange, manual=blue) ---
+            function setQuantityHighlight(input, state) {
+                input.classList.remove('bg-yellow-100', 'border-orange-400', 'bg-blue-100', 'border-blue-400', 'bg-white', 'border-gray-300');
+                if (state === 'scaled') {
+                    input.classList.add('bg-yellow-100', 'border-orange-400');
+                } else if (state === 'manual') {
+                    input.classList.add('bg-blue-100', 'border-blue-400');
+                } else {
+                    input.classList.add('bg-white', 'border-gray-300');
+                }
+            }
+
+            // --- Scaling Mode Multiplier Function ---
+            function setMultiplier(multiplier) {
+                // Update active button styling
+                document.querySelectorAll('.scaling-btn').forEach(btn => {
+                    const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                    if (btnMultiplier === multiplier) {
+                        // Active state: blue background, white text, blue border
+                        btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+                        btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                    } else {
+                        // Inactive state: white background, gray text, gray border
+                        btn.classList.remove('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                        btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
+                    }
+                });
+
+                // Update yield_portions input based on base portions
+                const basePortions = window.basePortions || 10;
+                const newPortions = basePortions * multiplier;
+                const yieldInput = document.getElementById('yield_portions');
+                if (yieldInput) {
+                    yieldInput.value = Math.round(newPortions);
+                    updateScaling();
+                }
+            }
+
+            // --- Scaling Logic ---
+            function updateScaling() {
+                const yieldInput = document.getElementById('yield_portions');
+                if (!yieldInput) return;
+
+                const currentPortions = parseFloat(yieldInput.value) || 0;
+                if (currentPortions <= 0) return;
+
+                const ratio = currentPortions / (window.basePortions || 10);
+
+                // Update active button based on current ratio
+                const multiplier = ratio;
+                document.querySelectorAll('.scaling-btn').forEach(btn => {
+                    const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                    // Check if this button matches the current multiplier (with small tolerance for rounding)
+                    if (Math.abs(btnMultiplier - multiplier) < 0.01) {
+                        btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+                        btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                    } else {
+                        btn.classList.remove('border-blue-500', 'bg-blue-500', 'text-white', 'active');
+                        btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
+                    }
+                });
+
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    if (input.dataset.manuallyEdited === 'true') return;
+
+                    const baseQty = parseFloat(input.dataset.baseQty);
+                    if (!isNaN(baseQty) && baseQty > 0) {
+                        const newQty = baseQty * ratio;
+                        input.value = newQty.toFixed(3);
+                        // Apply highlight inside scaling (no event wait): remove original/manual, apply scaled
+                        setQuantityHighlight(input, ratio !== 1 ? 'scaled' : 'original');
+                    }
+                });
+
+                document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
+            }
+
+            function resetScaling() {
+                const yieldInput = document.getElementById('yield_portions');
+                if (yieldInput) yieldInput.value = window.basePortions;
+
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    const baseQty = input.dataset.baseQty;
+                    if (baseQty !== undefined && baseQty !== '') input.value = baseQty;
+                    setQuantityHighlight(input, 'original');
+                    input.removeAttribute('data-manually-edited');
+                });
+
+                document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
+            }
+
+            // --- Sub-Recipe Modal & Logic ---
+            function handleSubRecipeSelect(select) {
+                const val = select.value;
+                if (!val) {
+                    const unitDisplay = document.getElementById('sub-recipe-unit-display');
+                    if (unitDisplay) unitDisplay.value = '';
+                    const addBtn = document.getElementById('addSubRecipeBtn');
                     if (addBtn) {
                         addBtn.disabled = true;
                         addBtn.classList.add('opacity-50', 'cursor-not-allowed');
                     }
-                }
-            }
-
-            // Form Submit Override
-            const form = document.getElementById('recipeForm');
-            if (form) {
-                form.addEventListener('submit', function (e) {
-                    console.log('Form submit triggered');
-                    
-                    // Basic validation before submit
-                    const recipeName = form.querySelector('input[name="name"]').value.trim();
-                    if (!recipeName) {
-                        e.preventDefault();
-                        alert('Please enter a recipe name');
-                        return false;
-                    }
-
-                    const categoryId = form.querySelector('select[name="category_id"]').value;
-                    if (!categoryId) {
-                        e.preventDefault();
-                        alert('Please select a category');
-                        return false;
-                    }
-
-                    // Check if at least one stage exists
-                    const stageInputs = form.querySelectorAll('input[name^="stages["][name$="[name]"]');
-                    if (stageInputs.length === 0) {
-                        e.preventDefault();
-                        alert('Please add at least one stage');
-                        return false;
-                    }
-
-                    // Inject Sub-Recipes as a special stage if any exist
-                    if (window.addedSubRecipes && window.addedSubRecipes.length > 0) {
-                        const stageIdx = 999;
-                        const container = document.createElement('div');
-                        container.style.display = 'none';
-
-                        const nameInput = document.createElement('input');
-                        nameInput.type = 'hidden';
-                        nameInput.name = `stages[${stageIdx}][name]`;
-                        nameInput.value = 'Sub-Recipes';
-                        container.appendChild(nameInput);
-
-                        const methodInput = document.createElement('input');
-                        methodInput.type = 'hidden';
-                        methodInput.name = `stages[${stageIdx}][method]`;
-                        methodInput.value = 'Included sub-recipes';
-                        container.appendChild(methodInput);
-
-                        window.addedSubRecipes.forEach((sub, idx) => {
-                            const idInput = document.createElement('input');
-                            idInput.type = 'hidden';
-                            idInput.name = `stages[${stageIdx}][ingredients][${idx}][ingredient_id]`;
-                            idInput.value = sub.ingId;
-                            container.appendChild(idInput);
-
-                            const qtyInput = document.createElement('input');
-                            qtyInput.type = 'hidden';
-                            qtyInput.name = `stages[${stageIdx}][ingredients][${idx}][quantity]`;
-                            qtyInput.value = sub.qty;
-                            container.appendChild(qtyInput);
-
-                            const unitInput = document.createElement('input');
-                            unitInput.type = 'hidden';
-                            unitInput.name = `stages[${stageIdx}][ingredients][${idx}][unit]`;
-                            unitInput.value = sub.unit;
-                            container.appendChild(unitInput);
-
-                            const groupInput = document.createElement('input');
-                            groupInput.type = 'hidden';
-                            groupInput.name = `stages[${stageIdx}][ingredients][${idx}][ingredient_group]`;
-                            groupInput.value = 'Sub-Recipe';
-                            container.appendChild(groupInput);
-                        });
-                        form.appendChild(container);
-                    }
-
-                    // Show loading state
-                    const submitBtn = form.querySelector('button[type="submit"], button[onclick*="submit"]');
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = 'Saving...';
-                    }
-
-                    // Allow form to submit normally
-                    return true;
-                });
-            }
-
-            // Set initial base portions if yield_portions has value
-            const yieldInput = document.getElementById('yield_portions');
-            if (yieldInput && yieldInput.value) {
-                window.basePortions = parseFloat(yieldInput.value) || 10;
-            } else {
-                window.basePortions = 10; // Default fallback
-            }
-
-            // STEP 1: Base quantity + original state on form load
-            document.querySelectorAll('.quantity-input').forEach(input => {
-                if (!input.dataset.baseQty || input.dataset.baseQty === '') {
-                    const v = input.value || '';
-                    if (v) input.dataset.baseQty = v;
-                }
-                setQuantityHighlight(input, 'original');
-            });
-
-            // Sub-recipe toggle logic restoration
-            if (document.getElementById('produces_ingredient_id').value) {
-                toggleSubRecipe(true);
-            }
-        });
-
-        function toggleSubRecipe(forceState = null) {
-            const fields = document.getElementById('subRecipeFields');
-            const bg = document.getElementById('subRecipeToggleBg');
-            const dot = document.getElementById('subRecipeToggleDot');
-            const input = document.getElementById('is_sub_recipe');
-
-            const isHidden = fields.classList.contains('hidden');
-            const newState = forceState !== null ? forceState : isHidden;
-
-            if (newState) {
-                fields.classList.remove('hidden');
-                bg.classList.remove('bg-gray-200');
-                bg.classList.add('bg-indigo-500');
-                dot.classList.add('translate-x-4');
-                dot.classList.remove('translate-x-0');
-                input.value = "1";
-            } else {
-                fields.classList.add('hidden');
-                bg.classList.remove('bg-indigo-500');
-                bg.classList.add('bg-gray-200');
-                dot.classList.remove('translate-x-4');
-                dot.classList.add('translate-x-0');
-                input.value = "0";
-
-                // Clear values if hiding
-                if (forceState === null) {
-                    document.getElementById('produces_ingredient_id').value = '';
-                }
-            }
-        }
-
-        // --- Stage Management ---
-        function addStage() {
-            try {
-                console.log('addStage() function called, stageCount:', stageCount);
-                
-                const container = document.getElementById('stages-container');
-                if (!container) {
-                    console.error('stages-container not found!');
                     return;
                 }
-
-                const template = document.getElementById('stageTemplate');
-                if (!template) {
-                    console.error('stageTemplate not found!');
-                    return;
-                }
-
-                const clone = template.content.cloneNode(true);
-                const stageBlock = clone.querySelector('.stage-block');
-                
-                if (!stageBlock) {
-                    console.error('stage-block not found in template!');
-                    return;
-                }
-
-                stageBlock.dataset.stageIndex = stageCount;
-
-                const existingStages = container.querySelectorAll('.stage-block');
-                const nextSetNumber = existingStages.length + 1;
-                console.log('Next set number:', nextSetNumber);
-
-                stageBlock.querySelectorAll('[name*="STAGE_INDEX"]').forEach(el => {
-                    el.name = el.name.replace('STAGE_INDEX', stageCount);
-                });
-
-                const setNameInput = stageBlock.querySelector('input[name*="[name]"]');
-                if (setNameInput) {
-                    setNameInput.value = setNameInput.value.replace('SET_NUMBER_PLACEHOLDER', `Set ${nextSetNumber}`);
-                }
-
-                const tbody = stageBlock.querySelector('.stage-ingredients-body');
-                if (tbody) {
-                    addIngredientRowToTbody(tbody, stageCount);
-                }
-
-                container.appendChild(stageBlock);
-                stageCount++;
-                console.log('Stage added successfully, new stageCount:', stageCount);
-                
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-
-                if (stageCount > 1) {
-                    stageBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            } catch (error) {
-                console.error('Error in addStage():', error);
-            }
-        }
-        
-        // Make it globally accessible - override window.addStage with this implementation
-        window.addStage = addStage;
-
-        function removeStage(btn) {
-            const container = document.getElementById('stages-container');
-            if (container.children.length <= 1) {
-                alert('You need at least one stage!');
-                return;
-            }
-            if (confirm('Remove this stage?')) {
-                btn.closest('.stage-block').remove();
-                calculateTotal();
-            }
-        }
-
-        // --- Ingredient Row Management ---
-        function addIngredientRow(btn) {
-            const tbody = btn.closest('.stage-block').querySelector('tbody');
-            const stageIndex = btn.closest('.stage-block').dataset.stageIndex;
-            addIngredientRowToTbody(tbody, stageIndex);
-        }
-
-        function addIngredientRowToTbody(tbody, stageIndex) {
-            try {
-                if (!tbody) {
-                    console.error('addIngredientRowToTbody: tbody is null');
-                    return;
-                }
-
-                const template = document.getElementById('ingredientRowTemplate');
-                if (!template) {
-                    console.error('ingredientRowTemplate not found!');
-                    alert('Error: Could not find ingredient template. Please refresh the page.');
-                    return;
-                }
-
-                const clone = template.content.cloneNode(true);
-                const tr = clone.querySelector('tr');
-                
-                if (!tr) {
-                    console.error('tr not found in ingredientRowTemplate!');
-                    return;
-                }
-
-                const rowIndex = Date.now() + Math.floor(Math.random() * 1000);
-
-                tr.querySelectorAll('[name*="STAGE_INDEX"]').forEach(el => {
-                    el.name = el.name.replace('STAGE_INDEX', stageIndex).replace('ROW_INDEX', rowIndex);
-                });
-
-                // Populate select options (only ingredients, no sub-recipes)
-                const ingSelect = tr.querySelector('.ingredient-select');
-                
-                if (!ingSelect) {
-                    console.error('ingredient-select not found in row template!');
-                    return;
-                }
-                
-                // Clear existing options first (except placeholder)
-                const placeholderOption = ingSelect.querySelector('option[value=""]');
-                ingSelect.innerHTML = '';
-                if (placeholderOption) {
-                    ingSelect.appendChild(placeholderOption);
-                }
-                
-                // Add ingredient options using proper DOM methods
-                if (typeof ingredientOptionsHTML === 'undefined' || !ingredientOptionsHTML) {
-                    console.error('ingredientOptionsHTML is not defined!');
-                    return;
-                }
-                
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = ingredientOptionsHTML;
-                const optionsToAdd = tempDiv.querySelectorAll('option');
-                optionsToAdd.forEach(opt => {
-                    if (opt.value) {
-                        // Clone and ensure data attributes are preserved
-                        const clonedOpt = opt.cloneNode(true);
-                        
-                        // Ensure data-unit attribute is preserved
-                        const unitAttr = opt.getAttribute('data-unit');
-                        if (unitAttr) {
-                            clonedOpt.setAttribute('data-unit', unitAttr);
-                        } else if (opt.dataset && opt.dataset.unit) {
-                            clonedOpt.setAttribute('data-unit', opt.dataset.unit);
-                        } else {
-                            // Fallback: Extract from text like "Milk (l)"
-                        const match = opt.textContent.match(/\(([^)]+)\)/);
-                        if (match && match[1]) {
-                            clonedOpt.setAttribute('data-unit', match[1].trim());
-                        }
-                    }
-                    
-                    // Ensure data-price attribute is preserved
-                    const priceAttr = opt.getAttribute('data-price');
-                    if (priceAttr) {
-                        clonedOpt.setAttribute('data-price', priceAttr);
-                    } else if (opt.dataset && opt.dataset.price) {
-                        clonedOpt.setAttribute('data-price', opt.dataset.price);
-                    }
-                    
-                    ingSelect.appendChild(clonedOpt);
-                }
-            });
-
-                tbody.appendChild(tr);
-                initRow(tr);
-                
-                // Initialize Lucide icons for the new row
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-            } catch (error) {
-                console.error('Error in addIngredientRowToTbody():', error);
-                alert('Error adding ingredient row: ' + error.message + '\nPlease check the browser console for details.');
-            }
-        }
-
-        // Helper function to update unit when ingredient is selected (for native select)
-        function updateUnitForIngredient(value, row, ingSelect) {
-            if (!value) {
-                // Clear unit if no value
-                const unitValueInput = row.querySelector('.unit-value-input');
-                const unitDisplay = row.querySelector('.unit-display');
-                if (unitValueInput) unitValueInput.value = '';
-                if (unitDisplay) {
-                    unitDisplay.value = '';
-                    unitDisplay.setAttribute('placeholder', 'Select item first');
-                }
-                return;
-            }
-            
-            // Get unit from selected option
-            const selectedOption = ingSelect.querySelector(`option[value="${value}"]`);
-            if (selectedOption) {
-                const unitValue = selectedOption.getAttribute('data-unit') || selectedOption.dataset.unit;
-                if (unitValue) {
-                    const unitLabel = UNIT_LABELS[unitValue] || unitValue;
-                    
-                    // Update hidden input
-                    const unitValueInput = row.querySelector('.unit-value-input');
-                    if (unitValueInput) {
-                        unitValueInput.value = unitValue;
-                    }
-                    
-                    // Update display field
-                    const unitDisplay = row.querySelector('.unit-display');
+                const selectedOpt = select.options[select.selectedIndex];
+                if (selectedOpt) {
+                    const unitDisplay = document.getElementById('sub-recipe-unit-display');
                     if (unitDisplay) {
-                        unitDisplay.value = unitLabel;
-                        unitDisplay.removeAttribute('placeholder');
+                        unitDisplay.value = selectedOpt.dataset?.unit || 'pcs';
+                    }
+                    const addBtn = document.getElementById('addSubRecipeBtn');
+                    if (addBtn) {
+                        addBtn.disabled = false;
+                        addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
                 }
             }
-        }
+            window.handleSubRecipeSelect = handleSubRecipeSelect;
 
-        function initRow(row) {
-            const ingSelect = row.querySelector('.ingredient-select');
-            
-            // Simple native select - no TomSelect
-            if (ingSelect && !ingSelect.hasAttribute('data-initialized')) {
-                ingSelect.setAttribute('data-initialized', 'true');
-                
-                // Populate options from ingredientOptions if empty
-                if (ingSelect.querySelectorAll('option').length <= 1) {
-                    const ingredientOptionsHTML = document.getElementById('ingredientOptions');
-                    if (ingredientOptionsHTML) {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = ingredientOptionsHTML.innerHTML;
-                        const options = tempDiv.querySelectorAll('option');
-                        options.forEach(opt => {
-                            if (opt.value) {
-                                const newOpt = opt.cloneNode(true);
-                                
-                                // Ensure data-unit attribute is preserved
-                                const unitAttr = opt.getAttribute('data-unit');
-                                if (unitAttr) {
-                                    newOpt.setAttribute('data-unit', unitAttr);
-                                } else if (opt.dataset && opt.dataset.unit) {
-                                    newOpt.setAttribute('data-unit', opt.dataset.unit);
-                                } else {
-                                    // Fallback: Extract from text like "Milk (l)"
-                                    const match = opt.textContent.match(/\(([^)]+)\)/);
-                                    if (match && match[1]) {
-                                        newOpt.setAttribute('data-unit', match[1].trim());
-                                    }
-                                }
-                                
-                                // Ensure data-price attribute is preserved
-                                const priceAttr = opt.getAttribute('data-price');
-                                if (priceAttr) {
-                                    newOpt.setAttribute('data-price', priceAttr);
-                                } else if (opt.dataset && opt.dataset.price) {
-                                    newOpt.setAttribute('data-price', opt.dataset.price);
-                                }
-                                
-                                ingSelect.appendChild(newOpt);
-                            }
-                        });
-                    }
-                }
-                
-                // Add change handler for unit and cost update
-                // Use arrow function to preserve 'row' reference, or find row dynamically
-                ingSelect.addEventListener('change', function() {
-                    const selectedValue = this.value;
-                    // Find the row dynamically to ensure we get the correct row
-                    const currentRow = this.closest('tr.ingredient-row') || this.closest('tr');
-                    
-                    if (!currentRow) {
-                        console.error('Row not found for ingredient select');
+            function openSubRecipeModal() {
+                try {
+                    const modal = document.getElementById('addSubRecipeModal');
+                    if (!modal) {
+                        console.error('addSubRecipeModal not found!');
                         return;
                     }
-                    
-                    console.log('Item changed to:', selectedValue, 'in row:', currentRow);
-                    
-                    if (selectedValue) {
-                        const selectedOption = this.querySelector(`option[value="${selectedValue}"]`);
-                        console.log('Selected option:', selectedOption);
-                        
-                        if (selectedOption) {
-                            // Try multiple methods to get unit
-                            let unitValue = selectedOption.getAttribute('data-unit');
-                            if (!unitValue && selectedOption.dataset) {
-                                unitValue = selectedOption.dataset.unit;
-                            }
-                            
-                            // Fallback: Extract from text like "Milk (l)"
-                            if (!unitValue && selectedOption.textContent) {
-                                const match = selectedOption.textContent.match(/\(([^)]+)\)/);
-                                if (match && match[1]) {
-                                    unitValue = match[1].trim();
-                                    console.log('Unit extracted from text:', unitValue);
-                                }
-                            }
-                            
-                            console.log('Unit value found:', unitValue);
-                            
-                            if (unitValue) {
-                                const unitValueInput = currentRow.querySelector('.unit-value-input');
-                                const unitDisplay = currentRow.querySelector('.unit-display');
-                                
-                                console.log('Unit input found:', unitValueInput, 'in row:', currentRow);
-                                console.log('Unit display found:', unitDisplay, 'in row:', currentRow);
-                                
-                                if (unitValueInput) {
-                                    unitValueInput.value = unitValue;
-                                    console.log('Unit input set to:', unitValue);
-                                } else {
-                                    console.error('Unit value input not found in row');
-                                }
-                                
-                                if (unitDisplay) {
-                                    const unitLabel = UNIT_LABELS[unitValue] || unitValue;
-                                    unitDisplay.value = unitLabel;
-                                    unitDisplay.removeAttribute('placeholder');
-                                    console.log('Unit display set to:', unitLabel);
-                                } else {
-                                    console.error('Unit display not found in row');
-                                }
-                            } else {
-                                console.warn('No unit found for selected option');
-                            }
-                            
-                            // Calculate cost
-                            calculateRowCost(currentRow);
-                        } else {
-                            console.error('Selected option not found for value:', selectedValue);
-                        }
-                    } else {
-                        // Clear unit if no selection
-                        const unitValueInput = currentRow.querySelector('.unit-value-input');
-                        const unitDisplay = currentRow.querySelector('.unit-display');
-                        if (unitValueInput) unitValueInput.value = '';
-                        if (unitDisplay) {
-                            unitDisplay.value = '';
-                            unitDisplay.setAttribute('placeholder', 'Select item first');
-                        }
-                        calculateRowCost(currentRow);
+
+                    modal.classList.remove('hidden');
+
+                    const subSelEl = document.getElementById('sub-recipe-selector');
+                    if (!subSelEl) {
+                        console.error('sub-recipe-selector not found!');
+                        return;
                     }
+
+                    subSelEl.value = '';
+                    handleSubRecipeSelect(subSelEl);
+
+                    setTimeout(() => {
+                        subSelEl.focus();
+                    }, 100);
+                } catch (error) {
+                    console.error('Error in openSubRecipeModal():', error);
+                }
+            }
+            window.openSubRecipeModal = openSubRecipeModal;
+
+            function closeSubRecipeModal() {
+                try {
+                    const modal = document.getElementById('addSubRecipeModal');
+                    if (modal) {
+                        modal.classList.add('hidden');
+                    }
+
+                    const subSelEl = document.getElementById('sub-recipe-selector');
+                    if (subSelEl) {
+                        subSelEl.value = '';
+                    }
+                    const qtyInput = document.getElementById('sub-recipe-qty');
+                    if (qtyInput) qtyInput.value = 1;
+
+                    const unitDisplay = document.getElementById('sub-recipe-unit-display');
+                    if (unitDisplay) unitDisplay.value = '';
+                } catch (error) {
+                    console.error('Error in closeSubRecipeModal():', error);
+                }
+            }
+            window.closeSubRecipeModal = closeSubRecipeModal;
+
+            function confirmAddSubRecipe() {
+                try {
+                    const subSelEl = document.getElementById('sub-recipe-selector');
+                    if (!subSelEl) {
+                        alert('Error: Sub-recipe selector not found.');
+                        return;
+                    }
+
+                    const val = subSelEl.value;
+                    if (!val) {
+                        alert('Please select a sub-recipe');
+                        return;
+                    }
+                    const qtyInput = document.getElementById('sub-recipe-qty');
+                    if (!qtyInput) {
+                        alert('Error: Quantity input not found. Please refresh the page.');
+                        return;
+                    }
+
+                    const qty = parseFloat(qtyInput.value);
+                    if (isNaN(qty) || qty <= 0) {
+                        alert('Please enter a valid quantity');
+                        return;
+                    }
+
+                    const opt = subSelEl.options[subSelEl.selectedIndex];
+
+                    const subData = {
+                        id: val,
+                        name: opt?.dataset?.name || opt?.text || 'Unknown',
+                        ingId: opt?.dataset?.ingId || val,
+                        qty: qty,
+                        unit: opt?.dataset?.unit || 'pcs',
+                        price: parseFloat(opt?.dataset?.price || 0)
+                    };
+
+                    if (!window.addedSubRecipes) {
+                        window.addedSubRecipes = [];
+                    }
+
+                    window.addedSubRecipes.push(subData);
+                    renderSubRecipeCards();
+                    calculateTotal();
+                    closeSubRecipeModal();
+                } catch (error) {
+                    console.error('Error in confirmAddSubRecipe():', error);
+                    alert('Error adding sub-recipe: ' + error.message + '\nPlease check the browser console for details.');
+                }
+            }
+            window.confirmAddSubRecipe = confirmAddSubRecipe;
+
+            function renderSubRecipeCards() {
+                const container = document.getElementById('sub-recipes-container');
+                const msg = document.getElementById('no-sub-recipes-msg');
+
+                // Clear existing (except msg)
+                container.querySelectorAll('.sub-recipe-card').forEach(el => el.remove());
+
+                if (window.addedSubRecipes.length === 0) {
+                    msg.classList.remove('hidden');
+                    return;
+                }
+
+                msg.classList.add('hidden');
+
+                window.addedSubRecipes.forEach((sub, index) => {
+                    const cost = (sub.qty * sub.price).toFixed(2);
+                    const card = document.createElement('div');
+                    card.className = 'sub-recipe-card bg-indigo-50/30 border border-indigo-100 rounded-xl p-4 flex justify-between items-center group hover:bg-indigo-50 transition-colors animate-fade-in-up';
+                    card.innerHTML = `
+                                                                                                                        <div class="flex items-center gap-4">
+                                                                                                                            <div class="p-2 bg-white rounded-lg shadow-sm text-indigo-500">
+                                                                                                                                <i data-lucide="component" class="w-5 h-5"></i>
+                                                                                                                            </div>
+                                                                                                                            <div>
+                                                                                                                                <h4 class="font-bold text-gray-800">${sub.name}</h4>
+                                                                                                                                <p class="text-xs text-gray-500 font-medium">${sub.qty} ${sub.unit} • ₹${cost}</p>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                        <button type="button" onclick="removeSubRecipe(${index})" 
+                                                                                                                            class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                                                                                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                                                                                        </button>
+                                                                                                                        <span class="cost-val hidden">${cost}</span>
+                                                                                                                    `;
+                    container.appendChild(card);
                 });
-                
-                // Add global click handler to close TomSelect dropdowns when clicking outside (only for sub-recipe selector now)
-                if (!window.dropdownCloseHandlerAdded) {
-                    window.dropdownCloseHandlerAdded = true;
-                    document.addEventListener('click', function(e) {
-                        // Check what was clicked
-                        const isDropdown = e.target.closest('.ts-dropdown');
-                        const isTomSelectControl = e.target.closest('.ts-control');
-                        const isTomSelectWrapper = e.target.closest('.ts-wrapper');
-                        const isOption = e.target.classList.contains('option') || e.target.closest('.option');
-                        
-                        // If clicking on option, let TomSelect handle it
-                        if (isOption) {
-                            return;
-                        }
-                        
-                        // If clicking outside TomSelect area, close sub-recipe selector dropdown
-                        if (!isDropdown && !isTomSelectControl && !isTomSelectWrapper) {
-                            setTimeout(() => {
-                                // Close sub-recipe selector
-                                if (window.subRecipeSelector) {
-                                    try {
-                                        if (window.subRecipeSelector.isOpen) {
-                                            window.subRecipeSelector.close();
-                                        }
-                                        window.subRecipeSelector.blur();
-                                    } catch(err) {
-                                        console.log('Error closing sub-recipe:', err);
-                                    }
-                                }
-                                
-                                // Hide all TomSelect dropdowns manually
-                                const dropdowns = document.querySelectorAll('.ts-dropdown');
-                                dropdowns.forEach(dropdown => {
-                                    dropdown.style.display = 'none';
-                                    dropdown.style.visibility = 'hidden';
-                                    dropdown.style.opacity = '0';
-                                    dropdown.classList.remove('active');
-                                    dropdown.classList.add('hidden');
-                                });
-                            }, 150);
-                        }
-                    }, false); // Bubble phase
-                }
+
+                lucide.createIcons();
             }
+            window.renderSubRecipeCards = renderSubRecipeCards;
 
-            // Listeners for cost recalc and highlights
-            const qty = row.querySelector('.quantity-input');
-            if (qty) {
-                // Initialize base quantity if not set
-                if (!qty.dataset.baseQty || qty.dataset.baseQty === '') {
-                    const currentValue = qty.value || '';
-                    if (currentValue) {
-                        qty.dataset.baseQty = currentValue;
-                    }
-                }
-                setQuantityHighlight(qty, 'original');
-                qty.addEventListener('input', () => {
-                    if (document.activeElement === qty) {
-                        qty.dataset.manuallyEdited = 'true';
-                        qty.dataset.baseQty = qty.value;
-                        setQuantityHighlight(qty, 'manual');
-                    }
-                    calculateRowCost(row);
-                });
-            }
-            // Unit is now readonly, no need for change listeners
-
-            // Calculate initial cost
-            calculateRowCost(row);
-        }
-
-        function removeRow(btn) {
-            btn.closest('tr').remove();
-            calculateTotal();
-        }
-
-        // --- Cost Calculation Logic ---
-        function calculateRowCost(row) {
-            const select = row.querySelector('.ingredient-select');
-            const qtyInput = row.querySelector('.quantity-input');
-            const unitValueInput = row.querySelector('.unit-value-input');
-            const costDisplay = row.querySelector('.cost-display');
-
-            if (!costDisplay) {
-                console.warn('calculateRowCost: cost-display element not found in row');
-                return;
-            }
-            
-            if (!select) {
-                console.warn('calculateRowCost: ingredient-select element not found in row');
-                costDisplay.textContent = '0.00';
-                if (typeof calculateTotal === 'function') calculateTotal();
-                return;
-            }
-
-            // Logic: Get Price per Base Unit -> Convert Qty to Base Unit -> Multiply
-            const selectedIndex = select.selectedIndex;
-            const opt = select.options[selectedIndex];
-            
-            if (!opt || !opt.value) {
-                console.log('calculateRowCost: No option selected', { selectedIndex });
-                costDisplay.textContent = '0.00';
-                if (typeof calculateTotal === 'function') calculateTotal();
-                return;
-            }
-            
-            // Try multiple ways to get price
-            let price = 0;
-            const priceAttr = opt.getAttribute('data-price');
-            const priceDataset = opt.dataset ? opt.dataset.price : null;
-            
-            if (priceAttr) {
-                price = parseFloat(priceAttr);
-            } else if (priceDataset) {
-                price = parseFloat(priceDataset);
-            }
-            
-            console.log('calculateRowCost: Price detection', {
-                optionValue: opt.value,
-                optionText: opt.textContent,
-                priceAttr: priceAttr,
-                priceDataset: priceDataset,
-                parsedPrice: price,
-                isNaN: isNaN(price)
-            });
-            
-            if (!price || isNaN(price) || price <= 0) {
-                console.warn('calculateRowCost: Invalid or zero price', { 
-                    price, 
-                    priceAttr, 
-                    priceDataset,
-                    optionText: opt.textContent 
-                });
-                costDisplay.textContent = '0.00';
-                if (typeof calculateTotal === 'function') calculateTotal();
-                return;
-            }
-            
-            // Get unit from data-unit attribute
-            const invUnit = opt.getAttribute('data-unit') || (opt.dataset ? opt.dataset.unit : '') || '';
-            const qty = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
-            const useUnit = unitValueInput ? unitValueInput.value : '';
-
-            // Simple Factor Conversion
-            const UNIT_FACTORS = { 'g': 1, 'kg': 1000, 'ml': 1, 'l': 1000, 'tbsp': 15, 'tsp': 5, 'cup': 240, 'pcs': 1, 'oz': 28.35, 'lb': 453.6 };
-            const priceFactor = UNIT_FACTORS[invUnit] || 1;
-            const useFactor = UNIT_FACTORS[useUnit] || 1;
-
-            let finalCost = 0;
-
-            // If units match or are compatible
-            if (invUnit === useUnit || !useUnit) {
-                finalCost = price * qty;
-            } else {
-                // Price per 1 base unit
-                const basePrice = price / priceFactor;
-                // Qty in base units
-                const baseQty = qty * useFactor;
-                finalCost = basePrice * baseQty;
-            }
-
-            console.log('calculateRowCost: Final calculation', {
-                price,
-                qty,
-                invUnit,
-                useUnit,
-                finalCost
-            });
-
-            costDisplay.textContent = finalCost.toFixed(2);
-            if (typeof calculateTotal === 'function') {
-                calculateTotal();
-            }
-        }
-        
-        // Make calculateRowCost globally accessible
-        window.calculateRowCost = calculateRowCost;
-
-        function calculateTotal() {
-            let total = 0;
-            document.querySelectorAll('.cost-display').forEach(el => total += parseFloat(el.textContent));
-            const display = document.getElementById('totalCostDisplay');
-            if (display) display.textContent = total.toFixed(2);
-        }
-
-        // --- Scaling Highlight (per spec: original=white/grey, scaled=yellow/orange, manual=blue) ---
-        function setQuantityHighlight(input, state) {
-            input.classList.remove('bg-yellow-100', 'border-orange-400', 'bg-blue-100', 'border-blue-400', 'bg-white', 'border-gray-300');
-            if (state === 'scaled') {
-                input.classList.add('bg-yellow-100', 'border-orange-400');
-            } else if (state === 'manual') {
-                input.classList.add('bg-blue-100', 'border-blue-400');
-            } else {
-                input.classList.add('bg-white', 'border-gray-300');
-            }
-        }
-
-        // --- Scaling Mode Multiplier Function ---
-        function setMultiplier(multiplier) {
-            // Update active button styling
-            document.querySelectorAll('.scaling-btn').forEach(btn => {
-                const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
-                if (btnMultiplier === multiplier) {
-                    // Active state: blue background, white text, blue border
-                    btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
-                    btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white', 'active');
-                } else {
-                    // Inactive state: white background, gray text, gray border
-                    btn.classList.remove('border-blue-500', 'bg-blue-500', 'text-white', 'active');
-                    btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
-                }
-            });
-
-            // Update yield_portions input based on base portions
-            const basePortions = window.basePortions || 10;
-            const newPortions = basePortions * multiplier;
-            const yieldInput = document.getElementById('yield_portions');
-            if (yieldInput) {
-                yieldInput.value = Math.round(newPortions);
-                updateScaling();
-            }
-        }
-
-        // --- Scaling Logic ---
-        function updateScaling() {
-            const yieldInput = document.getElementById('yield_portions');
-            if (!yieldInput) return;
-
-            const currentPortions = parseFloat(yieldInput.value) || 0;
-            if (currentPortions <= 0) return;
-
-            const ratio = currentPortions / (window.basePortions || 10);
-            
-            // Update active button based on current ratio
-            const multiplier = ratio;
-            document.querySelectorAll('.scaling-btn').forEach(btn => {
-                const btnMultiplier = parseFloat(btn.getAttribute('data-multiplier'));
-                // Check if this button matches the current multiplier (with small tolerance for rounding)
-                if (Math.abs(btnMultiplier - multiplier) < 0.01) {
-                    btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
-                    btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white', 'active');
-                } else {
-                    btn.classList.remove('border-blue-500', 'bg-blue-500', 'text-white', 'active');
-                    btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
-                }
-            });
-
-            document.querySelectorAll('.quantity-input').forEach(input => {
-                if (input.dataset.manuallyEdited === 'true') return;
-
-                const baseQty = parseFloat(input.dataset.baseQty);
-                if (!isNaN(baseQty) && baseQty > 0) {
-                    const newQty = baseQty * ratio;
-                    input.value = newQty.toFixed(3);
-                    // Apply highlight inside scaling (no event wait): remove original/manual, apply scaled
-                    setQuantityHighlight(input, ratio !== 1 ? 'scaled' : 'original');
-                }
-            });
-
-            document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
-        }
-
-        function resetScaling() {
-            const yieldInput = document.getElementById('yield_portions');
-            if (yieldInput) yieldInput.value = window.basePortions;
-
-            document.querySelectorAll('.quantity-input').forEach(input => {
-                const baseQty = input.dataset.baseQty;
-                if (baseQty !== undefined && baseQty !== '') input.value = baseQty;
-                setQuantityHighlight(input, 'original');
-                input.removeAttribute('data-manually-edited');
-            });
-
-            document.querySelectorAll('.ingredient-row').forEach(row => calculateRowCost(row));
-        }
-
-        // --- Sub-Recipe Modal & Logic ---
-        function openSubRecipeModal() {
-            if (window.openSubRecipeModal && typeof window.openSubRecipeModal === 'function') {
-                return window.openSubRecipeModal();
-            }
-            // Fallback implementation
-            try {
-                console.log('openSubRecipeModal() called');
-                
-                const modal = document.getElementById('addSubRecipeModal');
-                if (!modal) {
-                    console.error('addSubRecipeModal not found!');
-                    return;
-                }
-
-                modal.classList.remove('hidden');
-                
-                const subSelEl = document.getElementById('sub-recipe-selector');
-                if (!subSelEl) {
-                    console.error('sub-recipe-selector not found!');
-                    return;
-                }
-
-                if (!subRecipeSelector) {
-                    const availableOptions = subSelEl.querySelectorAll('option:not([value=""]):not([disabled])');
-                    
-                    if (availableOptions.length > 0) {
-                        try {
-                            subRecipeSelector = new TomSelect(subSelEl, {
-                                create: false,
-                                sortField: { field: "text", direction: "asc" },
-                                placeholder: 'Search for a sub-recipe...',
-                                plugins: [],
-                                onChange: function (val) {
-                                    if (!val) {
-                                        const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                        if (unitDisplay) unitDisplay.value = '';
-                                        const addBtn = document.getElementById('addSubRecipeBtn');
-                                        if (addBtn) {
-                                            addBtn.disabled = true;
-                                            addBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                                        }
-                                        return;
-                                    }
-                                    const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
-                                    if (originalOpt) {
-                                        const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                                        if (unitDisplay) {
-                                            unitDisplay.value = originalOpt.dataset?.unit || 'pcs';
-                                        }
-                                        const addBtn = document.getElementById('addSubRecipeBtn');
-                                        if (addBtn) {
-                                            addBtn.disabled = false;
-                                            addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                                        }
-                                    }
-                                }
-                            });
-                        } catch (error) {
-                            console.error('Error initializing TomSelect:', error);
-                        }
-                    }
-                }
-                
-                setTimeout(() => {
-                    if (subRecipeSelector) {
-                        try {
-                            subRecipeSelector.focus();
-                        } catch (error) {
-                            console.warn('Could not focus sub-recipe selector:', error);
-                        }
-                    }
-                }, 100);
-            } catch (error) {
-                console.error('Error in openSubRecipeModal():', error);
-            }
-        }
-        
-        // Make it globally accessible
-        window.openSubRecipeModal = openSubRecipeModal;
-
-        function closeSubRecipeModal() {
-            try {
-                const modal = document.getElementById('addSubRecipeModal');
-                if (modal) {
-                    modal.classList.add('hidden');
-                }
-                
-                if (subRecipeSelector) {
-                    try {
-                        subRecipeSelector.clear();
-                    } catch (error) {
-                        console.warn('Error clearing sub-recipe selector:', error);
-                    }
-                }
-                
-                const qtyInput = document.getElementById('sub-recipe-qty');
-                if (qtyInput) qtyInput.value = 1;
-                
-                const unitDisplay = document.getElementById('sub-recipe-unit-display');
-                if (unitDisplay) unitDisplay.value = '';
-            } catch (error) {
-                console.error('Error in closeSubRecipeModal():', error);
-            }
-        }
-
-        function confirmAddSubRecipe() {
-            try {
-                if (!subRecipeSelector) {
-                    alert('Error: Sub-recipe selector not initialized. Please refresh the page.');
-                    return;
-                }
-
-                const val = subRecipeSelector.getValue();
-                if (!val) {
-                    alert('Please select a sub-recipe');
-                    return;
-                }
-
-                const qtyInput = document.getElementById('sub-recipe-qty');
-                if (!qtyInput) {
-                    alert('Error: Quantity input not found. Please refresh the page.');
-                    return;
-                }
-
-                const qty = parseFloat(qtyInput.value);
-                if (isNaN(qty) || qty <= 0) {
-                    alert('Please enter a valid quantity');
-                    return;
-                }
-
-                const opt = subRecipeSelector.options[val];
-                const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
-
-                const subData = {
-                    id: val,
-                    name: originalOpt?.dataset?.name || opt?.text || 'Unknown',
-                    ingId: originalOpt?.dataset?.ingId || val,
-                    qty: qty,
-                    unit: originalOpt?.dataset?.unit || opt?.dataset?.unit || 'pcs',
-                    price: parseFloat(originalOpt?.dataset?.price || opt?.dataset?.price || 0)
-                };
-
-                if (!window.addedSubRecipes) {
-                    window.addedSubRecipes = [];
-                }
-
-                window.addedSubRecipes.push(subData);
+            function removeSubRecipe(index) {
+                window.addedSubRecipes.splice(index, 1);
                 renderSubRecipeCards();
                 calculateTotal();
-                closeSubRecipeModal();
-            } catch (error) {
-                console.error('Error in confirmAddSubRecipe():', error);
-                alert('Error adding sub-recipe: ' + error.message + '\nPlease check the browser console for details.');
             }
-        }
+            window.removeSubRecipe = removeSubRecipe;
 
-        function renderSubRecipeCards() {
-            const container = document.getElementById('sub-recipes-container');
-            const msg = document.getElementById('no-sub-recipes-msg');
+            // Override calculateTotal to include sub-recipes
+            const originalCalculateTotal = calculateTotal;
+            calculateTotal = function () {
+                let total = 0;
+                // Raw ingredients
+                document.querySelectorAll('.cost-display').forEach(el => total += parseFloat(el.textContent));
+                // Sub-recipes
+                document.querySelectorAll('.cost-val').forEach(el => total += parseFloat(el.textContent));
 
-            // Clear existing (except msg)
-            container.querySelectorAll('.sub-recipe-card').forEach(el => el.remove());
+                const display = document.getElementById('totalCostDisplay');
+                if (display) display.textContent = total.toFixed(2);
+            };
 
-            if (window.addedSubRecipes.length === 0) {
-                msg.classList.remove('hidden');
-                return;
+            // --- Quick Creature Modal ---
+            function openIngredientModal(name) {
+                document.getElementById('quick_name').value = name;
+                document.getElementById('createIngredientModal').classList.remove('hidden');
+            }
+            function closeIngredientModal() {
+                document.getElementById('createIngredientModal').classList.add('hidden');
+            }
+            function submitQuickIngredient() {
+                const form = document.getElementById('quickIngredientForm');
+                const data = Object.fromEntries(new FormData(form).entries());
+
+                fetch('{{ route('ingredients.storeQuick') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            const newOpt = { value: res.ingredient.id, text: res.ingredient.name, price: res.ingredient.price, unit: res.ingredient.unit };
+
+                            // Add to all ingredient selects
+                            document.querySelectorAll('.ingredient-select').forEach(s => {
+                                if (s.tomselect) s.tomselect.addOption(newOpt);
+                            });
+
+                            // Select in active
+                            if (activeSelect) activeSelect.tomselect.setValue(res.ingredient.id);
+
+                            // Add to HTML buffer
+                            const opt = document.createElement('option');
+                            opt.value = res.ingredient.id;
+                            opt.text = res.ingredient.name;
+                            opt.dataset.price = res.ingredient.price;
+                            opt.dataset.unit = res.ingredient.unit;
+                            document.getElementById('ingredientOptions').appendChild(opt);
+
+                            closeIngredientModal();
+                        } else {
+                            alert(res.message);
+                        }
+                    });
             }
 
-            msg.classList.add('hidden');
 
-            window.addedSubRecipes.forEach((sub, index) => {
-                const cost = (sub.qty * sub.price).toFixed(2);
-                const card = document.createElement('div');
-                card.className = 'sub-recipe-card bg-indigo-50/30 border border-indigo-100 rounded-xl p-4 flex justify-between items-center group hover:bg-indigo-50 transition-colors animate-fade-in-up';
-                card.innerHTML = `
-                                    <div class="flex items-center gap-4">
-                                        <div class="p-2 bg-white rounded-lg shadow-sm text-indigo-500">
-                                            <i data-lucide="component" class="w-5 h-5"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-gray-800">${sub.name}</h4>
-                                            <p class="text-xs text-gray-500 font-medium">${sub.qty} ${sub.unit} • ₹${cost}</p>
-                                        </div>
-                                    </div>
-                                    <button type="button" onclick="removeSubRecipe(${index})" 
-                                        class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                    <span class="cost-val hidden">${cost}</span>
-                                `;
-                container.appendChild(card);
-            });
-
-            lucide.createIcons();
-        }
-
-        function removeSubRecipe(index) {
-            window.addedSubRecipes.splice(index, 1);
-            renderSubRecipeCards();
-            calculateTotal();
-        }
-
-        // Override calculateTotal to include sub-recipes
-        const originalCalculateTotal = calculateTotal;
-        calculateTotal = function () {
-            let total = 0;
-            // Raw ingredients
-            document.querySelectorAll('.cost-display').forEach(el => total += parseFloat(el.textContent));
-            // Sub-recipes
-            document.querySelectorAll('.cost-val').forEach(el => total += parseFloat(el.textContent));
-
-            const display = document.getElementById('totalCostDisplay');
-            if (display) display.textContent = total.toFixed(2);
-        };
-
-        // --- Quick Creature Modal ---
-        function openIngredientModal(name) {
-            document.getElementById('quick_name').value = name;
-            document.getElementById('createIngredientModal').classList.remove('hidden');
-        }
-        function closeIngredientModal() {
-            document.getElementById('createIngredientModal').classList.add('hidden');
-        }
-        function submitQuickIngredient() {
-            const form = document.getElementById('quickIngredientForm');
-            const data = Object.fromEntries(new FormData(form).entries());
-
-            fetch('{{ route('ingredients.storeQuick') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-                .then(r => r.json())
-                .then(res => {
-                    if (res.success) {
-                        const newOpt = { value: res.ingredient.id, text: res.ingredient.name, price: res.ingredient.price, unit: res.ingredient.unit };
-
-                        // Add to all ingredient selects
-                        document.querySelectorAll('.ingredient-select').forEach(s => {
-                            if (s.tomselect) s.tomselect.addOption(newOpt);
-                        });
-
-                        // Select in active
-                        if (activeSelect) activeSelect.tomselect.setValue(res.ingredient.id);
-
-                        // Add to HTML buffer
-                        const opt = document.createElement('option');
-                        opt.value = res.ingredient.id;
-                        opt.text = res.ingredient.name;
-                        opt.dataset.price = res.ingredient.price;
-                        opt.dataset.unit = res.ingredient.unit;
-                        document.getElementById('ingredientOptions').appendChild(opt);
-
-                        closeIngredientModal();
-                    } else {
-                        alert(res.message);
-                    }
-                });
-        }
-
-
-    </script>
+        </script>
 @endpush

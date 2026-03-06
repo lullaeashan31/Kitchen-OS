@@ -206,6 +206,20 @@
                         <input type="hidden" name="is_sub_recipe" id="is_sub_recipe" value="{{ old('is_sub_recipe', $recipe->is_sub_recipe ? 1 : 0) }}">
 
                         <div id="subRecipeFields" class="{{ $recipe->is_sub_recipe ? '' : 'hidden' }} space-y-4 pt-4 border-t border-indigo-100 mt-2">
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Produced Ingredient</label>
+                                <select name="produces_ingredient_id" id="produces_ingredient_id"
+                                    class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
+                                    <option value="">-- Select Ingredient This Recipe Produces --</option>
+                                    @foreach($ingredients as $ing)
+                                        <option value="{{ $ing->id }}" {{ old('produces_ingredient_id', $recipe->produces_ingredient_id) == $ing->id ? 'selected' : '' }}>
+                                            {{ $ing->name }} ({{ $ing->measurement_unit }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-[10px] text-indigo-500 mt-1">Select the item that is created by this sub-recipe.</p>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output Qty</label>

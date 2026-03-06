@@ -18,12 +18,19 @@ class SopController extends Controller
         $user = Auth::user();
         $today = today();
 
-        // 1. Get user's shift assignment for today
+        // 1. Get user's shift IDs assigned for today
         $assignments = $user->shiftAssignments()->where('date', $today)->pluck('shift_id');
 
-        // Staff see checklists for their assigned shifts today
+        // Staff see checklists for their assigned shifts today, 
+        // OR checklists for their role if they have no explicit shift assignment today.
         $checklists = SopChecklist::active()
-            ->whereIn('shift_id', $assignments)
+            ->where('role', $user->role->value)
+            ->when($assignments->isNotEmpty(), function ($q) use ($assignments) {
+                $q->where(function ($sq) use ($assignments) {
+                    $sq->whereIn('shift_id', $assignments)
+                        ->orWhereNull('shift_id');
+                });
+            })
             ->with(['todayRun'])
             ->get();
 
@@ -35,14 +42,24 @@ class SopController extends Controller
         $user = Auth::user();
         $today = today();
 
-        // 1. Verify access via shift assignment
-        $hasAccess = $user->shiftAssignments()
-            ->where('date', $today)
-            ->where('shift_id', $checklist->shift_id)
-            ->exists();
+        // 1. Verify access via shift assignment or role fallback
+        $assignments = $user->shiftAssignments()->where('date', $today)->pluck('shift_id');
 
-        if (!$hasAccess && !$user->isAdmin()) {
-            return redirect()->route('sop.index')->with('error', 'You are not assigned to this shift today.');
+        $hasAccess = false;
+        if ($user->isAdmin()) {
+            $hasAccess = true;
+        } elseif ($checklist->role === $user->role->value) {
+            // Allow if it's a global SOP, or user is assigned to this shift, 
+            // or user has no shifts assigned today (fallback)
+            if ($assignments->isEmpty()) {
+                $hasAccess = true;
+            } else {
+                $hasAccess = is_null($checklist->shift_id) || $assignments->contains($checklist->shift_id);
+            }
+        }
+
+        if (!$hasAccess) {
+            return redirect()->route('sop.index')->with('error', 'You do not have access to this checklist.');
         }
 
         // 2. Find or Create Daily Run
@@ -75,14 +92,26 @@ class SopController extends Controller
             $dateFolder = today()->toDateString();
             $path = "sop/photos/{$dateFolder}/{$checklist->id}";
 
-            // Save to S3 as requested
+            // Try S3 first
             try {
                 $photoPath = $request->file('photo')->store($path, 's3');
+                if (!$photoPath || $photoPath === '0' || $photoPath === 'false') {
+                    throw new \Exception("S3 store failed.");
+                }
+                \Log::info("SOP Photo uploaded to S3: " . $photoPath);
             } catch (\Exception $e) {
-                \Log::error("SOP Photo S3 Upload Failed: " . $e->getMessage());
-                // Fallback to public if s3 fails (to avoid blocking staff)
+                \Log::warning("SOP Photo S3 Upload Failed (falling back to public): " . $e->getMessage());
+                // Fallback to public
                 $photoPath = $request->file('photo')->store($path, 'public');
+                if ($photoPath && $photoPath !== '0' && $photoPath !== 'false') {
+                    \Log::info("SOP Photo uploaded to Public: " . $photoPath);
+                } else {
+                    \Log::error("SOP Photo Public Storage ALSO failed.");
+                    $photoPath = null;
+                }
             }
+        } else {
+            \Log::info("No photo in request for item " . $itemId . " (is_photo_required: " . ($item->is_photo_required ? 'true' : 'false') . ")");
         }
 
         $completion = SopItemCompletion::where('run_id', $run->id)
