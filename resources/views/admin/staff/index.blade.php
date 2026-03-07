@@ -197,15 +197,15 @@
     </div>
 
     <!-- Staff Details Modal -->
-    <div id="staffDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+    <div id="staffDetailsModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full h-[85vh] flex flex-col overflow-hidden transform scale-95 transition-transform duration-300" id="staffDetailsModalBox">
+            <div class="bg-gray-50 border-b border-gray-100 p-6 flex justify-between items-center shrink-0">
                 <h2 class="text-2xl font-bold text-gray-800">Staff Member Details</h2>
-                <button onclick="closeStaffDetails()" class="text-gray-400 hover:text-gray-600">
+                <button onclick="closeStaffDetails()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 p-2 rounded-lg transition-colors">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </div>
-            <div id="staffDetailsContent" class="p-6">
+            <div id="staffDetailsContent" class="p-6 overflow-y-auto flex-1 custom-scrollbar">
                 <!-- Content will be loaded here -->
             </div>
         </div>
@@ -223,7 +223,19 @@
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('staffDetailsContent').innerHTML = html;
-                    document.getElementById('staffDetailsModal').classList.remove('hidden');
+                    const modal = document.getElementById('staffDetailsModal');
+                    const modalBox = document.getElementById('staffDetailsModalBox');
+                    
+                    modal.classList.remove('hidden');
+                    
+                    // Small delay to allow tailwind classes to apply transition
+                    setTimeout(() => {
+                        modal.classList.remove('opacity-0');
+                        modal.classList.add('opacity-100');
+                        modalBox.classList.remove('scale-95');
+                        modalBox.classList.add('scale-100');
+                    }, 10);
+                    
                     // Reinitialize Lucide icons
                     if (typeof lucide !== 'undefined') {
                         lucide.createIcons();
@@ -236,7 +248,17 @@
         }
 
         function closeStaffDetails() {
-            document.getElementById('staffDetailsModal').classList.add('hidden');
+            const modal = document.getElementById('staffDetailsModal');
+            const modalBox = document.getElementById('staffDetailsModalBox');
+            
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            modalBox.classList.remove('scale-100');
+            modalBox.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // Wait for transition
         }
 
         // Close modal on outside click

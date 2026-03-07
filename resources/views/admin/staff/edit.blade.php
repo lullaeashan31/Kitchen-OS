@@ -116,12 +116,22 @@
 
                             <div class="bg-orange-50/50 p-6 rounded-xl border border-orange-100">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">New Password</label>
-                                <input type="password" name="password" placeholder="Leave blank to keep current"
-                                    class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none mb-4">
+                                <div class="relative mb-4">
+                                    <input type="password" name="password" id="password" placeholder="Leave blank to keep current"
+                                        class="w-full px-4 py-3 pr-12 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none">
+                                    <button type="button" onclick="togglePassword('password', 'eye-icon-password')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-orange-500 cursor-pointer">
+                                        <i data-lucide="eye" id="eye-icon-password" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
                                 
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Confirm Password</label>
-                                <input type="password" name="password_confirmation" placeholder="Confirm new password"
-                                    class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none">
+                                <div class="relative">
+                                    <input type="password" name="password_confirmation" id="password_confirmation" placeholder="Confirm new password"
+                                        class="w-full px-4 py-3 pr-12 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none">
+                                    <button type="button" onclick="togglePassword('password_confirmation', 'eye-icon-confirm')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-orange-500 cursor-pointer">
+                                        <i data-lucide="eye" id="eye-icon-confirm" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -259,6 +269,21 @@
                  
                  reader.readAsDataURL(input.files[0]);
              }
+        }
+
+        // Toggle Password Visibility
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
         }
     </script>
 @endsection

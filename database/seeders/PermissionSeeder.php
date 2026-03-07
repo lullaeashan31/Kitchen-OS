@@ -19,6 +19,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Manage Ingredients', 'slug' => 'manage_ingredients'],
             ['name' => 'Manage Production', 'slug' => 'manage_production'],
             ['name' => 'System Settings', 'slug' => 'system_settings'],
+            ['name' => 'View SOP', 'slug' => 'sop_view'],
         ];
 
         foreach ($permissions as $permission) {
