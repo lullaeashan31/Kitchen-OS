@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Notification;
 
 class SopReviewController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $runs = SopDailyRun::with(['checklist', 'user', 'completions'])
             ->orderBy('date', 'desc')
@@ -22,7 +22,7 @@ class SopReviewController extends Controller
         return view('admin.sop.review_index', compact('runs'));
     }
 
-    public function show(SopDailyRun $run)
+    public function show(string $kitchen_slug, SopDailyRun $run)
     {
         $run->load(['checklist.items', 'completions.item', 'user']);
 
@@ -31,7 +31,7 @@ class SopReviewController extends Controller
         return view('admin.sop.review_run', compact('run', 'completions'));
     }
 
-    public function approveRun(SopDailyRun $run)
+    public function approveRun(string $kitchen_slug, SopDailyRun $run)
     {
         $run->update([
             'status' => 'approved',
@@ -42,7 +42,7 @@ class SopReviewController extends Controller
         return back()->with('success', 'SOP Run approved successfully.');
     }
 
-    public function approveItem(SopDailyRun $run, SopItemCompletion $completion)
+    public function approveItem(string $kitchen_slug, SopDailyRun $run, SopItemCompletion $completion)
     {
         $completion->update([
             'status' => 'completed',
@@ -52,7 +52,7 @@ class SopReviewController extends Controller
         return back()->with('success', 'Item approved.');
     }
 
-    public function rejectItem(Request $request, SopDailyRun $run, SopItemCompletion $completion)
+    public function rejectItem(Request $request, string $kitchen_slug, SopDailyRun $run, SopItemCompletion $completion)
     {
         $request->validate([
             'reason' => 'required|string|max:1000',

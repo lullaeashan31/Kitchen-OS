@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Purchase extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
+        'kitchen_id',
         'vendor', // Keep for backward compatibility or remove? Requirement says "Vendor free text field remove".
         // But we should keep it until migration is fully verified. 
         // Actually, let's keep it for now and deprecate later.

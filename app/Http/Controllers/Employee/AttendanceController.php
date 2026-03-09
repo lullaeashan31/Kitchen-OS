@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $month = $request->input('month', date('n'));
         $year = $request->input('year', date('Y'));

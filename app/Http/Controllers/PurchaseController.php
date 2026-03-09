@@ -17,7 +17,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class PurchaseController extends Controller
 {
     use AuthorizesRequests;
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $query = Purchase::with(['ingredient', 'creator', 'approver', 'vendor']);
 
@@ -32,7 +32,7 @@ class PurchaseController extends Controller
         return view('admin.purchases.index', compact('purchases')); // Reuse view or create new? Let's assume we'll update the view path in a bit.
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         // Show all ingredients regardless of status for purchase form
         // Users can purchase any ingredient, even if it's pending approval
@@ -55,7 +55,7 @@ class PurchaseController extends Controller
         return view('admin.purchases.create', compact('ingredients', 'vendors'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'purchase_date' => 'required|date',
@@ -154,7 +154,7 @@ class PurchaseController extends Controller
         }
     }
 
-    public function approve(Purchase $purchase)
+    public function approve(string $kitchen_slug, Purchase $purchase)
     {
         $this->authorize('approve', $purchase); // Need policy? Or just check role.
 
@@ -206,7 +206,7 @@ class PurchaseController extends Controller
         return back()->with('success', 'Purchase approved and inventory updated.');
     }
 
-    public function reject(Request $request, Purchase $purchase)
+    public function reject(Request $request, string $kitchen_slug, Purchase $purchase)
     {
         $this->authorize('approve', $purchase);
 
@@ -225,7 +225,7 @@ class PurchaseController extends Controller
     /**
      * Download single invoice (image/PDF)
      */
-    public function downloadInvoice(Purchase $purchase)
+    public function downloadInvoice(string $kitchen_slug, Purchase $purchase)
     {
         $this->authorize('view', $purchase);
 
@@ -252,7 +252,7 @@ class PurchaseController extends Controller
     /**
      * Download all invoices from last 90 days as ZIP
      */
-    public function downloadInvoices90Days()
+    public function downloadInvoices90Days(string $kitchen_slug)
     {
         $this->authorize('viewAny', Purchase::class);
 

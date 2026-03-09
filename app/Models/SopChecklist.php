@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SopChecklist extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
-    protected $fillable = ['name', 'description', 'shift_id', 'shift', 'role', 'deadline_time', 'status'];
+    protected $fillable = ['kitchen_id', 'name', 'description', 'shift_id', 'shift', 'role', 'deadline_time', 'status'];
 
     public function shift()
     {

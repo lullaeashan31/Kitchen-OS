@@ -22,9 +22,20 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
+            $user = Auth::user();
+
             // Check if password change is required
-            if (!Auth::user()->is_password_changed) {
+            if (!$user->is_password_changed) {
                 return redirect()->route('password.change_form');
+            }
+
+            // Tenant-Aware Redirect
+            if ($user->isSuperAdmin()) {
+                return redirect()->route('superadmin.dashboard');
+            }
+
+            if ($user->kitchen_id && $user->kitchen) {
+                return redirect("/k/{$user->kitchen->slug}/dashboard");
             }
 
             return redirect()->intended('dashboard');
@@ -64,6 +75,14 @@ class LoginController extends Controller
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
             'is_password_changed' => true
         ]);
+
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('superadmin.dashboard')->with('success', 'Password updated successfully.');
+        }
+
+        if ($user->kitchen_id && $user->kitchen) {
+            return redirect("/k/{$user->kitchen->slug}/dashboard")->with('success', 'Password updated successfully.');
+        }
 
         return redirect()->route('dashboard')->with('success', 'Password updated successfully.');
     }

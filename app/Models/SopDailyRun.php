@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class SopDailyRun extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'sop_daily_runs';
 
     protected $fillable = [
+        'kitchen_id',
         'checklist_id',
         'user_id',
         'date',

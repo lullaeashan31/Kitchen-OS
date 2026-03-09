@@ -18,12 +18,12 @@ class ExcelController extends Controller
         $this->exportService = $exportService;
     }
 
-    public function importForm()
+    public function importForm(string $kitchen_slug)
     {
         return view('excel.import');
     }
 
-    public function import(ImportRecipesRequest $request)
+    public function import(ImportRecipesRequest $request, string $kitchen_slug)
     {
         $result = $this->importService->importRecipes($request->file('file'), $request->user());
 
@@ -46,7 +46,7 @@ class ExcelController extends Controller
             ->with('success', "Successfully imported {$result['success']} recipes.");
     }
 
-    public function downloadErrors($errorId)
+    public function downloadErrors(string $kitchen_slug, $errorId)
     {
         $errors = cache()->get($errorId);
 
@@ -57,32 +57,32 @@ class ExcelController extends Controller
         return $this->exportService->generateErrorExcel($errors);
     }
 
-    public function exportRecipes()
+    public function exportRecipes(string $kitchen_slug)
     {
         return $this->exportService->exportRecipeList();
     }
 
-    public function downloadTemplate()
+    public function downloadTemplate(string $kitchen_slug)
     {
         return $this->exportService->downloadTemplate();
     }
 
-    public function inventoryTemplate()
+    public function inventoryTemplate(string $kitchen_slug)
     {
         return $this->exportService->downloadInventoryTemplate();
     }
 
-    public function purchaseTemplate()
+    public function purchaseTemplate(string $kitchen_slug)
     {
         return $this->exportService->downloadPurchaseTemplate();
     }
 
-    public function salesTemplate()
+    public function salesTemplate(string $kitchen_slug)
     {
         return $this->exportService->downloadSalesTemplate();
     }
 
-    public function exportCostSummary()
+    public function exportCostSummary(string $kitchen_slug)
     {
         return $this->exportService->exportCostSummary();
     }

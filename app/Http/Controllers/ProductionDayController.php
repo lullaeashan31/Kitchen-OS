@@ -20,19 +20,19 @@ class ProductionDayController extends Controller
         $this->productionService = $productionService;
     }
 
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $productionDays = ProductionDay::with('creator')->latest('date')->paginate(10);
         return view('production.index', compact('productionDays'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         $this->authorize('create', ProductionDay::class);
         return view('production.create');
     }
 
-    public function store(StoreProductionDayRequest $request)
+    public function store(StoreProductionDayRequest $request, string $kitchen_slug)
     {
         $this->authorize('create', ProductionDay::class);
 
@@ -46,7 +46,7 @@ class ProductionDayController extends Controller
             ->with('success', 'Production day initialized.');
     }
 
-    public function show(ProductionDay $productionDay)
+    public function show(string $kitchen_slug, ProductionDay $productionDay)
     {
         $productionDay->load(['items.recipe', 'tasks.assignedUser', 'driveFiles']);
         $totalIngredients = $this->productionService->calculateTotalIngredients($productionDay);
@@ -55,7 +55,7 @@ class ProductionDayController extends Controller
         return view('production.show', compact('productionDay', 'totalIngredients', 'recipes'));
     }
 
-    public function addItem(Request $request, ProductionDay $productionDay)
+    public function addItem(Request $request, string $kitchen_slug, ProductionDay $productionDay)
     {
         $this->authorize('update', $productionDay);
 
@@ -73,7 +73,7 @@ class ProductionDayController extends Controller
         return back()->with('success', 'Recipe added to production.');
     }
 
-    public function toggleItemStatus(Request $request, \App\Models\ProductionItem $item)
+    public function toggleItemStatus(Request $request, string $kitchen_slug, \App\Models\ProductionItem $item)
     {
         // Check if user has access to the production day of this item
         $this->authorize('update', $item->productionDay);
@@ -87,7 +87,7 @@ class ProductionDayController extends Controller
         return back()->with('success', 'Item status updated.');
     }
 
-    public function print(ProductionDay $productionDay)
+    public function print(string $kitchen_slug, ProductionDay $productionDay)
     {
         $productionDay->load(['items.recipe', 'tasks']);
         $totalIngredients = $this->productionService->calculateTotalIngredients($productionDay);
@@ -95,7 +95,7 @@ class ProductionDayController extends Controller
         return view('production.print', compact('productionDay', 'totalIngredients'));
     }
 
-    public function destroy(ProductionDay $productionDay)
+    public function destroy(string $kitchen_slug, ProductionDay $productionDay)
     {
         $this->authorize('delete', $productionDay);
         $productionDay->delete();

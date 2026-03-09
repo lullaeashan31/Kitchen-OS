@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class VendorController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:vendors,name',

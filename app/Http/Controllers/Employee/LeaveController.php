@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class LeaveController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $leaves = LeaveRequest::where('user_id', auth()->id())
             ->orderBy('start_date', 'desc')
@@ -18,12 +18,12 @@ class LeaveController extends Controller
         return view('employee.leave.index', compact('leaves'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         return view('employee.leave.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'start_date' => 'required|date|after_or_equal:today',

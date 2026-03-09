@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class SopChecklistItem extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'sop_checklist_items';
 
     protected $fillable = [
+        'kitchen_id',
         'checklist_id',
         'name',
         'description',

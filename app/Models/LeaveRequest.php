@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class LeaveRequest extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'kitchen_id',
         'user_id',
         'start_date',
         'end_date',

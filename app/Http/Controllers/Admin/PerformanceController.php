@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class PerformanceController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $staff = User::where('role', 'staff')
             ->where('onboarding_status', 'active')
@@ -23,7 +23,7 @@ class PerformanceController extends Controller
         return view('admin.performance.index', compact('staff'));
     }
 
-    public function create(Request $request)
+    public function create(Request $request, string $kitchen_slug)
     {
         $user = User::findOrFail($request->user_id);
 
@@ -40,7 +40,7 @@ class PerformanceController extends Controller
         return view('admin.performance.create', compact('user'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',

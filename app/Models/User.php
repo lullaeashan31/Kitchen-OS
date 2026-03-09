@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\BelongsToTenant;
 use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, BelongsToTenant;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +21,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'kitchen_id',
         'name',
         'staff_code',
         'target_latitude',
@@ -66,14 +68,19 @@ class User extends Authenticatable
     }
 
     // Role Helper Methods
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRole::SuperAdmin;
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin;
+        return $this->role === UserRole::Admin || $this->role === UserRole::SuperAdmin;
     }
 
     public function isManager(): bool
     {
-        return $this->role === UserRole::Manager;
+        return $this->role === UserRole::Manager || $this->role === UserRole::SuperAdmin;
     }
 
     public function isStaff(): bool
@@ -83,7 +90,7 @@ class User extends Authenticatable
 
     public function canApproveRecipes(): bool
     {
-        return $this->isAdmin();
+        return $this->isAdmin() || $this->isSuperAdmin();
     }
 
     public function canManageProduction(): bool
@@ -92,6 +99,11 @@ class User extends Authenticatable
     }
 
     // Relationships
+    public function kitchen()
+    {
+        return $this->belongsTo(Kitchen::class);
+    }
+
     public function permissions()
     {
         return $this->belongsToMany(Permission::class);

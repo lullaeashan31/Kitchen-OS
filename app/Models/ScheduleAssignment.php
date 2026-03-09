@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ScheduleAssignment extends Model
 {
-    protected $fillable = ['date', 'role_id', 'slot_index', 'user_id'];
+    use BelongsToTenant;
+
+    protected $fillable = ['kitchen_id', 'date', 'role_id', 'slot_index', 'user_id'];
 
     protected $casts = [
         'date' => 'date',

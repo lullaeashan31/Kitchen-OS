@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class PayrollController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $month = (int) $request->input('month', date('n'));
         $year = (int) $request->input('year', date('Y'));
@@ -23,7 +23,7 @@ class PayrollController extends Controller
         return view('admin.payroll.index', compact('payrollRecords', 'month', 'year'));
     }
 
-    public function generate(Request $request, PayrollService $payrollService)
+    public function generate(Request $request, string $kitchen_slug, PayrollService $payrollService)
     {
         $request->validate([
             'month' => 'required|integer',
@@ -41,7 +41,7 @@ class PayrollController extends Controller
             ->with('success', "Payroll generated successfully for {$results['total_processed']} staff members.");
     }
 
-    public function markAsPaid(string $id)
+    public function markAsPaid(string $kitchen_slug, string $id)
     {
         $record = PayrollRecord::findOrFail($id);
         $record->update([
@@ -52,7 +52,7 @@ class PayrollController extends Controller
         return redirect()->back()->with('success', 'Payroll marked as paid.');
     }
 
-    public function export(Request $request)
+    public function export(Request $request, string $kitchen_slug)
     {
         $month = $request->input('month', date('n'));
         $year = $request->input('year', date('Y'));
@@ -65,7 +65,7 @@ class PayrollController extends Controller
         );
     }
 
-    public function myPayslips()
+    public function myPayslips(string $kitchen_slug)
     {
         $payrollRecords = PayrollRecord::where('user_id', auth()->id())
             ->orderBy('year', 'desc')
@@ -75,7 +75,7 @@ class PayrollController extends Controller
         return view('employee.payroll.index', compact('payrollRecords'));
     }
 
-    public function downloadPayslip(string $id)
+    public function downloadPayslip(string $kitchen_slug, string $id)
     {
         $record = PayrollRecord::with('user')->findOrFail($id);
 

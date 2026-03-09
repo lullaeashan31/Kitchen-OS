@@ -10,7 +10,7 @@ class AuditLogController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    public function index(string $kitchen_slug)
     {
         // Only admin
         if (!auth()->user()->isAdmin()) {

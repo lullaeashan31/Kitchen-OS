@@ -17,6 +17,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Users - All with password: admin123
+        User::updateOrCreate(['phone' => '0000000000'], [
+            'name' => 'Super Admin',
+            'email' => 'superadmin@kitchen.com',
+            'password' => Hash::make('admin123'),
+            'role' => UserRole::SuperAdmin,
+            'is_password_changed' => true,
+        ]);
+
         User::updateOrCreate(['email' => 'admin@kitchen.com'], [
             'name' => 'Admin User',
             'phone' => '9999999999',
@@ -64,13 +72,13 @@ class DatabaseSeeder extends Seeder
         // Categories
         $categories = ['Starters', 'Mains', 'Desserts', 'Beverages', 'Sauces', 'Sides'];
         foreach ($categories as $cat) {
-            Category::create(['name' => $cat]);
+            Category::firstOrCreate(['name' => $cat]);
         }
 
         // Ingredients
         $ingredients = ['Salt', 'Pepper', 'Olive Oil', 'Garlic', 'Onion', 'Tomato', 'Chicken Breast', 'Rice', 'Flour', 'Sugar', 'Milk', 'Eggs'];
         foreach ($ingredients as $ing) {
-            Ingredient::create(['name' => $ing]);
+            Ingredient::firstOrCreate(['name' => $ing]);
         }
     }
 }

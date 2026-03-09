@@ -12,19 +12,19 @@ class ShiftController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $shifts = \App\Models\Shift::all();
         return view('admin.shifts.index', compact('shifts'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         $existingShifts = \App\Models\Shift::orderBy('name')->get();
         return view('admin.shifts.create', compact('existingShifts'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -39,13 +39,13 @@ class ShiftController extends Controller
         return redirect()->route('admin.shifts.index')->with('success', 'Shift created successfully.');
     }
 
-    public function edit(\App\Models\Shift $shift)
+    public function edit(string $kitchen_slug, \App\Models\Shift $shift)
     {
         $existingShifts = \App\Models\Shift::orderBy('name')->get();
         return view('admin.shifts.edit', compact('shift', 'existingShifts'));
     }
 
-    public function update(Request $request, \App\Models\Shift $shift)
+    public function update(Request $request, string $kitchen_slug, \App\Models\Shift $shift)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -60,7 +60,7 @@ class ShiftController extends Controller
         return redirect()->route('admin.shifts.index')->with('success', 'Shift updated successfully.');
     }
 
-    public function destroy(\App\Models\Shift $shift)
+    public function destroy(string $kitchen_slug, \App\Models\Shift $shift)
     {
         $shift->delete();
         return redirect()->route('admin.shifts.index')->with('success', 'Shift deleted successfully.');
@@ -69,7 +69,7 @@ class ShiftController extends Controller
     /**
      * Trigger auto-scheduling logic for the next week.
      */
-    public function autoGenerate(\App\Services\SchedulingService $schedulingService)
+    public function autoGenerate(string $kitchen_slug, \App\Services\SchedulingService $schedulingService)
     {
         $startDate = now()->addDay()->startOfDay();
         $endDate = now()->addDays(8)->endOfDay();
@@ -87,7 +87,7 @@ class ShiftController extends Controller
     /**
      * Display the employee's own schedule.
      */
-    public function mySchedule()
+    public function mySchedule(string $kitchen_slug)
     {
         $startDate = today();
         $endDate = today()->addDays(6);

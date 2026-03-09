@@ -8,13 +8,13 @@ use Illuminate\Http\Request;
 
 class PendingIngredientController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $pendingIngredients = Ingredient::where('status', 'pending')->latest()->get();
         return view('admin.ingredients.pending', compact('pendingIngredients'));
     }
 
-    public function update(Request $request, Ingredient $ingredient)
+    public function update(Request $request, string $kitchen_slug, Ingredient $ingredient)
     {
         $validated = $request->validate([
             'price' => 'required|numeric|min:0',

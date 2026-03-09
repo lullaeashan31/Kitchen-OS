@@ -22,7 +22,7 @@ class IngredientController extends Controller
         $this->ingredientService = $ingredientService;
     }
 
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $query = Ingredient::query()->withCount('recipes');
 
@@ -35,7 +35,7 @@ class IngredientController extends Controller
         return view('ingredients.index', compact('ingredients'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         $this->authorize('create', Ingredient::class);
         $categories = Category::where('status', 'active')->orderBy('name')->get();
@@ -43,7 +43,7 @@ class IngredientController extends Controller
         return view('ingredients.create', compact('categories', 'units'));
     }
 
-    public function store(StoreIngredientRequest $request)
+    public function store(StoreIngredientRequest $request, string $kitchen_slug)
     {
         $this->authorize('create', Ingredient::class);
 
@@ -82,7 +82,7 @@ class IngredientController extends Controller
         }
     }
 
-    public function edit(Ingredient $ingredient)
+    public function edit(string $kitchen_slug, Ingredient $ingredient)
     {
         $this->authorize('update', $ingredient);
         $categories = Category::where('status', 'active')->orderBy('name')->get();
@@ -90,7 +90,7 @@ class IngredientController extends Controller
         return view('ingredients.edit', compact('ingredient', 'categories', 'units'));
     }
 
-    public function update(StoreIngredientRequest $request, Ingredient $ingredient)
+    public function update(StoreIngredientRequest $request, string $kitchen_slug, Ingredient $ingredient)
     {
         $this->authorize('update', $ingredient);
 
@@ -100,7 +100,7 @@ class IngredientController extends Controller
             ->with('success', 'Ingredient updated successfully.');
     }
 
-    public function destroy(Ingredient $ingredient)
+    public function destroy(string $kitchen_slug, Ingredient $ingredient)
     {
         $this->authorize('delete', $ingredient);
         $ingredient->delete();
@@ -108,14 +108,14 @@ class IngredientController extends Controller
             ->with('success', 'Ingredient deleted successfully.');
     }
 
-    public function search(Request $request)
+    public function search(Request $request, string $kitchen_slug)
     {
         $query = $request->get('q');
         return response()->json(
             $this->ingredientService->search($query)
         );
     }
-    public function storeQuick(QuickCreateIngredientRequest $request)
+    public function storeQuick(QuickCreateIngredientRequest $request, string $kitchen_slug)
     {
         // $this->authorize('create', Ingredient::class); // Optional based on specific permission needs
 

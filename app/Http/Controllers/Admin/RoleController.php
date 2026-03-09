@@ -9,19 +9,19 @@ use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $roles = Role::withCount(['permissions', 'users'])->orderBy('name')->get();
         return view('admin.roles.index', compact('roles'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         $permissions = Permission::orderBy('name')->get();
         return view('admin.roles.create', compact('permissions'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -39,13 +39,13 @@ class RoleController extends Controller
         return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
     }
 
-    public function edit(Role $role)
+    public function edit(string $kitchen_slug, Role $role)
     {
         $permissions = Permission::orderBy('name')->get();
         return view('admin.roles.edit', compact('role', 'permissions'));
     }
 
-    public function update(Request $request, Role $role)
+    public function update(Request $request, string $kitchen_slug, Role $role)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -63,7 +63,7 @@ class RoleController extends Controller
         return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
     }
 
-    public function destroy(Role $role)
+    public function destroy(string $kitchen_slug, Role $role)
     {
         if ($role->users()->count() > 0) {
             return redirect()->route('admin.roles.index')->with('error', 'Cannot delete role: staff are assigned to it. Reassign them first.');

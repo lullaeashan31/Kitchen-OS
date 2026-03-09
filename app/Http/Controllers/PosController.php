@@ -10,12 +10,12 @@ use App\Services\ExcelImportService; // Reuse or create new? Let's keep logic he
 
 class PosController extends Controller
 {
-    public function uploadForm()
+    public function uploadForm(string $kitchen_slug)
     {
         return view('pos.upload');
     }
 
-    public function parse(Request $request)
+    public function parse(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv',
@@ -76,7 +76,7 @@ class PosController extends Controller
         return view('pos.preview', compact('mappedItems', 'unmappedItems'));
     }
 
-    public function process()
+    public function process(string $kitchen_slug)
     {
         $data = session()->get('pos_import_data');
         if (!$data) {

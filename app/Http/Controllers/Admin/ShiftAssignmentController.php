@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ShiftAssignmentController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $date = $request->get('date', today()->toDateString());
         $shifts = \App\Models\Shift::where('is_active', true)->get();
@@ -21,7 +21,7 @@ class ShiftAssignmentController extends Controller
         return view('admin.shifts.assignments', compact('shifts', 'users', 'date', 'assignments'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'date' => 'required|date',

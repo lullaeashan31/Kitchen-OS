@@ -27,7 +27,7 @@ class RecipeController extends Controller
         $this->costService = $costService;
     }
 
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $query = Recipe::with(['category', 'creator']);
 
@@ -58,7 +58,7 @@ class RecipeController extends Controller
         return view('recipes.index', compact('recipes', 'categories'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         try {
             $categories = Category::all();
@@ -100,7 +100,7 @@ class RecipeController extends Controller
         }
     }
 
-    public function store(StoreRecipeRequest $request)
+    public function store(StoreRecipeRequest $request, string $kitchen_slug)
     {
         try {
             $recipe = $this->recipeService->createRecipe($request->validated(), $request->user());
@@ -120,7 +120,7 @@ class RecipeController extends Controller
         }
     }
 
-    public function show(Recipe $recipe)
+    public function show(string $kitchen_slug, Recipe $recipe)
     {
         $recipe->load([
             'category',
@@ -138,7 +138,7 @@ class RecipeController extends Controller
         return view('recipes.show', compact('recipe', 'costPerPortion'));
     }
 
-    public function edit(Recipe $recipe)
+    public function edit(string $kitchen_slug, Recipe $recipe)
     {
         $this->authorize('update', $recipe);
 
@@ -189,7 +189,7 @@ class RecipeController extends Controller
         }
     }
 
-    public function update(UpdateRecipeRequest $request, Recipe $recipe)
+    public function update(UpdateRecipeRequest $request, string $kitchen_slug, Recipe $recipe)
     {
         $this->authorize('update', $recipe);
 
@@ -199,7 +199,7 @@ class RecipeController extends Controller
             ->with('success', 'Recipe updated successfully and saved to Google Drive.');
     }
 
-    public function destroy(Recipe $recipe)
+    public function destroy(string $kitchen_slug, Recipe $recipe)
     {
         $this->authorize('delete', $recipe);
 
@@ -209,7 +209,7 @@ class RecipeController extends Controller
             ->with('success', 'Recipe deleted successfully.');
     }
 
-    public function approve(Recipe $recipe)
+    public function approve(string $kitchen_slug, Recipe $recipe)
     {
         $this->authorize('approve', $recipe);
 
@@ -218,7 +218,7 @@ class RecipeController extends Controller
         return back()->with('success', 'Recipe approved as permanent version.');
     }
 
-    public function reject(Recipe $recipe)
+    public function reject(string $kitchen_slug, Recipe $recipe)
     {
         $this->authorize('approve', $recipe); // Admins only
 
@@ -227,7 +227,7 @@ class RecipeController extends Controller
         return back()->with('success', 'Recipe rejected.');
     }
 
-    public function print(Recipe $recipe, Request $request)
+    public function print(string $kitchen_slug, Recipe $recipe, Request $request)
     {
         // Load necessary relationships
         $recipe->load(['category', 'ingredients', 'stages.ingredients.ingredient', 'recipeIngredients.ingredient']);
@@ -240,7 +240,7 @@ class RecipeController extends Controller
         return view('recipes.print', compact('recipe'));
     }
 
-    public function export(Request $request, $type)
+    public function export(Request $request, string $kitchen_slug, $type)
     {
         // Get filtered recipes based on current filters
         $query = Recipe::with(['category', 'creator', 'stages.ingredients.ingredient', 'recipeIngredients.ingredient']);

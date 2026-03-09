@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class LeaveController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $pendingLeaves = LeaveRequest::with('user')
             ->where('status', 'pending')
@@ -23,7 +23,7 @@ class LeaveController extends Controller
         return view('admin.leave.index', compact('pendingLeaves', 'historyLeaves'));
     }
 
-    public function approve(Request $request, string $id)
+    public function approve(Request $request, string $kitchen_slug, string $id)
     {
         $leave = LeaveRequest::findOrFail($id);
         $leave->update([
@@ -35,7 +35,7 @@ class LeaveController extends Controller
         return redirect()->back()->with('success', 'Leave request approved.');
     }
 
-    public function reject(Request $request, string $id)
+    public function reject(Request $request, string $kitchen_slug, string $id)
     {
         $leave = LeaveRequest::findOrFail($id);
         $leave->update([

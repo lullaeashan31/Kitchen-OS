@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class PermissionController extends Controller
 {
-    public function edit(User $user)
+    public function edit(string $kitchen_slug, User $user)
     {
         $permissions = Permission::orderBy('name')->get();
         $userPermissions = $user->permissions->pluck('id')->toArray();
@@ -17,7 +17,7 @@ class PermissionController extends Controller
         return view('admin.permissions.edit', compact('user', 'permissions', 'userPermissions'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, string $kitchen_slug, User $user)
     {
         $request->validate([
             'permissions' => 'array',

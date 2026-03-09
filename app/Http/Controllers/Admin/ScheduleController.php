@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $roles = Role::orderBy('name')->get();
         $staff = User::where('role', \App\Enums\UserRole::Staff)
@@ -32,17 +32,24 @@ class ScheduleController extends Controller
         $assignments = ScheduleAssignment::whereBetween('date', [$days[0]->toDateString(), $days[6]->toDateString()])
             ->with(['user', 'role'])
             ->get()
-            ->groupBy(fn ($a) => $a->date->format('Y-m-d') . '_' . $a->role_id . '_' . $a->slot_index);
+            ->groupBy(fn($a) => $a->date->format('Y-m-d') . '_' . $a->role_id . '_' . $a->slot_index);
 
         $nextWeek = $start->copy()->addWeek()->format('Y-m-d');
         $prevWeek = $start->copy()->subWeek()->format('Y-m-d');
 
         return view('admin.schedule.index', compact(
-            'roles', 'staff', 'days', 'requirements', 'assignments', 'nextWeek', 'prevWeek', 'start'
+            'roles',
+            'staff',
+            'days',
+            'requirements',
+            'assignments',
+            'nextWeek',
+            'prevWeek',
+            'start'
         ));
     }
 
-    public function saveRequirements(Request $request)
+    public function saveRequirements(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'requirements' => 'required|array',
@@ -63,7 +70,7 @@ class ScheduleController extends Controller
         return redirect()->route('admin.schedule.index')->with('success', 'Weekly requirements saved.');
     }
 
-    public function saveAssignments(Request $request)
+    public function saveAssignments(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'assignments' => 'nullable|array',

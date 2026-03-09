@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $categories = Category::latest()->get();
         return view('categories.index', compact('categories'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         return view('categories.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
@@ -30,12 +30,12 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
 
-    public function edit(Category $category)
+    public function edit(string $kitchen_slug, Category $category)
     {
         return view('categories.edit', compact('category'));
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, string $kitchen_slug, Category $category)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
@@ -46,7 +46,7 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(string $kitchen_slug, Category $category)
     {
         try {
             if ($category->recipes()->exists()) {
@@ -65,12 +65,12 @@ class CategoryController extends Controller
                 'category_id' => $category->id,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
         }
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'ids' => 'required|array',
@@ -86,7 +86,7 @@ class CategoryController extends Controller
             if (!$category) {
                 continue;
             }
-            
+
             // Skip deletion if used in recipes or ingredients
             if ($category->recipes()->exists() || $category->ingredients()->exists()) {
                 $skippedCount++;

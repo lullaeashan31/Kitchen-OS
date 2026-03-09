@@ -11,7 +11,7 @@ class AttendanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $date = $request->input('date', date('Y-m-d'));
 
@@ -26,7 +26,7 @@ class AttendanceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $kitchen_slug, string $id)
     {
         if (!auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized action.');
@@ -47,7 +47,7 @@ class AttendanceController extends Controller
     /**
      * Force clock out an active session.
      */
-    public function forceClockOut(string $id)
+    public function forceClockOut(string $kitchen_slug, string $id)
     {
         if (!auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized action.');

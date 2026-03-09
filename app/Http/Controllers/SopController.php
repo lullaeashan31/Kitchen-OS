@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class SopController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $user = Auth::user();
         $today = today();
@@ -37,7 +37,7 @@ class SopController extends Controller
         return view('sop.index', compact('checklists'));
     }
 
-    public function execute(SopChecklist $checklist)
+    public function execute(string $kitchen_slug, SopChecklist $checklist)
     {
         $user = Auth::user();
         $today = today();
@@ -74,7 +74,7 @@ class SopController extends Controller
         return view('sop.execute', compact('checklist', 'run', 'completions'));
     }
 
-    public function updateItem(Request $request, SopChecklist $checklist, $itemId)
+    public function updateItem(Request $request, string $kitchen_slug, SopChecklist $checklist, $itemId)
     {
         $user = Auth::user();
         $run = SopDailyRun::where('checklist_id', $checklist->id)->where('date', today())->firstOrFail();
@@ -159,7 +159,7 @@ class SopController extends Controller
         ]);
     }
 
-    public function complete(SopChecklist $checklist)
+    public function complete(string $kitchen_slug, SopChecklist $checklist)
     {
         $run = SopDailyRun::where('checklist_id', $checklist->id)->where('date', today())->firstOrFail();
 
@@ -185,7 +185,7 @@ class SopController extends Controller
         return $completedItems >= $totalItems;
     }
 
-    public function report(Request $request)
+    public function report(Request $request, string $kitchen_slug)
     {
         $date = $request->get('date', today()->toDateString());
         $runs = SopDailyRun::with(['checklist', 'completions.item', 'user'])

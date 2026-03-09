@@ -20,7 +20,7 @@ class TaskController extends Controller
         $this->taskService = $taskService;
     }
 
-    public function store(StoreTaskRequest $request)
+    public function store(StoreTaskRequest $request, string $kitchen_slug)
     {
         $this->authorize('create', Task::class);
 
@@ -35,7 +35,7 @@ class TaskController extends Controller
         return back()->with('success', 'Task added.');
     }
 
-    public function complete(Request $request, Task $task)
+    public function complete(Request $request, string $kitchen_slug, Task $task)
     {
         $this->authorize('complete', $task);
 
@@ -52,7 +52,7 @@ class TaskController extends Controller
         return back()->with('success', 'Task marked as completed.');
     }
 
-    public function reopen(Task $task)
+    public function reopen(string $kitchen_slug, Task $task)
     {
         $this->authorize('update', $task); // Only managers can reopen? Or same as complete?
 
@@ -61,7 +61,7 @@ class TaskController extends Controller
         return back()->with('success', 'Task reopened.');
     }
 
-    public function destroy(Task $task)
+    public function destroy(string $kitchen_slug, Task $task)
     {
         $this->authorize('delete', $task);
         $task->delete();

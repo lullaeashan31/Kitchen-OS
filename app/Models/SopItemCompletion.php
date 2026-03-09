@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class SopItemCompletion extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'sop_item_completions';
 
     protected $fillable = [
+        'kitchen_id',
         'run_id',
         'item_id',
         'user_id',

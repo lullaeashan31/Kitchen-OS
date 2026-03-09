@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Attendance extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'kitchen_id',
         'staff_code',
         'user_id',
         'clock_in_time',

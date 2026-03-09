@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $user = auth()->user();
 

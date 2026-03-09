@@ -20,7 +20,7 @@ class DriveFileController extends Controller
         $this->driveFileService = $driveFileService;
     }
 
-    public function store(StoreDriveFileRequest $request)
+    public function store(StoreDriveFileRequest $request, string $kitchen_slug)
     {
         $this->authorize('create', DriveFile::class);
 
@@ -49,7 +49,7 @@ class DriveFileController extends Controller
         return back()->with('success', 'File attached successfully.');
     }
 
-    public function destroy(DriveFile $driveFile)
+    public function destroy(string $kitchen_slug, DriveFile $driveFile)
     {
         $this->authorize('delete', $driveFile);
 
@@ -58,7 +58,7 @@ class DriveFileController extends Controller
         return back()->with('success', 'File link removed.');
     }
 
-    public function preview(DriveFile $driveFile)
+    public function preview(string $kitchen_slug, DriveFile $driveFile)
     {
         // Just return the view partial or URL?
         // Requirement: "Open inside modal... Iframe."

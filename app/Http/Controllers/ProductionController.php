@@ -23,7 +23,7 @@ class ProductionController extends Controller
     /**
      * Show the production/cooking page.
      */
-    public function create()
+    public function create(string $kitchen_slug)
     {
         // Only show approved/permanent recipes that are SUB-RECIPES (produce an ingredient)
         // Show all approved/permanent recipes (both sub-recipes and main dishes)
@@ -38,7 +38,7 @@ class ProductionController extends Controller
     /**
      * Record a cooking session (deduct stock).
      */
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $validated = $request->validate([
             'recipe_id' => 'required|exists:recipes,id',
@@ -48,7 +48,7 @@ class ProductionController extends Controller
 
         // Load recipe with all ingredients from all stages
         $recipe = Recipe::with(['stages.ingredients.ingredient'])->findOrFail($validated['recipe_id']);
-        
+
         // Collect all ingredients from all stages, grouping by ingredient_id and summing quantities
         $ingredientsMap = [];
         foreach ($recipe->stages as $stage) {
@@ -56,10 +56,10 @@ class ProductionController extends Controller
                 $ingredient = $recipeIngredient->ingredient;
                 if ($ingredient) {
                     $ingredientId = $ingredient->id;
-                    
+
                     if (!isset($ingredientsMap[$ingredientId])) {
                         // First occurrence - create pivot object
-                        $ingredient->pivot = (object)[
+                        $ingredient->pivot = (object) [
                             'quantity' => $recipeIngredient->quantity,
                             'unit' => $recipeIngredient->unit,
                             'cost' => $recipeIngredient->cost,
@@ -74,7 +74,7 @@ class ProductionController extends Controller
                 }
             }
         }
-        
+
         // Replace the ingredients relation with our collected ingredients
         $recipe->setRelation('ingredients', collect(array_values($ingredientsMap)));
 
@@ -137,7 +137,7 @@ class ProductionController extends Controller
             // IMPORTANT: This section DEDUCTS raw ingredients (STOCK OUT)
             // Raw ingredients should DECREASE when cooking
             $yieldValue = $recipe->yield_portions ?? $recipe->yields ?? 1;
-            
+
             \Log::info("Production Processing - DEDUCTING RAW INGREDIENTS", [
                 'recipe_id' => $recipe->id,
                 'recipe_name' => $recipe->name,
@@ -146,7 +146,7 @@ class ProductionController extends Controller
                 'ingredients_count' => $recipe->ingredients->count(),
                 'action' => 'STOCK_OUT',
             ]);
-            
+
             foreach ($recipe->ingredients as $ingredient) {
                 // CRITICAL: Raw ingredients must be DEDUCTED (decreased)
                 // quantity_change must be NEGATIVE for raw ingredients
@@ -154,7 +154,7 @@ class ProductionController extends Controller
                 // pivot->quantity is the total quantity for the recipe's base yield
                 $qtyPerPortion = $ingredient->pivot->quantity / $yieldValue;
                 $requiredQty = $qtyPerPortion * $portions; // Total required for this batch
-                
+
                 \Log::info("Ingredient Calculation", [
                     'ingredient_id' => $ingredient->id,
                     'ingredient_name' => $ingredient->name,
@@ -202,11 +202,11 @@ class ProductionController extends Controller
                 // Refresh ingredient to get latest stock from database
                 $ingredient->refresh();
                 $before = $ingredient->current_stock;
-                
+
                 // CRITICAL: Ensure deductAmount is positive (absolute value)
                 // This ensures we're always deducting, never adding
                 $deductAmount = abs($deductAmount);
-                
+
                 // Calculate new stock: subtract the deduction amount (STOCK DECREASES)
                 $after = $before - $deductAmount;
 
@@ -217,7 +217,7 @@ class ProductionController extends Controller
 
                 // Update database current_stock (DECREASING)
                 $ingredient->update(['current_stock' => $after]);
-                
+
                 // Verify the update was correct - stock must decrease
                 $ingredient->refresh();
                 if (abs($ingredient->current_stock - $after) > 0.001) {
@@ -227,7 +227,7 @@ class ProductionController extends Controller
                         'ingredient_id' => $ingredient->id
                     ]);
                 }
-                
+
                 // Verify stock actually decreased
                 if ($after >= $before && $before > 0) {
                     \Log::error("CRITICAL: Stock did not decrease!", [
@@ -238,7 +238,7 @@ class ProductionController extends Controller
                         'deductAmount' => $deductAmount,
                     ]);
                 }
-                
+
                 // Log for debugging
                 \Log::info("Raw Ingredient Stock Deduction", [
                     'ingredient_id' => $ingredient->id,
@@ -255,7 +255,7 @@ class ProductionController extends Controller
                 // Raw ingredients MUST decrease when cooking
                 // quantity_change MUST be negative for raw materials
                 $quantityChange = -$deductAmount; // Negative value (STOCK OUT)
-                
+
                 $inventoryLog = InventoryLog::create([
                     'ingredient_id' => $ingredient->id,
                     'user_id' => auth()->id(),
@@ -266,7 +266,7 @@ class ProductionController extends Controller
                     'stock_before' => $before,
                     'stock_after' => $after,
                 ]);
-                
+
                 // Verify log was created correctly - MUST be negative
                 if ($inventoryLog->quantity_change >= 0) {
                     \Log::error("CRITICAL ERROR: Raw ingredient quantity_change is NOT negative!", [
@@ -277,7 +277,7 @@ class ProductionController extends Controller
                         'expected' => 'negative value',
                     ]);
                 }
-                
+
                 \Log::info("Raw Ingredient Stock DEDUCTED (STOCK OUT)", [
                     'log_id' => $inventoryLog->id,
                     'ingredient_id' => $ingredient->id,
@@ -297,7 +297,7 @@ class ProductionController extends Controller
             // Raw ingredients are already deducted above
             if ($recipe->isSubRecipe()) {
                 $producedIngredient = $recipe->producesIngredient;
-                
+
                 \Log::info("Sub-Recipe Production - ADDING PRODUCED INGREDIENT STOCK", [
                     'recipe_id' => $recipe->id,
                     'recipe_name' => $recipe->name,
@@ -345,7 +345,7 @@ class ProductionController extends Controller
                     'stock_before' => $before,
                     'stock_after' => $after,
                 ]);
-                
+
                 \Log::info("Produced Ingredient Stock ADDED (STOCK IN)", [
                     'log_id' => $producedLog->id,
                     'ingredient_id' => $producedIngredient->id,
@@ -367,14 +367,14 @@ class ProductionController extends Controller
         }
         $message = "Production recorded! {$portions} portions of {$recipe->name} cooked. ";
         $message .= "Master inventory updated for " . count($deductedDetails) . " ingredient(s).";
-        
+
         return redirect()->route('production.create')->with('success', $message);
     }
 
     /**
      * Download Excel template for production upload
      */
-    public function downloadTemplate()
+    public function downloadTemplate(string $kitchen_slug)
     {
         return Excel::download(new ProductionTemplateExport, 'production_template.xlsx');
     }
@@ -382,7 +382,7 @@ class ProductionController extends Controller
     /**
      * Process uploaded Excel file for bulk production
      */
-    public function uploadExcel(Request $request)
+    public function uploadExcel(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls|max:10240', // 10MB max
@@ -390,21 +390,23 @@ class ProductionController extends Controller
 
         try {
             $file = $request->file('file');
-            $data = Excel::toArray([], $file);
-            
+            $data = Excel::toArray(new \App\Imports\DataImport, $file);
+
             if (empty($data) || empty($data[0])) {
                 return back()->with('error', 'Excel file is empty or invalid.');
             }
 
             $rows = $data[0];
             $header = array_shift($rows); // Remove header row
-            
+
             // Validate header
             $expectedHeaders = ['Recipe Name', 'Quantity', 'Unit Type (batches/portions)'];
-            if (count($header) < 3 || 
+            if (
+                count($header) < 3 ||
                 strtolower(trim($header[0])) !== 'recipe name' ||
                 strtolower(trim($header[1])) !== 'quantity' ||
-                !str_contains(strtolower(implode(' ', $header)), 'unit type')) {
+                !str_contains(strtolower(implode(' ', $header)), 'unit type')
+            ) {
                 return back()->with('error', 'Invalid Excel format. Please download the sample template first.');
             }
 
@@ -413,7 +415,7 @@ class ProductionController extends Controller
 
             foreach ($rows as $index => $row) {
                 $rowNum = $index + 2; // +2 because header is row 1, and array is 0-indexed
-                
+
                 // Skip empty rows
                 if (empty($row[0]) || empty($row[1])) {
                     continue;
@@ -476,7 +478,7 @@ class ProductionController extends Controller
         try {
             // Load recipe with all ingredients from all stages
             $recipe = Recipe::with(['stages.ingredients.ingredient'])->findOrFail($recipe->id);
-            
+
             // Collect all ingredients from all stages, grouping by ingredient_id and summing quantities
             $ingredientsMap = [];
             foreach ($recipe->stages as $stage) {
@@ -484,10 +486,10 @@ class ProductionController extends Controller
                     $ingredient = $recipeIngredient->ingredient;
                     if ($ingredient) {
                         $ingredientId = $ingredient->id;
-                        
+
                         if (!isset($ingredientsMap[$ingredientId])) {
                             // First occurrence - create pivot object
-                            $ingredient->pivot = (object)[
+                            $ingredient->pivot = (object) [
                                 'quantity' => $recipeIngredient->quantity,
                                 'unit' => $recipeIngredient->unit,
                                 'cost' => $recipeIngredient->cost,
@@ -502,7 +504,7 @@ class ProductionController extends Controller
                     }
                 }
             }
-            
+
             // Replace the ingredients relation with our collected ingredients
             $recipe->setRelation('ingredients', collect(array_values($ingredientsMap)));
 
@@ -583,11 +585,11 @@ class ProductionController extends Controller
                     // Refresh ingredient to get latest stock from database
                     $ingredient->refresh();
                     $before = $ingredient->current_stock;
-                    
+
                     // CRITICAL: Ensure deductAmount is positive (absolute value)
                     // This ensures we're always deducting, never adding
                     $deductAmount = abs($deductAmount);
-                    
+
                     // Calculate new stock: subtract the deduction amount (STOCK DECREASES)
                     $after = $before - $deductAmount;
 
@@ -598,7 +600,7 @@ class ProductionController extends Controller
 
                     // Update database current_stock (DECREASING)
                     $ingredient->update(['current_stock' => $after]);
-                    
+
                     // Verify the update was correct - stock must decrease
                     $ingredient->refresh();
                     if (abs($ingredient->current_stock - $after) > 0.001) {
@@ -608,7 +610,7 @@ class ProductionController extends Controller
                             'ingredient_id' => $ingredient->id
                         ]);
                     }
-                    
+
                     // Verify stock actually decreased
                     if ($after >= $before && $before > 0) {
                         \Log::error("CRITICAL (Excel): Stock did not decrease!", [
@@ -619,7 +621,7 @@ class ProductionController extends Controller
                             'deductAmount' => $deductAmount,
                         ]);
                     }
-                    
+
                     // Log for debugging
                     \Log::info("Raw Ingredient Stock Deduction (Excel)", [
                         'ingredient_id' => $ingredient->id,
@@ -636,7 +638,7 @@ class ProductionController extends Controller
                     // Raw ingredients MUST decrease when cooking
                     // quantity_change MUST be negative for raw materials
                     $quantityChange = -$deductAmount; // Negative value (STOCK OUT)
-                    
+
                     $inventoryLog = InventoryLog::create([
                         'ingredient_id' => $ingredient->id,
                         'user_id' => auth()->id(),
@@ -647,7 +649,7 @@ class ProductionController extends Controller
                         'stock_before' => $before,
                         'stock_after' => $after,
                     ]);
-                    
+
                     // Verify log was created correctly - MUST be negative
                     if ($inventoryLog->quantity_change >= 0) {
                         \Log::error("CRITICAL ERROR (Excel): Raw ingredient quantity_change is NOT negative!", [
@@ -658,7 +660,7 @@ class ProductionController extends Controller
                             'expected' => 'negative value',
                         ]);
                     }
-                    
+
                     \Log::info("Raw Ingredient Stock DEDUCTED (STOCK OUT) - Excel Upload", [
                         'log_id' => $inventoryLog->id,
                         'ingredient_id' => $ingredient->id,
@@ -712,7 +714,7 @@ class ProductionController extends Controller
                         'stock_before' => $before,
                         'stock_after' => $after,
                     ]);
-                    
+
                     \Log::info("Produced Ingredient Stock ADDED (STOCK IN) - Excel Upload", [
                         'log_id' => $producedLog->id,
                         'ingredient_id' => $producedIngredient->id,

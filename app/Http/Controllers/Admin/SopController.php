@@ -11,19 +11,19 @@ use Illuminate\Support\Facades\DB;
 
 class SopController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $checklists = SopChecklist::with(['shift'])->withCount('items')->get();
         return view('admin.sop.index', compact('checklists'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         $shifts = \App\Models\Shift::where('is_active', true)->get();
         return view('admin.sop.create', compact('shifts'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -59,14 +59,14 @@ class SopController extends Controller
         return redirect()->route('admin.sop.index')->with('success', 'SOP Checklist created successfully.');
     }
 
-    public function edit(SopChecklist $sop)
+    public function edit(string $kitchen_slug, SopChecklist $sop)
     {
         $sop->load(['items', 'shift']);
         $shifts = \App\Models\Shift::where('is_active', true)->get();
         return view('admin.sop.edit', compact('sop', 'shifts'));
     }
 
-    public function update(Request $request, SopChecklist $sop)
+    public function update(Request $request, string $kitchen_slug, SopChecklist $sop)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -113,20 +113,20 @@ class SopController extends Controller
         return redirect()->route('admin.sop.index')->with('success', 'SOP Checklist updated successfully.');
     }
 
-    public function archive(SopChecklist $checklist)
+    public function archive(string $kitchen_slug, SopChecklist $checklist)
     {
         $checklist->update(['status' => 'archived']);
         return back()->with('success', 'Checklist archived.');
     }
 
-    public function pause(SopChecklist $checklist)
+    public function pause(string $kitchen_slug, SopChecklist $checklist)
     {
         $newStatus = $checklist->status === 'paused' ? 'active' : 'paused';
         $checklist->update(['status' => $newStatus]);
         return back()->with('success', 'Checklist status updated to ' . $newStatus);
     }
 
-    public function reorder(Request $request)
+    public function reorder(Request $request, string $kitchen_slug)
     {
         $order = $request->input('order'); // Array of IDs
         foreach ($order as $index => $id) {

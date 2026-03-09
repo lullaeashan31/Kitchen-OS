@@ -22,11 +22,11 @@ class InventoryController extends Controller
         $this->pdfParser = $pdfParser;
     }
 
-    public function index(Request $request)
+    public function index(Request $request, string $kitchen_slug)
     {
         $query = Ingredient::query()->with([
             'category',
-            'purchases' => fn ($q) => $q->where('status', 'approved')->with('vendor'),
+            'purchases' => fn($q) => $q->where('status', 'approved')->with('vendor'),
         ]);
 
         // Search by name
@@ -123,12 +123,12 @@ class InventoryController extends Controller
         return view('admin.inventory.index', compact('inventory', 'categories', 'storageLocations', 'allergens'));
     }
 
-    public function upload()
+    public function upload(string $kitchen_slug)
     {
         return view('admin.inventory.upload');
     }
 
-    public function import(Request $request)
+    public function import(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv,pdf',
@@ -153,7 +153,7 @@ class InventoryController extends Controller
         return redirect()->route('admin.inventory.index')->with('success', "Inventory imported successfully ({$result['success']} items).");
     }
 
-    public function importSalesReport(Request $request)
+    public function importSalesReport(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv',
@@ -244,7 +244,7 @@ class InventoryController extends Controller
             ->with('success', "Successfully imported {$imported} items from PDF.");
     }
 
-    public function adjust(Request $request, Ingredient $ingredient)
+    public function adjust(Request $request, string $kitchen_slug, Ingredient $ingredient)
     {
         // restricted to: Audit correction, Damage, Opening balance fix
         $request->validate([
@@ -277,7 +277,7 @@ class InventoryController extends Controller
 
         return back()->with('success', 'Stock adjusted successfully.');
     }
-    public function show(Ingredient $ingredient)
+    public function show(string $kitchen_slug, Ingredient $ingredient)
     {
         // Load logs with relationships
         $logs = $ingredient->logs()
@@ -288,7 +288,7 @@ class InventoryController extends Controller
         return view('admin.inventory.show', compact('ingredient', 'logs'));
     }
 
-    public function destroy(Ingredient $ingredient)
+    public function destroy(string $kitchen_slug, Ingredient $ingredient)
     {
         // Check if ingredient is used in any recipes or has purchase/log history?
         // If used in active recipes, prevent delete.
@@ -309,7 +309,7 @@ class InventoryController extends Controller
         return redirect()->route('admin.inventory.index')->with('success', 'Inventory item deleted successfully.');
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request, string $kitchen_slug)
     {
         $request->validate([
             'ids' => 'required|array',

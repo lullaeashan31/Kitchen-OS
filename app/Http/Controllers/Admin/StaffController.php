@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 class StaffController extends Controller
 {
-    public function index()
+    public function index(string $kitchen_slug)
     {
         $staff = User::where('role', \App\Enums\UserRole::Staff)
             ->with(['employeeProfile', 'jobRole'])
@@ -20,14 +20,14 @@ class StaffController extends Controller
         return view('admin.staff.index', compact('staff'));
     }
 
-    public function create()
+    public function create(string $kitchen_slug)
     {
         $permissions = Permission::orderBy('name')->get();
         $roles = Role::orderBy('name')->get();
         return view('admin.staff.create', compact('permissions', 'roles'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, string $kitchen_slug)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -57,6 +57,7 @@ class StaffController extends Controller
             'onboarding_status' => 'pending',
             'is_password_changed' => false, // Force change
             'job_role_id' => $validated['job_role_id'] ?? null,
+            'kitchen_id' => app()->has('current_kitchen') ? app('current_kitchen')->id : null,
         ];
 
         if ($request->hasFile('profile_photo')) {
@@ -89,7 +90,7 @@ class StaffController extends Controller
         return redirect()->route('admin.staff.index')->with('success', 'Staff member created successfully. Onboarding Link: ' . $onboardingLink);
     }
 
-    public function edit(string $id)
+    public function edit(string $kitchen_slug, string $id)
     {
         $user = User::where('role', \App\Enums\UserRole::Staff)
             ->with(['employeeProfile', 'jobRole'])
@@ -99,7 +100,7 @@ class StaffController extends Controller
         return view('admin.staff.edit', compact('user', 'permissions', 'roles'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $kitchen_slug, string $id)
     {
         $user = User::where('role', \App\Enums\UserRole::Staff)->findOrFail($id);
 
@@ -188,7 +189,7 @@ class StaffController extends Controller
         return redirect()->route('admin.staff.index')->with('success', 'Staff member updated successfully.');
     }
 
-    public function destroy(string $id)
+    public function destroy(string $kitchen_slug, string $id)
     {
         $user = User::where('role', \App\Enums\UserRole::Staff)->findOrFail($id);
         $user->delete();
@@ -196,7 +197,7 @@ class StaffController extends Controller
         return redirect()->route('admin.staff.index')->with('success', 'Staff member deleted successfully.');
     }
 
-    public function approve(string $id)
+    public function approve(string $kitchen_slug, string $id)
     {
         $user = User::where('role', \App\Enums\UserRole::Staff)->findOrFail($id);
         $user->update(['onboarding_status' => 'active']);
@@ -204,7 +205,7 @@ class StaffController extends Controller
         return redirect()->route('admin.staff.index')->with('success', 'Staff onboarding approved and account activated.');
     }
 
-    public function show(string $id)
+    public function show(string $kitchen_slug, string $id)
     {
         $user = User::where('role', \App\Enums\UserRole::Staff)
             ->with(['employeeProfile', 'permissions', 'hrPolicyLogs'])

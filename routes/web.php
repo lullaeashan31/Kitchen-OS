@@ -55,46 +55,15 @@ Route::post('/onboarding/{token}', [\App\Http\Controllers\Employee\OnboardingWiz
 Route::get('/time-clock', [AttendanceViewController::class, 'tablet'])->name('attendance.tablet');
 
 // Admin Routes
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
-    // Attendance & Leaves
-    Route::resource('attendance', AdminAttendanceController::class)->only(['index', 'update']);
-    Route::post('attendance/{attendance}/force-clock-out', [AdminAttendanceController::class, 'forceClockOut'])->name('attendance.force_clock_out');
-
-    Route::get('leaves', [\App\Http\Controllers\Admin\LeaveController::class, 'index'])->name('leave.index');
-    Route::post('leaves/{leave}/approve', [\App\Http\Controllers\Admin\LeaveController::class, 'approve'])->name('leave.approve');
-    Route::post('leaves/{leave}/reject', [\App\Http\Controllers\Admin\LeaveController::class, 'reject'])->name('leave.reject');
-
-    Route::get('performance', [\App\Http\Controllers\Admin\PerformanceController::class, 'index'])->name('performance.index');
-    Route::get('performance/create', [\App\Http\Controllers\Admin\PerformanceController::class, 'create'])->name('performance.create');
-    Route::post('performance', [\App\Http\Controllers\Admin\PerformanceController::class, 'store'])->name('performance.store');
-
-    Route::get('payroll', [\App\Http\Controllers\Admin\PayrollController::class, 'index'])->name('payroll.index');
-    Route::post('payroll/generate', [\App\Http\Controllers\Admin\PayrollController::class, 'generate'])->name('payroll.generate');
-    Route::get('payroll/export', [\App\Http\Controllers\Admin\PayrollController::class, 'export'])->name('payroll.export');
-    Route::post('payroll/{payroll}/pay', [\App\Http\Controllers\Admin\PayrollController::class, 'markAsPaid'])->name('payroll.pay');
-    Route::get('payroll/{payroll}/download', [\App\Http\Controllers\Admin\PayrollController::class, 'downloadPayslip'])->name('payroll.download');
-    Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->names('roles');
-    Route::get('schedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedule.index');
-    Route::post('schedule/requirements', [\App\Http\Controllers\Admin\ScheduleController::class, 'saveRequirements'])->name('schedule.requirements');
-    Route::post('schedule/assignments', [\App\Http\Controllers\Admin\ScheduleController::class, 'saveAssignments'])->name('schedule.assignments');
-    Route::resource('staff', \App\Http\Controllers\Admin\StaffController::class);
-    Route::post('staff/{staff}/approve', [\App\Http\Controllers\Admin\StaffController::class, 'approve'])->name('staff.approve');
-
-    // Settings Routes
-    Route::get('settings/location', [\App\Http\Controllers\Admin\SettingsController::class, 'location'])->name('settings.location');
-    Route::get('settings/devices', [\App\Http\Controllers\Admin\SettingsController::class, 'devices'])->name('settings.devices');
-
-    // Purchases moved to main group
-
-    // Inventory
-    Route::get('inventory', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventory.index');
-    Route::get('inventory/upload', [\App\Http\Controllers\Admin\InventoryController::class, 'upload'])->name('inventory.upload');
-    Route::post('inventory/upload', [\App\Http\Controllers\Admin\InventoryController::class, 'import'])->name('inventory.import');
-    Route::post('inventory/import-sales', [\App\Http\Controllers\Admin\InventoryController::class, 'importSalesReport'])->name('inventory.import_sales');
-    Route::post('inventory/{ingredient}/adjust', [\App\Http\Controllers\Admin\InventoryController::class, 'adjust'])->name('inventory.adjust');
-    Route::get('inventory/{ingredient}/history', [\App\Http\Controllers\Admin\InventoryController::class, 'show'])->name('inventory.show');
-    Route::delete('inventory/bulk-destroy', [\App\Http\Controllers\Admin\InventoryController::class, 'bulkDestroy'])->name('inventory.bulk_destroy');
-    Route::delete('inventory/{ingredient}', [\App\Http\Controllers\Admin\InventoryController::class, 'destroy'])->name('inventory.destroy');
+// Redirect legacy admin routes to tenant-aware routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('{any?}', function ($any = null) {
+        $user = auth()->user();
+        if ($user->kitchen) {
+            return redirect('/k/' . $user->kitchen->slug . '/admin/' . $any);
+        }
+        return redirect()->route('superadmin.dashboard');
+    })->where('any', '.*');
 });
 
 // Auth Routes (Simple manual auth if not using Breeze/UI)
@@ -114,6 +83,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('my-profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
     Route::get('my-profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('my-profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+});
+
+Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(function () {
+    // Tenant Root Redirect
+    Route::get('/', function () {
+        return redirect()->route('dashboard');
+    });
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -192,10 +168,49 @@ Route::middleware(['auth'])->group(function () {
     Route::post('pos/parse', [\App\Http\Controllers\PosController::class, 'parse'])->name('pos.parse');
     Route::post('pos/process', [\App\Http\Controllers\PosController::class, 'process'])->name('pos.process');
 
-    // Admin SOP Management
+    // Admin SOP & Staff Management
     Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
+        // Attendance & Leaves
+        Route::resource('attendance', AdminAttendanceController::class)->only(['index', 'update']);
+        Route::post('attendance/{attendance}/force-clock-out', [AdminAttendanceController::class, 'forceClockOut'])->name('attendance.force_clock_out');
+
+        Route::get('leaves', [\App\Http\Controllers\Admin\LeaveController::class, 'index'])->name('leave.index');
+        Route::post('leaves/{leave}/approve', [\App\Http\Controllers\Admin\LeaveController::class, 'approve'])->name('leave.approve');
+        Route::post('leaves/{leave}/reject', [\App\Http\Controllers\Admin\LeaveController::class, 'reject'])->name('leave.reject');
+
+        Route::get('performance', [\App\Http\Controllers\Admin\PerformanceController::class, 'index'])->name('performance.index');
+        Route::get('performance/create', [\App\Http\Controllers\Admin\PerformanceController::class, 'create'])->name('performance.create');
+        Route::post('performance', [\App\Http\Controllers\Admin\PerformanceController::class, 'store'])->name('performance.store');
+
+        Route::get('payroll', [\App\Http\Controllers\Admin\PayrollController::class, 'index'])->name('payroll.index');
+        Route::post('payroll/generate', [\App\Http\Controllers\Admin\PayrollController::class, 'generate'])->name('payroll.generate');
+        Route::get('payroll/export', [\App\Http\Controllers\Admin\PayrollController::class, 'export'])->name('payroll.export');
+        Route::post('payroll/{payroll}/pay', [\App\Http\Controllers\Admin\PayrollController::class, 'markAsPaid'])->name('payroll.pay');
+        Route::get('payroll/{payroll}/download', [\App\Http\Controllers\Admin\PayrollController::class, 'downloadPayslip'])->name('payroll.download');
+
+        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->names('roles');
+        Route::get('schedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedule.index');
+        Route::post('schedule/requirements', [\App\Http\Controllers\Admin\ScheduleController::class, 'saveRequirements'])->name('schedule.requirements');
+        Route::post('schedule/assignments', [\App\Http\Controllers\Admin\ScheduleController::class, 'saveAssignments'])->name('schedule.assignments');
+
+        Route::resource('staff', \App\Http\Controllers\Admin\StaffController::class);
+        Route::post('staff/{staff}/approve', [\App\Http\Controllers\Admin\StaffController::class, 'approve'])->name('staff.approve');
         Route::get('staff/{user}/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'edit'])->name('staff.permissions.edit');
         Route::put('staff/{user}/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'update'])->name('staff.permissions.update');
+
+        // Settings Routes
+        Route::get('settings/location', [\App\Http\Controllers\Admin\SettingsController::class, 'location'])->name('settings.location');
+        Route::get('settings/devices', [\App\Http\Controllers\Admin\SettingsController::class, 'devices'])->name('settings.devices');
+
+        // Inventory
+        Route::get('inventory', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventory.index');
+        Route::get('inventory/upload', [\App\Http\Controllers\Admin\InventoryController::class, 'upload'])->name('inventory.upload');
+        Route::post('inventory/upload', [\App\Http\Controllers\Admin\InventoryController::class, 'import'])->name('inventory.import');
+        Route::post('inventory/import-sales', [\App\Http\Controllers\Admin\InventoryController::class, 'importSalesReport'])->name('inventory.import_sales');
+        Route::post('inventory/{ingredient}/adjust', [\App\Http\Controllers\Admin\InventoryController::class, 'adjust'])->name('inventory.adjust');
+        Route::get('inventory/{ingredient}/history', [\App\Http\Controllers\Admin\InventoryController::class, 'show'])->name('inventory.show');
+        Route::delete('inventory/bulk-destroy', [\App\Http\Controllers\Admin\InventoryController::class, 'bulkDestroy'])->name('inventory.bulk_destroy');
+        Route::delete('inventory/{ingredient}', [\App\Http\Controllers\Admin\InventoryController::class, 'destroy'])->name('inventory.destroy');
 
         Route::post('shifts/auto-generate', [\App\Http\Controllers\Admin\ShiftController::class, 'autoGenerate'])->name('shifts.auto_generate');
         Route::resource('shifts', \App\Http\Controllers\Admin\ShiftController::class);
@@ -230,4 +245,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('sop/{checklist}/item/{itemId}', [\App\Http\Controllers\SopController::class, 'updateItem'])->name('sop.update_item');
     Route::post('sop/{checklist}/complete', [\App\Http\Controllers\SopController::class, 'complete'])->name('sop.complete');
     Route::get('sop/report', [\App\Http\Controllers\SopController::class, 'report'])->name('sop.report');
+});
+
+// Super Admin Routes (Central Management)
+Route::middleware(['auth', 'super_admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('kitchens', \App\Http\Controllers\SuperAdmin\KitchenController::class);
 });
