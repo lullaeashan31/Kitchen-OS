@@ -47,4 +47,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, \Illuminate\Http\Request $request) {
             return redirect()->back()->with('error', 'You do not have permission to perform this action.');
         });
+
+        // Handle 419 "Page Expired" (usually CSRF / session timeout) more gracefully
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, \Illuminate\Http\Request $request) {
+            // For AJAX / JSON requests, return a simple JSON error the frontend can handle
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Your session has expired. Please reload the page.',
+                ], 419);
+            }
+
+            // For normal browser requests, just reload the current page instead of showing a big error
+            return redirect()->back()->with('warning', 'Session expired, page reloaded. Please try again.');
+        });
     })->create();
