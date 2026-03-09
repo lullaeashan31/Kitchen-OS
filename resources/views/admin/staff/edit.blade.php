@@ -203,63 +203,315 @@
                                     <i data-lucide="info" class="w-4 h-4 text-blue-500"></i>
                                     Onboarding Snapshot (Read-only)
                                 </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
-                                    @if($user->employeeProfile->full_name_aadhaar)
+
+                                <div class="space-y-5 text-sm text-gray-700">
+                                    {{-- Personal Information --}}
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="user-circle" class="w-4 h-4 text-blue-500"></i>
+                                            <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Personal Information</span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            @if($user->employeeProfile->full_name_aadhaar)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Full Name (Aadhaar)</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->full_name_aadhaar }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->dob)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Date of Birth</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->dob->format('M d, Y') }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->gender)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Gender</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->gender }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->marital_status)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Marital Status</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->marital_status }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->father_spouse_name)
+                                                <div class="md:col-span-2">
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Father / Spouse Name</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->father_spouse_name }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->blood_group)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Blood Group</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->blood_group }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->permanent_address)
+                                                <div class="md:col-span-2">
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Permanent Address</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->permanent_address }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->address)
+                                                <div class="md:col-span-2">
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Current Address</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->address }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->secondary_phone)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Secondary Phone</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->secondary_phone }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->joining_date)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Joining Date</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->joining_date->format('M d, Y') }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Identification & Documents --}}
+                                    @if($user->employeeProfile->aadhaar_number || $user->employeeProfile->pan_number || $user->employeeProfile->passport_number || $user->employeeProfile->dl_number || $user->employeeProfile->voter_id || $user->employeeProfile->submitted_documents)
                                         <div>
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Aadhaar Name</span>
-                                            <span class="font-medium">{{ $user->employeeProfile->full_name_aadhaar }}</span>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <i data-lucide="id-card" class="w-4 h-4 text-purple-500"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Identification & Documents</span>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                @if($user->employeeProfile->aadhaar_number)
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Aadhaar Number</span>
+                                                        <span class="font-mono tracking-[0.25em]">{{ $user->employeeProfile->aadhaar_number }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($user->employeeProfile->pan_number)
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">PAN Number</span>
+                                                        <span class="font-mono uppercase">{{ $user->employeeProfile->pan_number }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($user->employeeProfile->dl_number)
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Driver's License</span>
+                                                        <span class="font-medium">{{ $user->employeeProfile->dl_number }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($user->employeeProfile->voter_id)
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Voter ID</span>
+                                                        <span class="font-medium">{{ $user->employeeProfile->voter_id }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($user->employeeProfile->passport_number)
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Passport Number</span>
+                                                        <span class="font-medium">{{ $user->employeeProfile->passport_number }}</span>
+                                                    </div>
+                                                @endif
+                                                @if($user->employeeProfile->submitted_documents)
+                                                    <div class="md:col-span-2">
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Submitted Documents</span>
+                                                        <ul class="mt-1 text-xs text-gray-700 list-disc list-inside space-y-0.5">
+                                                            @foreach((array) $user->employeeProfile->submitted_documents as $doc)
+                                                                <li>{{ $doc }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endif
-                                    @if($user->employeeProfile->dob)
+
+                                    {{-- Education & Work History --}}
+                                    @if($user->employeeProfile->educational_qualifications || $user->employeeProfile->employment_history)
                                         <div>
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">DOB</span>
-                                            <span class="font-medium">{{ $user->employeeProfile->dob->format('M d, Y') }}</span>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <i data-lucide="graduation-cap" class="w-4 h-4 text-indigo-500"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Education & Work History</span>
+                                            </div>
+                                            <div class="space-y-3">
+                                                @if($user->employeeProfile->educational_qualifications)
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Educational Qualifications</span>
+                                                        <div class="mt-1 text-xs text-gray-700">
+                                                            @foreach((array) $user->employeeProfile->educational_qualifications as $edu)
+                                                                <div class="flex items-center justify-between py-1 border-b border-dashed border-gray-100 last:border-0">
+                                                                    <span>{{ $edu['name'] ?? '' }} @if(!empty($edu['inst'])) – {{ $edu['inst'] }} @endif</span>
+                                                                    <span class="text-gray-500">
+                                                                        @if(!empty($edu['year'])) {{ $edu['year'] }} @endif
+                                                                        @if(!empty($edu['grade'])) · {{ $edu['grade'] }} @endif
+                                                                    </span>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                @if($user->employeeProfile->employment_history)
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Employment History</span>
+                                                        <div class="mt-1 text-xs text-gray-700">
+                                                            @foreach((array) $user->employeeProfile->employment_history as $job)
+                                                                <div class="py-1 border-b border-dashed border-gray-100 last:border-0">
+                                                                    <div class="font-medium">
+                                                                        {{ $job['company'] ?? '' }}
+                                                                        @if(!empty($job['role'])) – {{ $job['role'] }} @endif
+                                                                    </div>
+                                                                    <div class="text-[11px] text-gray-500">
+                                                                        @if(!empty($job['duration'])) {{ $job['duration'] }} @endif
+                                                                        @if(!empty($job['salary'])) · Last Salary: {{ $job['salary'] }} @endif
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endif
-                                    @if($user->employeeProfile->gender)
-                                        <div>
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Gender</span>
-                                            <span class="font-medium">{{ $user->employeeProfile->gender }}</span>
+
+                                    {{-- Emergency Contacts --}}
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="phone-call" class="w-4 h-4 text-red-500"></i>
+                                            <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Emergency Contacts</span>
                                         </div>
-                                    @endif
-                                    @if($user->employeeProfile->marital_status)
-                                        <div>
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Marital Status</span>
-                                            <span class="font-medium">{{ $user->employeeProfile->marital_status }}</span>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            @if($user->employeeProfile->emergency_contact_name)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Primary Contact Name</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->emergency_contact_name }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->emergency_contact_phone)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Primary Contact Phone</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->emergency_contact_phone }}</span>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
-                                    @if($user->employeeProfile->aadhaar_number)
-                                        <div>
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Aadhaar</span>
-                                            <span class="font-mono tracking-[0.25em]">{{ $user->employeeProfile->aadhaar_number }}</span>
+                                        @if($user->employeeProfile->emergency_contacts_json)
+                                            <div class="mt-3 space-y-1.5 text-xs text-gray-700">
+                                                @foreach((array) $user->employeeProfile->emergency_contacts_json as $contact)
+                                                    <div class="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+                                                        <div>
+                                                            <div class="font-medium">{{ $contact['name'] ?? 'Contact' }}</div>
+                                                            <div class="text-[11px] text-gray-500">{{ $contact['relation'] ?? '' }}</div>
+                                                        </div>
+                                                        <div class="font-mono text-xs text-gray-800">{{ $contact['mobile'] ?? '' }}</div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Bank Details --}}
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="credit-card" class="w-4 h-4 text-green-500"></i>
+                                            <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Bank Account Details</span>
                                         </div>
-                                    @endif
-                                    @if($user->employeeProfile->pan_number)
-                                        <div>
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">PAN</span>
-                                            <span class="font-mono uppercase">{{ $user->employeeProfile->pan_number }}</span>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            @if($user->employeeProfile->bank_name)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Bank Name</span>
+                                                    <span class="font-medium">{{ $user->employeeProfile->bank_name }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->account_number)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Account Number</span>
+                                                    <span class="font-mono font-medium">{{ $user->employeeProfile->account_number }}</span>
+                                                </div>
+                                            @endif
+                                            @if($user->employeeProfile->ifsc_code)
+                                                <div>
+                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">IFSC Code</span>
+                                                    <span class="font-mono font-medium">{{ $user->employeeProfile->ifsc_code }}</span>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
+                                    </div>
+
+                                    {{-- Nominee --}}
                                     @if($user->employeeProfile->nominee_details)
                                         @php $nom = $user->employeeProfile->nominee_details; @endphp
-                                        <div class="md:col-span-2">
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Nominee</span>
-                                            <span class="font-medium">
-                                                {{ $nom['name'] ?? '' }}
-                                                @if(!empty($nom['relation'])) ({{ $nom['relation'] }}) @endif
-                                                @if(isset($nom['share'])) – {{ $nom['share'] }}% @endif
-                                            </span>
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Nominee Details</span>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                @if(!empty($nom['name']))
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Nominee Name</span>
+                                                        <span class="font-medium">{{ $nom['name'] }}</span>
+                                                    </div>
+                                                @endif
+                                                @if(!empty($nom['relation']))
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Relationship</span>
+                                                        <span class="font-medium">{{ $nom['relation'] }}</span>
+                                                    </div>
+                                                @endif
+                                                @if(!empty($nom['dob']))
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Nominee DOB</span>
+                                                        <span class="font-medium">{{ \Carbon\Carbon::parse($nom['dob'])->format('M d, Y') }}</span>
+                                                    </div>
+                                                @endif
+                                                @if(!empty($nom['share']))
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Share</span>
+                                                        <span class="font-medium">{{ $nom['share'] }}%</span>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endif
-                                    @if($user->employeeProfile->uniform_details)
-                                        @php $uni = $user->employeeProfile->uniform_details; @endphp
-                                        <div class="md:col-span-2">
-                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Uniform</span>
-                                            <span class="font-medium">
-                                                @if(!empty($uni['shirt'])) Shirt: {{ $uni['shirt'] }}; @endif
-                                                @if(!empty($uni['trouser'])) Trouser: {{ $uni['trouser'] }}; @endif
-                                                @if(!empty($uni['shoes'])) Shoes: {{ $uni['shoes'] }}; @endif
-                                            </span>
+
+                                    {{-- Medical & Uniform --}}
+                                    @if($user->employeeProfile->medical_info || $user->employeeProfile->uniform_details)
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <i data-lucide="activity" class="w-4 h-4 text-emerald-500"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Medical & Uniform</span>
+                                            </div>
+                                            <div class="space-y-3">
+                                                @if($user->employeeProfile->medical_info)
+                                                    @php $med = $user->employeeProfile->medical_info; @endphp
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Medical Information</span>
+                                                        <div class="mt-1 text-xs text-gray-700 space-y-1">
+                                                            @if(!empty($med['conditions']))
+                                                                <div>Conditions: {{ $med['conditions'] }}</div>
+                                                            @endif
+                                                            @if(!empty($med['allergies']))
+                                                                <div>Allergies: {{ $med['allergies'] }}</div>
+                                                            @endif
+                                                            @if(!empty($med['medications']))
+                                                                <div>Medications: {{ $med['medications'] }}</div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                                @if($user->employeeProfile->uniform_details)
+                                                    @php $uni = $user->employeeProfile->uniform_details; @endphp
+                                                    <div>
+                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Uniform Sizes</span>
+                                                        <span class="font-medium">
+                                                            @if(!empty($uni['shirt'])) Shirt: {{ $uni['shirt'] }}; @endif
+                                                            @if(!empty($uni['trouser'])) Trouser: {{ $uni['trouser'] }}; @endif
+                                                            @if(!empty($uni['shoes'])) Shoes: {{ $uni['shoes'] }}; @endif
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endif
                                 </div>

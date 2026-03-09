@@ -95,6 +95,15 @@ class StaffController extends Controller
         $user = User::where('role', \App\Enums\UserRole::Staff)
             ->with(['employeeProfile', 'jobRole'])
             ->findOrFail($id);
+
+        // Ensure we can see onboarding data even if older profiles were saved without kitchen_id
+        $rawProfile = \App\Models\EmployeeProfile::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->first();
+        if ($rawProfile) {
+            $user->setRelation('employeeProfile', $rawProfile);
+        }
         $permissions = Permission::orderBy('name')->get();
         $roles = Role::orderBy('name')->get();
         return view('admin.staff.edit', compact('user', 'permissions', 'roles'));
@@ -210,6 +219,15 @@ class StaffController extends Controller
         $user = User::where('role', \App\Enums\UserRole::Staff)
             ->with(['employeeProfile', 'permissions', 'hrPolicyLogs'])
             ->findOrFail($id);
+
+        // Load full onboarding profile ignoring tenant scope so older data is visible
+        $rawProfile = \App\Models\EmployeeProfile::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->first();
+        if ($rawProfile) {
+            $user->setRelation('employeeProfile', $rawProfile);
+        }
 
         return view('admin.staff.show', compact('user'));
     }
