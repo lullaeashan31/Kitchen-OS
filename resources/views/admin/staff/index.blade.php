@@ -139,7 +139,7 @@
                             </td>
                             <td class="p-6 text-right">
                                 <div class="flex items-center justify-end gap-3 opacity-100 transition-opacity">
-                                    <button onclick="showStaffDetails({{ $user->id }})"
+                                    <button onclick="showStaffDetails('{{ route('admin.staff.show', $user->id) }}')"
                                             class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 transition-colors border border-purple-200 shadow-sm"
                                             title="View Details">
                                         <i data-lucide="eye" class="w-5 h-5"></i>
@@ -218,8 +218,8 @@
             });
         }
 
-        function showStaffDetails(userId) {
-            fetch(`/admin/staff/${userId}`)
+        function showStaffDetails(url) {
+            fetch(url)
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('staffDetailsContent').innerHTML = html;

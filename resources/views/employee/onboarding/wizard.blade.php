@@ -48,7 +48,7 @@
         }
 
         .table-input {
-            @apply w-full px-3 py-2 rounded-xl bg-white border border-slate-100 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 transition-all outline-none text-sm;
+            @apply w-full px-3 py-2 rounded-xl bg-white border border-slate-100 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 transition-all outline-none text-sm text-slate-900 placeholder:text-slate-400;
         }
 
         .btn-fancy {
@@ -732,7 +732,7 @@
                                     <div class="space-y-4">
                                         <p class="text-slate-400 text-sm leading-relaxed">We treat every voice with respect. Harassment, discrimination, or safety concerns can be reported directly to HR or using our anonymous portal.</p>
                                         <div class="flex items-center gap-3 text-rose-400 font-black text-sm uppercase">
-                                            <i data-lucide="mail" class="w-4 h-4"></i> help@mischieffood.com
+                                            <i data-lucide="mail" class="w-4 h-4"></i> help@mischefgroup.com
                                         </div>
                                     </div>
                                     <div class="space-y-6">
