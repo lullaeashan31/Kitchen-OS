@@ -13,6 +13,26 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+
+        // Custom redirect for authenticated users hitting guest routes (e.g. /login)
+        $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
+            $user = $request->user();
+
+            // If we already know a kitchen slug (from route or session), send to tenant dashboard
+            $slug = $request->route('kitchen_slug') ?? session('kitchen_slug');
+            if ($slug) {
+                return route('dashboard', ['kitchen_slug' => $slug]);
+            }
+
+            // Super admin: go to superadmin dashboard
+            if ($user && method_exists($user, 'isAdmin') && $user->isAdmin() && method_exists($user, 'role') && $user->role?->value === 'admin') {
+                return route('superadmin.dashboard');
+            }
+
+            // Fallback: send to home
+            return '/';
+        });
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'super_admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,

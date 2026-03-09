@@ -154,6 +154,63 @@
         <form action="{{ route('onboarding.submit', ['token' => $token]) }}" method="POST" id="onboarding_form">
             @csrf
 
+            @if($errors->any())
+                @php
+                    // Map fields to wizard steps so we only show errors for the active step
+                    $fieldStepMapBanner = [
+                        'asset_acknowledged' => 6,
+                        'police_verification_consent' => 7,
+                        'leave_policy_acknowledged' => 7,
+                        'grievance_acknowledged' => 8,
+                        'probation_terms_acknowledged' => 8,
+                        'digital_signature' => 9,
+                        'declaration_accepted' => 9,
+                    ];
+                    $errorStepBanner = null;
+                    foreach ($fieldStepMapBanner as $field => $stepIndex) {
+                        if ($errors->has($field)) {
+                            $errorStepBanner = $errorStepBanner ? min($errorStepBanner, $stepIndex) : $stepIndex;
+                        }
+                    }
+                    $stepFields = [];
+                    if ($errorStepBanner) {
+                        foreach ($fieldStepMapBanner as $field => $stepIndex) {
+                            if ($stepIndex === $errorStepBanner) {
+                                $stepFields[] = $field;
+                            }
+                        }
+                    }
+                    $stepErrors = [];
+                    if (!empty($stepFields)) {
+                        foreach ($errors->getMessages() as $field => $messages) {
+                            if (in_array($field, $stepFields, true)) {
+                                foreach ($messages as $msg) {
+                                    $stepErrors[] = $msg;
+                                }
+                            }
+                        }
+                    } else {
+                        // Fallback: show all if we couldn't map to a specific step
+                        $stepErrors = $errors->all();
+                    }
+                @endphp
+                <div id="validation_error_banner" class="mb-6 bg-red-50 border border-red-200 rounded-3xl p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-red-600 shrink-0">
+                            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-black text-red-900 mb-2">Please fix the following errors:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                @foreach($stepErrors as $error)
+                                    <li class="text-sm text-red-700 font-medium">{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- STEP 1: PERSONAL INFORMATION -->
             <div class="step active" id="step_1">
                 <div class="bg-white/70 backdrop-blur-xl rounded-[40px] shadow-2xl shadow-slate-200/50 border border-white p-8 md:p-12">
@@ -737,9 +794,14 @@
                                 <span class="text-sm font-bold text-slate-600">I declare that all facts are correct. Concealment may lead to immediate termination.</span>
                             </label>
 
-                            <button type="submit" class="btn-fancy btn-primary w-full py-6 text-2xl flex items-center justify-center group">
-                                SUBMIT JOINING FORM
-                                <i data-lucide="arrow-right" class="w-6 h-6 group-hover:translate-x-2 transition-transform"></i>
+                            <button type="button" id="submit_btn" onclick="submitForm()" class="btn-fancy btn-primary w-full py-6 text-2xl flex items-center justify-center group">
+                                <span id="submit_btn_text">SUBMIT JOINING FORM</span>
+                                <i data-lucide="arrow-right" class="w-6 h-6 group-hover:translate-x-2 transition-transform" id="submit_arrow"></i>
+                                <svg id="submit_spinner" class="hidden animate-spin w-6 h-6 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
                             </button>
                             
                             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] pb-4">Secured by Kitchen OS Verification System</p>
@@ -770,9 +832,31 @@
         </form>
     </main>
 
+    @php
+        $errorStep = null;
+        $fieldStepMap = [
+            // Step 6 – uniform / asset
+            'asset_acknowledged' => 6,
+            // Step 7 – policy / leave / police
+            'police_verification_consent' => 7,
+            'leave_policy_acknowledged' => 7,
+            // Step 8 – grievance / probation
+            'grievance_acknowledged' => 8,
+            'probation_terms_acknowledged' => 8,
+            // Step 9 – final declaration
+            'digital_signature' => 9,
+            'declaration_accepted' => 9,
+        ];
+        foreach ($fieldStepMap as $field => $stepIndex) {
+            if ($errors->has($field)) {
+                $errorStep = $errorStep ? min($errorStep, $stepIndex) : $stepIndex;
+            }
+        }
+    @endphp
+
     <script>
         lucide.createIcons();
-        let currentStep = 1;
+        let currentStep = {{ $errorStep ?? 1 }};
         const totalSteps = 9;
 
         function moveStep(delta) {
@@ -852,8 +936,40 @@
             }
         }
 
+        function submitForm() {
+            const sig = document.querySelector('input[name="digital_signature"]');
+            const decl = document.querySelector('input[name="declaration_accepted"]');
+            
+            // Validate only final step fields
+            if (!sig || !sig.value.trim()) {
+                sig.classList.add('border-rose-500', 'ring-4', 'ring-rose-400/20');
+                sig.focus();
+                sig.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            if (!decl || !decl.checked) {
+                decl.parentElement.parentElement.classList.add('ring-2', 'ring-rose-400');
+                decl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('submit_btn').disabled = true;
+            document.getElementById('submit_btn_text').textContent = 'Submitting...';
+            document.getElementById('submit_arrow').classList.add('hidden');
+            document.getElementById('submit_spinner').classList.remove('hidden');
+            
+            // Submit the form
+            document.getElementById('onboarding_form').submit();
+        }
+
         function addRow(tableId) {
-            const container = tableId === 'edu_table' ? document.getElementById('edu_container') : document.getElementById('exp_container');
+            const container = tableId === 'edu_table'
+                ? document.getElementById('edu_container')
+                : document.getElementById('exp_container');
+
+            if (!container) return;
+
             const rowCount = container.children.length;
             const newRow = document.createElement('div');
             newRow.className = "grid grid-cols-1 md:grid-cols-4 gap-4 pb-4 animate-in fade-in slide-in-from-left-4 relative group";
@@ -879,11 +995,39 @@
                     </div>
                 `;
             }
+
             container.appendChild(newRow);
             lucide.createIcons();
         }
 
-        updateUI();
+        document.addEventListener('DOMContentLoaded', function () {
+            // If server-side validation errors came from a later step,
+            // jump directly to that step instead of always starting at step 1.
+            if (currentStep !== 1) {
+                for (let i = 1; i <= totalSteps; i++) {
+                    const stepEl = document.getElementById(`step_${i}`);
+                    const stepperEl = document.getElementById(`stepper_${i}`);
+                    if (!stepEl || !stepperEl) continue;
+
+                    if (i === currentStep) {
+                        stepEl.classList.add('active');
+                        stepperEl.classList.add('active');
+                        stepperEl.classList.remove('completed');
+                    } else {
+                        stepEl.classList.remove('active');
+                        stepperEl.classList.remove('active');
+                        if (i < currentStep) {
+                            stepperEl.classList.add('completed');
+                        } else {
+                            stepperEl.classList.remove('completed');
+                        }
+                    }
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            updateUI();
+        });
     </script>
 </body>
 </html>

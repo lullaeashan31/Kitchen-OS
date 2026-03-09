@@ -79,6 +79,24 @@ Route::middleware(['auth'])->group(function () {
     Route::get('change-password', [LoginController::class, 'changePasswordForm'])->name('password.change_form');
     Route::post('change-password', [LoginController::class, 'updatePassword'])->name('password.update');
 
+    // Simple /dashboard redirect based on role + kitchen
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        if ($user->kitchen_id && $user->kitchen) {
+            return redirect("/k/{$user->kitchen->slug}/dashboard");
+        }
+
+        return redirect('/');
+    });
+
     // My Profile (staff / any logged-in user)
     Route::get('my-profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
     Route::get('my-profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');

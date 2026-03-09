@@ -38,23 +38,23 @@ class OnboardingWizardController extends Controller
 
         $validated = $request->validate([
             // SECTION A: PERSONAL INFORMATION
-            'full_name_aadhaar' => 'required|string|max:255',
-            'dob' => 'required|date',
-            'gender' => 'required|string',
-            'father_spouse_name' => 'required|string|max:255',
-            'marital_status' => 'required|string',
-            'blood_group' => 'required|string',
-            'secondary_phone' => 'nullable|string|digits:10',
-            'permanent_address' => 'required|string',
-            'address' => 'required|string', // Current Address
+            'full_name_aadhaar' => 'nullable|string|max:255',
+            'dob' => 'nullable|date',
+            'gender' => 'nullable|string',
+            'father_spouse_name' => 'nullable|string|max:255',
+            'marital_status' => 'nullable|string',
+            'blood_group' => 'nullable|string',
+            'secondary_phone' => 'nullable|string|max:15',
+            'permanent_address' => 'nullable|string',
+            'address' => 'nullable|string',
 
             // SECTION B: IDENTIFICATION DOCUMENTS
-            'aadhaar_number' => 'required|string|digits:12',
-            'pan_number' => 'required|string|size:10',
+            'aadhaar_number' => 'nullable|string|max:12',
+            'pan_number' => 'nullable|string|max:10',
             'passport_number' => 'nullable|string',
             'dl_number' => 'nullable|string',
             'voter_id' => 'nullable|string',
-            'submitted_documents' => 'required|array',
+            'submitted_documents' => 'nullable|array',
 
             // SECTION D: EDUCATIONAL QUALIFICATIONS
             'educational_qualifications' => 'nullable|array',
@@ -63,21 +63,21 @@ class OnboardingWizardController extends Controller
             'work_experience' => 'nullable|array',
 
             // SECTION F: BANK DETAILS
-            'bank_name' => 'required|string',
-            'account_holder_name' => 'required|string',
-            'account_number' => 'required|string',
-            'ifsc_code' => 'required|string',
-            'account_type' => 'required|string',
+            'bank_name' => 'nullable|string',
+            'account_holder_name' => 'nullable|string',
+            'account_number' => 'nullable|string',
+            'ifsc_code' => 'nullable|string',
+            'account_type' => 'nullable|string',
 
             // SECTION G: EMERGENCY CONTACT
-            'emergency_contacts_json' => 'required|array|min:1',
+            'emergency_contacts_json' => 'nullable|array',
 
             // SECTION H: NOMINEE DETAILS
-            'nominee_details' => 'required|array',
+            'nominee_details' => 'nullable|array',
 
             // SECTION I: HOSPITALITY-SPECIFIC INFORMATION
-            'medical_info' => 'required|array',
-            'uniform_details' => 'required|array',
+            'medical_info' => 'nullable|array',
+            'uniform_details' => 'nullable|array',
 
             // SECTION J, M, N, O acknowledgments
             'asset_acknowledged' => 'accepted',
@@ -91,8 +91,12 @@ class OnboardingWizardController extends Controller
 
         DB::transaction(function () use ($user, $validated, $onboardingToken, $request) {
             $user->employeeProfile()->updateOrCreate(
-                ['user_id' => $user->id],
                 [
+                    'user_id' => $user->id,
+                    'kitchen_id' => $onboardingToken->kitchen_id,
+                ],
+                [
+                    'kitchen_id' => $onboardingToken->kitchen_id,
                     // Personal & Bio
                     'full_name_aadhaar' => $validated['full_name_aadhaar'],
                     'dob' => $validated['dob'],
@@ -114,8 +118,8 @@ class OnboardingWizardController extends Controller
 
                     // Tables / JSON
                     'educational_qualifications' => $validated['educational_qualifications'],
-                    'work_experience' => $validated['work_experience'],
-                    'bank_details_ext' => [
+                    'employment_history' => $validated['work_experience'],  // maps form name to DB column
+                    'salary_details_ext' => [
                         'account_holder_name' => $validated['account_holder_name'],
                         'account_type' => $validated['account_type'],
                     ],
@@ -157,6 +161,6 @@ class OnboardingWizardController extends Controller
             $onboardingToken->update(['is_used' => true]);
         });
 
-        return redirect()->route('login')->with('success', 'Onboarding completed! Waiting for Admin approval.');
+        return view('employee.onboarding.success');
     }
 }

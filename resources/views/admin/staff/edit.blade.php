@@ -195,6 +195,76 @@
                                     class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 font-mono placeholder-gray-400">
                             </div>
                         </div>
+
+                        @if($user->employeeProfile)
+                            <!-- Read-only advanced onboarding snapshot -->
+                            <div class="mt-8 border-t border-dashed border-gray-200 pt-6">
+                                <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                    <i data-lucide="info" class="w-4 h-4 text-blue-500"></i>
+                                    Onboarding Snapshot (Read-only)
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                                    @if($user->employeeProfile->full_name_aadhaar)
+                                        <div>
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Aadhaar Name</span>
+                                            <span class="font-medium">{{ $user->employeeProfile->full_name_aadhaar }}</span>
+                                        </div>
+                                    @endif
+                                    @if($user->employeeProfile->dob)
+                                        <div>
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">DOB</span>
+                                            <span class="font-medium">{{ $user->employeeProfile->dob->format('M d, Y') }}</span>
+                                        </div>
+                                    @endif
+                                    @if($user->employeeProfile->gender)
+                                        <div>
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Gender</span>
+                                            <span class="font-medium">{{ $user->employeeProfile->gender }}</span>
+                                        </div>
+                                    @endif
+                                    @if($user->employeeProfile->marital_status)
+                                        <div>
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Marital Status</span>
+                                            <span class="font-medium">{{ $user->employeeProfile->marital_status }}</span>
+                                        </div>
+                                    @endif
+                                    @if($user->employeeProfile->aadhaar_number)
+                                        <div>
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Aadhaar</span>
+                                            <span class="font-mono tracking-[0.25em]">{{ $user->employeeProfile->aadhaar_number }}</span>
+                                        </div>
+                                    @endif
+                                    @if($user->employeeProfile->pan_number)
+                                        <div>
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">PAN</span>
+                                            <span class="font-mono uppercase">{{ $user->employeeProfile->pan_number }}</span>
+                                        </div>
+                                    @endif
+                                    @if($user->employeeProfile->nominee_details)
+                                        @php $nom = $user->employeeProfile->nominee_details; @endphp
+                                        <div class="md:col-span-2">
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Nominee</span>
+                                            <span class="font-medium">
+                                                {{ $nom['name'] ?? '' }}
+                                                @if(!empty($nom['relation'])) ({{ $nom['relation'] }}) @endif
+                                                @if(isset($nom['share'])) – {{ $nom['share'] }}% @endif
+                                            </span>
+                                        </div>
+                                    @endif
+                                    @if($user->employeeProfile->uniform_details)
+                                        @php $uni = $user->employeeProfile->uniform_details; @endphp
+                                        <div class="md:col-span-2">
+                                            <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Uniform</span>
+                                            <span class="font-medium">
+                                                @if(!empty($uni['shirt'])) Shirt: {{ $uni['shirt'] }}; @endif
+                                                @if(!empty($uni['trouser'])) Trouser: {{ $uni['trouser'] }}; @endif
+                                                @if(!empty($uni['shoes'])) Shoes: {{ $uni['shoes'] }}; @endif
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Role & Permissions Section -->
