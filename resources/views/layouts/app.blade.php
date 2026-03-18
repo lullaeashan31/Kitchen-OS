@@ -262,199 +262,154 @@
                 @endif
 
                 @if(app()->has('current_kitchen'))
-                    @if(auth()->user()->isStaff())
-                        <!-- Staff Sidebar: Minimal -->
-                        <a href="{{ route('dashboard') }}"
-                            class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                            <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
-                        </a>
-                        <a href="{{ route('attendance.tablet') }}" class="nav-link">
-                            <i data-lucide="clock" class="nav-icon"></i> Time Clock
-                        </a>
-                        @if(auth()->user()->hasPermissionTo('module_sops'))
-                            <a href="{{ route('sop.index') }}" class="nav-link {{ request()->routeIs('sop.*') ? 'active' : '' }}">
-                                <i data-lucide="clipboard-list" class="nav-icon text-blue-500"></i> SOP Checklists
-                            </a>
-                        @endif
+                    <!-- Unified Navigation -->
+                    <a href="{{ route('dashboard') }}"
+                        class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
+                    </a>
 
-                        <!-- Employee Portal Section -->
-                        <div
-                            style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
-                            My Portal
-                        </div>
-                        <a href="{{ route('employee.shifts.index') }}"
-                            class="nav-link {{ request()->routeIs('employee.shifts.index') ? 'active' : '' }}">
-                            <i data-lucide="user" class="nav-icon"></i> My Schedule
-                        </a>
-                        <a href="{{ route('employee.payroll.index') }}"
-                            class="nav-link {{ request()->routeIs('employee.payroll.index') ? 'active' : '' }}">
-                            <i data-lucide="file-text" class="nav-icon"></i> My Payslips
-                        </a>
-                        <a href="{{ route('employee.attendance.index') }}"
-                            class="nav-link {{ request()->routeIs('employee.attendance.index') ? 'active' : '' }}">
-                            <i data-lucide="clock" class="nav-icon"></i> My Attendance
-                        </a>
-                        <a href="{{ route('employee.leave.index') }}"
-                            class="nav-link {{ request()->routeIs('employee.leave.index') ? 'active' : '' }}">
-                            <i data-lucide="calendar-x" class="nav-icon"></i> My Leaves
-                        </a>
-
-                    @else
-                        <!-- Admin & Manager Sidebar -->
-                        <a href="{{ route('dashboard') }}"
-                            class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                            <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
-                        </a>
-
-                        <!-- Time Clock Section -->
-                        <div
-                            style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                    @if(!auth()->user()->isStaff() || auth()->user()->hasPermissionTo('manage_attendance')) 
+                        <div style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
                             Time Clock
                         </div>
                         <a href="{{ route('attendance.tablet') }}" class="nav-link">
                             <i data-lucide="clock" class="nav-icon"></i> Launch Tablet Mode
                         </a>
-                        <a href="{{ route('admin.attendance.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
-                            <i data-lucide="list" class="nav-icon"></i> Attendance List
+                        @if(!auth()->user()->isStaff())
+                            <a href="{{ route('admin.attendance.index') }}" class="nav-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
+                                <i data-lucide="list" class="nav-icon"></i> Attendance List
+                            </a>
+                        @endif
+                    @endif
+
+                    @if(auth()->user()->isStaff())
+                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; tracking-widest: 1px;">
+                            My Workspace
+                        </div>
+                        <a href="{{ route('employee.shifts.index') }}" class="nav-link {{ request()->routeIs('employee.shifts.*') ? 'active' : '' }}">
+                            <i data-lucide="user" class="nav-icon"></i> My Schedule
                         </a>
-                        <!-- Inventory & Stock Section -->
-                        @if(auth()->user()->hasPermissionTo('module_inventory'))
-                            <div
-                                style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
-                                Inventory & Stock
-                            </div>
-                            <a href="{{ route('admin.inventory.index') }}"
-                                class="nav-link {{ request()->routeIs('admin.inventory.index') ? 'active' : '' }}">
-                                <i data-lucide="package" class="nav-icon"></i> Master Inventory
-                            </a>
-                            <a href="{{ route('purchases.index') }}"
-                                class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
-                                <i data-lucide="shopping-cart" class="nav-icon"></i> Purchases
-                            </a>
-                            <a href="{{ route('admin.inventory.upload') }}"
-                                class="nav-link {{ request()->routeIs('admin.inventory.upload') ? 'active' : '' }}">
+                        <a href="{{ route('employee.payroll.index') }}" class="nav-link {{ request()->routeIs('employee.payroll.*') ? 'active' : '' }}">
+                            <i data-lucide="file-text" class="nav-icon text-green-500"></i> My Payslips
+                        </a>
+                        <a href="{{ route('employee.attendance.index') }}" class="nav-link {{ request()->routeIs('employee.attendance.*') ? 'active' : '' }}">
+                            <i data-lucide="clock" class="nav-icon text-blue-500"></i> My History
+                        </a>
+                    @endif
+
+                    <!-- Inventory & Stock Section -->
+                    @if(auth()->user()->hasPermissionTo('module_inventory') || !auth()->user()->isStaff())
+                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                            Inventory & Stock
+                        </div>
+                        <a href="{{ route('admin.inventory.index') }}" class="nav-link {{ request()->routeIs('admin.inventory.index') ? 'active' : '' }}">
+                            <i data-lucide="package" class="nav-icon"></i> Master Inventory
+                        </a>
+                        <a href="{{ route('purchases.index') }}" class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
+                            <i data-lucide="shopping-cart" class="nav-icon"></i> Purchases
+                        </a>
+                        @if(!auth()->user()->isStaff())
+                            <a href="{{ route('admin.inventory.upload') }}" class="nav-link {{ request()->routeIs('admin.inventory.upload') ? 'active' : '' }}">
                                 <i data-lucide="file-spreadsheet" class="nav-icon"></i> Inventory Upload
                             </a>
                         @endif
+                    @endif
 
-                        <!-- Recipe Management Section -->
-                        @if(auth()->user()->hasPermissionTo('module_recipes'))
-                            <div
-                                style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
-                                Recipe Management
-                            </div>
-                            <a href="{{ route('admin.ingredients.pending') }}"
-                                class="nav-link {{ request()->routeIs('admin.ingredients.pending') ? 'active' : '' }}">
+                    <!-- Recipe Management Section -->
+                    @if(auth()->user()->hasPermissionTo('module_recipes') || !auth()->user()->isStaff())
+                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                            Recipe Management
+                        </div>
+                        @if(!auth()->user()->isStaff())
+                            <a href="{{ route('admin.ingredients.pending') }}" class="nav-link {{ request()->routeIs('admin.ingredients.pending') ? 'active' : '' }}">
                                 <i data-lucide="alert-circle" class="nav-icon text-orange-500"></i> Pending Ingredients
                             </a>
-                            @if(auth()->user()->hasPermissionTo('module_production'))
-                                <a href="{{ route('production.create') }}"
-                                    class="nav-link {{ request()->routeIs('production.*') ? 'active' : '' }}">
-                                    <i data-lucide="chef-hat" class="nav-icon text-red-500"></i> Cook / Production
-                                </a>
-                            @endif
-                            <a href="{{ route('recipes.index') }}"
-                                class="nav-link {{ request()->routeIs('recipes.*') && !request()->has('is_sub_recipe') ? 'active' : '' }}">
-                                <i data-lucide="book-open" class="nav-icon"></i> All Recipes
+                        @endif
+                        @if(auth()->user()->hasPermissionTo('module_production') || !auth()->user()->isStaff())
+                            <a href="{{ route('production.create') }}" class="nav-link {{ request()->routeIs('production.*') ? 'active' : '' }}">
+                                <i data-lucide="chef-hat" class="nav-icon text-red-500"></i> Cook / Production
                             </a>
-                            <a href="{{ route('recipes.index', ['is_sub_recipe' => 1]) }}"
-                                class="nav-link {{ request()->query('is_sub_recipe') == 1 ? 'active' : '' }}">
+                        @endif
+                        <a href="{{ route('recipes.index') }}" class="nav-link {{ request()->routeIs('recipes.*') && !request()->has('is_sub_recipe') ? 'active' : '' }}">
+                            <i data-lucide="book-open" class="nav-icon"></i> All Recipes
+                        </a>
+                        @if(!auth()->user()->isStaff())
+                            <a href="{{ route('recipes.index', ['is_sub_recipe' => 1]) }}" class="nav-link {{ request()->query('is_sub_recipe') == 1 ? 'active' : '' }}">
                                 <i data-lucide="component" class="nav-icon"></i> Sub-Recipes
                             </a>
-                            <a href="{{ route('recipes.create') }}"
-                                class="nav-link {{ request()->routeIs('recipes.create') ? 'active' : '' }}">
+                            <a href="{{ route('recipes.create') }}" class="nav-link {{ request()->routeIs('recipes.create') ? 'active' : '' }}">
                                 <i data-lucide="plus-circle" class="nav-icon"></i> Create Recipe
                             </a>
-                            <a href="{{ route('categories.index') }}"
-                                class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}">
+                            <a href="{{ route('categories.index') }}" class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}">
                                 <i data-lucide="tag" class="nav-icon"></i> Categories
                             </a>
-                            <a href="{{ route('ingredients.index') }}"
-                                class="nav-link {{ request()->routeIs('ingredients.*') ? 'active' : '' }}">
+                            <a href="{{ route('ingredients.index') }}" class="nav-link {{ request()->routeIs('ingredients.*') ? 'active' : '' }}">
                                 <i data-lucide="database" class="nav-icon"></i> Master Ingredients
                             </a>
-                            <a href="{{ route('excel.import_form') }}"
-                                class="nav-link {{ request()->routeIs('excel.*') ? 'active' : '' }}">
-                                <i data-lucide="upload" class="nav-icon"></i> Excel Upload
+                        @endif
+                    @endif
+
+                    <!-- Administration & HR Section -->
+                    @if(auth()->user()->hasPermissionTo('module_staff_management') || auth()->user()->hasPermissionTo('module_hr_payroll') || !auth()->user()->isStaff())
+                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                            Administration & HR
+                        </div>
+                        @if(auth()->user()->hasPermissionTo('module_audit_logs') || !auth()->user()->isStaff())
+                            <a href="{{ route('audit_logs.index') }}" class="nav-link {{ request()->routeIs('audit_logs.*') ? 'active' : '' }}">
+                                <i data-lucide="shield-alert" class="nav-icon"></i> Audit Logs
                             </a>
                         @endif
-
-                        <!-- Administration & HR Section -->
-                        @if(auth()->user()->hasPermissionTo('module_audit_logs') || auth()->user()->hasPermissionTo('module_staff_management') || auth()->user()->hasPermissionTo('module_hr_payroll'))
-                            <div
-                                style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
-                                Administration & HR
-                            </div>
-                            @if(auth()->user()->hasPermissionTo('module_audit_logs'))
-                                <a href="{{ route('audit_logs.index') }}"
-                                    class="nav-link {{ request()->routeIs('audit_logs.*') ? 'active' : '' }}">
-                                    <i data-lucide="shield-alert" class="nav-icon"></i> Audit Logs
-                                </a>
-                            @endif
-                            @if(auth()->user()->isAdmin())
-                                <a href="https://drive.google.com" target="_blank" class="nav-link">
-                                    <i data-lucide="hard-drive" class="nav-icon"></i> Google Drive
-                                </a>
-                            @endif
-
-                            @if(auth()->user()->hasPermissionTo('module_staff_management'))
-                                <a href="{{ route('admin.staff.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-                                    <i data-lucide="users" class="nav-icon text-blue-500"></i> Staff Profiles
-                                </a>
-                                <a href="{{ route('admin.roles.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                                    <i data-lucide="briefcase" class="nav-icon text-indigo-500"></i> Roles
-                                </a>
-                                <a href="{{ route('admin.schedule.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.schedule.*') ? 'active' : '' }}">
-                                    <i data-lucide="calendar" class="nav-icon text-amber-500"></i> Staff Schedule
-                                </a>
-                            @endif
-
-                            @if(auth()->user()->hasPermissionTo('module_hr_payroll'))
-                                <a href="{{ route('admin.payroll.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.payroll.*') ? 'active' : '' }}">
-                                    <i data-lucide="pie-chart" class="nav-icon text-green-500"></i> Payroll Management
-                                </a>
-                                <a href="{{ route('admin.leave.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.leave.*') ? 'active' : '' }}">
-                                    <i data-lucide="calendar-check" class="nav-icon text-orange-500"></i> Leave Approvals
-                                </a>
-                                <a href="{{ route('admin.performance.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.performance.*') ? 'active' : '' }}">
-                                    <i data-lucide="award" class="nav-icon text-indigo-500"></i> Performance Reviews
-                                </a>
-                            @endif
+                        @if(auth()->user()->isAdmin())
+                            <a href="https://drive.google.com" target="_blank" class="nav-link">
+                                <i data-lucide="hard-drive" class="nav-icon"></i> Google Drive
+                            </a>
                         @endif
+                        @if(auth()->user()->hasPermissionTo('module_staff_management') || !auth()->user()->isStaff())
+                            <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
+                                <i data-lucide="users" class="nav-icon text-blue-500"></i> Staff Profiles
+                            </a>
+                            <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                                <i data-lucide="briefcase" class="nav-icon text-indigo-500"></i> Roles
+                            </a>
+                            <a href="{{ route('admin.schedule.index') }}" class="nav-link {{ request()->routeIs('admin.schedule.*') ? 'active' : '' }}">
+                                <i data-lucide="calendar" class="nav-icon text-amber-500"></i> Staff Schedule
+                            </a>
+                        @endif
+                        @if(auth()->user()->hasPermissionTo('module_hr_payroll') || !auth()->user()->isStaff())
+                            <a href="{{ route('admin.payroll.index') }}" class="nav-link {{ request()->routeIs('admin.payroll.*') ? 'active' : '' }}">
+                                <i data-lucide="pie-chart" class="nav-icon text-green-500"></i> Payroll Management
+                            </a>
+                            <a href="{{ route('admin.leave.index') }}" class="nav-link {{ request()->routeIs('admin.leave.*') ? 'active' : '' }}">
+                                <i data-lucide="calendar-check" class="nav-icon text-orange-500"></i> Leave Approvals
+                            </a>
+                            <a href="{{ route('admin.performance.index') }}" class="nav-link {{ request()->routeIs('admin.performance.*') ? 'active' : '' }}">
+                                <i data-lucide="award" class="nav-icon text-indigo-500"></i> Performance Reviews
+                            </a>
+                        @endif
+                    @endif
 
-                        <!-- SOP Management Section -->
-                        @if(auth()->user()->hasPermissionTo('module_sops'))
-                            <div
-                                style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
-                                Operations (SOP)
-                            </div>
-                            @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-                                <a href="{{ route('admin.sop.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.sop.index') ? 'active' : '' }}">
-                                    <i data-lucide="settings" class="nav-icon"></i> Manage Checklists
-                                </a>
-                                <a href="{{ route('admin.shifts.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
-                                    <i data-lucide="clock" class="nav-icon text-indigo-500"></i> Manage Shifts
-                                </a>
-                                <a href="{{ route('admin.shifts.assignments.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.shifts.assignments.*') ? 'active' : '' }}">
-                                    <i data-lucide="user-plus" class="nav-icon text-purple-500"></i> Daily Assignments
-                                </a>
-                            @endif
-                            <a href="{{ route('admin.sop.reviews.index') }}"
-                                class="nav-link {{ request()->routeIs('admin.sop.reviews.*') ? 'active' : '' }}">
+                    <!-- SOP Management Section -->
+                    @if(auth()->user()->hasPermissionTo('module_sops') || !auth()->user()->isStaff())
+                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                            Operations (SOP)
+                        </div>
+                        <a href="{{ route('sop.index') }}" class="nav-link {{ request()->routeIs('sop.*') ? 'active' : '' }}">
+                            <i data-lucide="clipboard-list" class="nav-icon text-blue-500"></i> SOP Checklists
+                        </a>
+                        @if(!auth()->user()->isStaff())
+                            <a href="{{ route('admin.sop.index') }}" class="nav-link {{ request()->routeIs('admin.sop.index') ? 'active' : '' }}">
+                                <i data-lucide="settings" class="nav-icon"></i> Manage Checklists
+                            </a>
+                            <a href="{{ route('admin.shifts.index') }}" class="nav-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
+                                <i data-lucide="clock" class="nav-icon text-indigo-500"></i> Manage Shifts
+                            </a>
+                            <a href="{{ route('admin.shifts.assignments.index') }}" class="nav-link {{ request()->routeIs('admin.shifts.assignments.*') ? 'active' : '' }}">
+                                <i data-lucide="user-plus" class="nav-icon text-purple-500"></i> Daily Assignments
+                            </a>
+                            <a href="{{ route('admin.sop.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.sop.reviews.*') ? 'active' : '' }}">
                                 <i data-lucide="check-square" class="nav-icon text-green-500"></i> Review SOPs
                             </a>
                         @endif
-
                     @endif
                 @endif
 

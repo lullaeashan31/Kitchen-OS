@@ -68,12 +68,6 @@ class StaffController extends Controller
         $user = User::create($createData);
 
         $permissionIds = $request->permissions ?? [];
-        if (!empty($createData['job_role_id'])) {
-            $role = Role::find($createData['job_role_id']);
-            if ($role) {
-                $permissionIds = array_unique(array_merge($permissionIds, $role->permissions->pluck('id')->toArray()));
-            }
-        }
         $user->permissions()->sync($permissionIds);
 
         // Generate Onboarding Token
@@ -171,12 +165,6 @@ class StaffController extends Controller
         $user->update($userData);
 
         $permissionIds = $request->permissions ?? [];
-        if (!empty($userData['job_role_id'])) {
-            $role = Role::find($userData['job_role_id']);
-            if ($role) {
-                $permissionIds = array_unique(array_merge($permissionIds, $role->permissions->pluck('id')->toArray()));
-            }
-        }
         $user->permissions()->sync($permissionIds);
 
         // Update or create employee profile (onboarding data)

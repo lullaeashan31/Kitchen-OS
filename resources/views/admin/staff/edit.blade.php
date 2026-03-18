@@ -2,610 +2,630 @@
 
 @section('header')
     <div class="flex items-center gap-4 mb-6">
-        <a href="{{ route('admin.staff.index') }}" class="p-2 bg-white rounded-lg border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        <a href="{{ route('admin.staff.index') }}" class="p-2 bg-white rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm group">
+            <i data-lucide="arrow-left" class="w-5 h-5 group-hover:-translate-x-1 transition-transform"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Edit Staff Member</h1>
-            <p class="text-sm text-gray-500">Update profile details and system access.</p>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Edit Staff Profile</h1>
+            <p class="text-sm font-medium text-slate-500">Managing <span class="text-blue-600 font-bold uppercase tracking-wider">{{ $user->name }}</span> ({{ $user->staff_code }})</p>
         </div>
     </div>
 @endsection
 
 @section('content')
-    <div class="w-full pb-10">
-        <form action="{{ route('admin.staff.update', $user) }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
+<div class="max-w-6xl mx-auto space-y-6 pb-20">
+    <form action="{{ route('admin.staff.update', $user) }}" method="POST" enctype="multipart/form-data" id="staffEditForm">
+        @csrf
+        @method('PUT')
 
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-6">
-                <!-- Profile & Photo Header -->
-                <div class="bg-white p-8 border-b border-gray-100 flex flex-col md:flex-row items-center gap-8">
-                    <div class="shrink-0 relative group">
-                        <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gray-100 ring-4 ring-blue-50">
-                             @if($user->profile_photo_path)
-                                <img id="photo_preview" src="{{ $user->profile_photo_url }}" class="w-full h-full object-cover">
-                            @else
-                                <div id="photo_placeholder" class="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold">
-                                    {{ substr($user->name, 0, 2) }}
-                                </div>
-                                <img id="photo_preview" class="hidden w-full h-full object-cover">
-                            @endif
-                        </div>
-                        <label for="profile_photo" class="absolute bottom-1 right-1 bg-blue-600 text-white p-2.5 rounded-full cursor-pointer hover:bg-blue-700 shadow-lg transition-all transform hover:scale-110 border-2 border-white">
-                            <i data-lucide="camera" class="w-5 h-5"></i>
-                        </label>
-                        <input type="file" name="profile_photo" id="profile_photo" class="hidden" accept="image/*" onchange="previewImage(this)">
+        <!-- Profile Header Card (Glassmorphism) -->
+        <div class="bg-white/80 backdrop-blur-xl rounded-[32px] shadow-xl shadow-slate-200/50 border border-white p-6 md:p-10 mb-8">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="relative group">
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-[40px] overflow-hidden border-4 border-white shadow-2xl bg-slate-100 ring-8 ring-blue-50/50">
+                        @if($user->profile_photo_path)
+                            <img id="photo_preview" src="{{ $user->profile_photo_url }}" class="w-full h-full object-cover">
+                        @else
+                            <div id="photo_placeholder" class="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-black">
+                                {{ substr($user->name, 0, 1) }}
+                            </div>
+                            <img id="photo_preview" class="hidden w-full h-full object-cover">
+                        @endif
                     </div>
-                    <div class="text-center md:text-left">
-                        <h2 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h2>
-                        <div class="flex items-center justify-center md:justify-start gap-2 mt-2">
-                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                                <i data-lucide="badge-check" class="w-3 h-3"></i>
-                                {{ $user->role->label() }}
-                            </span>
-                            <span class="font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs border border-gray-200">
-                                {{ $user->staff_code }}
-                            </span>
+                    <label for="profile_photo" class="absolute -bottom-2 -right-2 bg-blue-600 text-white p-3 rounded-2xl cursor-pointer hover:bg-blue-700 shadow-xl transition-all transform hover:scale-110 border-4 border-white active:scale-95 group-hover:rotate-6">
+                        <i data-lucide="camera" class="w-6 h-6"></i>
+                    </label>
+                    <input type="file" name="profile_photo" id="profile_photo" class="hidden" accept="image/*" onchange="previewImage(this)">
+                </div>
+
+                <div class="flex-1 text-center md:text-left space-y-3">
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                        <h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">{{ $user->name }}</h2>
+                        <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-blue-100 text-blue-700">
+                            <i data-lucide="badge-check" class="w-3 h-3"></i>
+                            {{ $user->role->label() }}
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-6 text-slate-500 font-bold text-sm">
+                        <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                            <i data-lucide="hash" class="w-4 h-4 text-slate-400"></i>
+                            <span class="font-mono tracking-wider">{{ $user->staff_code }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="phone" class="w-4 h-4 text-slate-400"></i>
+                            {{ $user->phone }}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                            Joined {{ $user->created_at->format('M Y') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabbed Navigation -->
+        <div class="bg-slate-100/50 p-1.5 rounded-[24px] inline-flex items-center gap-1 mb-8 w-full md:w-auto">
+            <button type="button" onclick="switchTab('basic')" class="tab-btn active px-6 py-3 rounded-[20px] text-sm font-black uppercase tracking-widest transition-all" data-tab="basic">
+                Account Settings
+            </button>
+            <button type="button" onclick="switchTab('onboarding')" class="tab-btn px-6 py-3 rounded-[20px] text-sm font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-900" data-tab="onboarding">
+                Onboarding Data
+            </button>
+            <button type="button" onclick="switchTab('access')" class="tab-btn px-6 py-3 rounded-[20px] text-sm font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-900" data-tab="access">
+                Roles & Access
+            </button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="basic" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Primary Stats/Quick Fields -->
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 md:p-10">
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                <i data-lucide="user" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="text-xl font-black text-slate-900 tracking-tight">Core Information</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Display Name</label>
+                                <input type="text" name="name" value="{{ old('name', $user->name) }}" required
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-bold text-slate-800">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Phone Number</label>
+                                <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" required
+                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" maxlength="10"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-bold text-slate-800">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">System Staff Code</label>
+                                <input type="text" name="staff_code" value="{{ old('staff_code', $user->staff_code) }}" required maxlength="6"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-mono text-center text-xl font-black tracking-widest text-blue-700">
+                                <p class="text-[10px] font-bold text-blue-500/70 text-center uppercase tracking-wider">Used for biometric & tablet logins</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Monthly Off Days</label>
+                                <div class="relative">
+                                    <input type="number" name="weekly_off_day" value="{{ old('weekly_off_day', $user->weekly_off_day) }}" min="0" required
+                                        class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-bold text-slate-800">
+                                    <span class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs uppercase">Days</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Salary Information -->
+                    <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 md:p-10">
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                <i data-lucide="banknote" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="text-xl font-black text-slate-900 tracking-tight">Payroll Settings</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Base Monthly Salary (₹)</label>
+                                <input type="number" name="monthly_salary" value="{{ old('monthly_salary', $user->monthly_salary) }}" min="0" step="0.01"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-black text-lg text-slate-800">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Max Variable Incentive (₹)</label>
+                                <input type="number" name="max_variable_amount" value="{{ old('max_variable_amount', $user->max_variable_amount) }}" min="0" step="0.01"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-black text-lg text-slate-800">
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="flex items-center gap-4 p-5 rounded-[24px] bg-slate-50 border-2 border-slate-100 cursor-pointer group hover:bg-slate-100 hover:border-slate-200 transition-all">
+                                    <div class="relative flex items-center">
+                                        <input type="checkbox" name="variable_enabled" value="1" {{ old('variable_enabled', $user->variable_enabled) ? 'checked' : '' }}
+                                            class="peer w-6 h-6 rounded-lg border-2 border-slate-300 text-emerald-500 focus:ring-0 focus:ring-offset-0 transition-all checked:border-emerald-500">
+                                        <i data-lucide="check" class="absolute inset-0 m-auto w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="block text-sm font-black text-slate-800 uppercase tracking-tight">Enable Productivity Bonus</span>
+                                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1">Allows managers to add variable pay during payroll cycles</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-8">
-                    <!-- Standard Fields -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                        <div class="space-y-6">
-                             <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
-                                <i data-lucide="user" class="w-5 h-5 text-blue-500"></i>
-                                <h3 class="font-bold text-gray-700">Basic Information</h3>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
-                                <input type="text" name="name" value="{{ old('name', $user->name) }}" required
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" required
-                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digit phone number" maxlength="10" minlength="10" placeholder="e.g. 9876543210"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
-                            </div>
-                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Staff Code (Login ID)</label>
-                                <input type="text" name="staff_code" value="{{ old('staff_code', $user->staff_code) }}" required maxlength="6"
-                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Enter 6 digit staff code"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-mono tracking-widest text-center text-lg">
-                                 <p class="text-xs text-blue-500 mt-2 flex items-center gap-1 font-medium">
-                                    <i data-lucide="info" class="w-3 h-3"></i> Required for Tablet Login
-                                </p>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Salary (₹)</label>
-                                <input type="number" name="monthly_salary" value="{{ old('monthly_salary', $user->monthly_salary) }}" min="0" step="0.01"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
-                            </div>
+                <!-- Security Sidebar -->
+                <div class="space-y-8">
+                    <div class="bg-slate-900 rounded-[40px] shadow-2xl p-8 md:p-10 text-white relative overflow-hidden group">
+                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-orange-500/10 rounded-full blur-[80px] group-hover:scale-150 transition-all duration-1000"></div>
+                        
+                        <div class="relative z-10 space-y-8">
                             <div class="flex items-center gap-3">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" name="variable_enabled" value="1" {{ old('variable_enabled', $user->variable_enabled) ? 'checked' : '' }}
-                                        class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                                    <span class="text-sm font-bold text-gray-700">Variable Pay Enabled</span>
-                                </label>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Max Variable Amount (₹)</label>
-                                <input type="number" name="max_variable_amount" value="{{ old('max_variable_amount', $user->max_variable_amount) }}" min="0" step="0.01"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Off Days</label>
-                                <input type="number" name="weekly_off_day" value="{{ old('weekly_off_day', $user->weekly_off_day) }}" 
-                                    min="0" required
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
-                                <p class="text-xs text-gray-500 mt-1">Total off days to deduct per month (e.g. 4)</p>
-                            </div>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div class="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
-                                <i data-lucide="lock" class="w-5 h-5 text-orange-500"></i>
-                                <h3 class="font-bold text-gray-700">Security & Password</h3>
+                                <div class="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-orange-400">
+                                    <i data-lucide="shield-lock" class="w-5 h-5"></i>
+                                </div>
+                                <h3 class="text-xl font-black tracking-tight">Access Control</h3>
                             </div>
 
-                            <div class="bg-orange-50/50 p-6 rounded-xl border border-orange-100">
-                                <label class="block text-sm font-bold text-gray-700 mb-2">New Password</label>
-                                <div class="relative mb-4">
-                                    <input type="password" name="password" id="password" placeholder="Leave blank to keep current"
-                                        class="w-full px-4 py-3 pr-12 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none">
-                                    <button type="button" onclick="togglePassword('password', 'eye-icon-password')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-orange-500 cursor-pointer">
-                                        <i data-lucide="eye" id="eye-icon-password" class="w-5 h-5"></i>
-                                    </button>
+                            <div class="space-y-6">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">New System Password</label>
+                                    <div class="relative">
+                                        <input type="password" name="password" id="password" placeholder="••••••••"
+                                            class="w-full px-5 py-4 rounded-2xl bg-white/5 border-2 border-white/10 focus:border-orange-500 focus:bg-white/10 transition-all outline-none font-bold text-white placeholder-white/20">
+                                        <button type="button" onclick="togglePassword('password', 'eye-basic')" class="absolute right-5 top-1/2 -translate-y-1/2 text-white/30 hover:text-orange-400 transition-colors">
+                                            <i data-lucide="eye" id="eye-basic" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Confirm Identity</label>
+                                    <input type="password" name="password_confirmation" placeholder="••••••••"
+                                        class="w-full px-5 py-4 rounded-2xl bg-white/5 border-2 border-white/10 focus:border-orange-500 focus:bg-white/10 transition-all outline-none font-bold text-white placeholder-white/20">
                                 </div>
                                 
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Confirm Password</label>
-                                <div class="relative">
-                                    <input type="password" name="password_confirmation" id="password_confirmation" placeholder="Confirm new password"
-                                        class="w-full px-4 py-3 pr-12 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none">
-                                    <button type="button" onclick="togglePassword('password_confirmation', 'eye-icon-confirm')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-orange-500 cursor-pointer">
-                                        <i data-lucide="eye" id="eye-icon-confirm" class="w-5 h-5"></i>
-                                    </button>
-                                </div>
+                                <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest text-center leading-relaxed">
+                                    Leave blank to keep current credentials. Passwords are encrypted.
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Onboarding / Employee Profile Section -->
-                    <div class="border-t border-gray-100 pt-8 mt-8">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-5 h-5 text-green-600"></i>
-                            Onboarding / Employee Profile
-                        </h3>
-                        <p class="text-sm text-gray-500 mb-6">Data filled by staff via onboarding link. You can view and edit here.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Current Address</label>
-                                <textarea name="address" rows="3" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">{{ old('address', $user->employeeProfile?->address) }}</textarea>
+                    <div class="bg-blue-600 rounded-[40px] shadow-xl p-8 text-white">
+                        <h4 class="font-black text-lg mb-4 flex items-center gap-2">
+                            <i data-lucide="smartphone" class="w-5 h-5"></i>
+                            Tablet Mode Tips
+                        </h4>
+                        <ul class="space-y-3 text-xs font-bold text-blue-100">
+                            <li class="flex items-start gap-3">
+                                <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] shrink-0 italic">01</span>
+                                Staff use their 6-digit code for quick clock-in/out.
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] shrink-0 italic">02</span>
+                                Face recognition can be enabled in settings.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONBOARDING TAB -->
+        <div id="onboarding" class="tab-content hidden">
+            <div class="space-y-8">
+                <!-- Data Filled By Staff Section -->
+                <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 md:p-10">
+                    <div class="flex items-center justify-between mb-10">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                <i data-lucide="clipboard-check" class="w-6 h-6"></i>
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Secondary Phone</label>
-                                <input type="tel" name="secondary_phone" value="{{ old('secondary_phone', $user->employeeProfile?->secondary_phone) }}"
-                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digits" maxlength="10" minlength="10" placeholder="e.g. 9876500000"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Joining Date</label>
-                                <input type="date" name="joining_date" value="{{ old('joining_date', $user->employeeProfile?->joining_date ? \Carbon\Carbon::parse($user->employeeProfile->joining_date)->format('Y-m-d') : '') }}"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
-                            </div>
-                            <div class="md:col-span-2 flex items-center gap-2 mt-2 mb-2">
-                                <i data-lucide="phone-call" class="w-4 h-4 text-red-500"></i>
-                                <span class="font-bold text-gray-700">Emergency Contact</span>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Emergency Contact Name</label>
-                                <input type="text" name="emergency_contact_name" value="{{ old('emergency_contact_name', $user->employeeProfile?->emergency_contact_name) }}"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Emergency Contact Phone</label>
-                                <input type="tel" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $user->employeeProfile?->emergency_contact_phone) }}"
-                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digits" maxlength="10" minlength="10" placeholder="e.g. 9876512345"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
-                            </div>
-                            <div class="md:col-span-2 flex items-center gap-2 mt-4 mb-2">
-                                <i data-lucide="credit-card" class="w-4 h-4 text-green-500"></i>
-                                <span class="font-bold text-gray-700">Bank Account Details</span>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Bank Name</label>
-                                <input type="text" name="bank_name" value="{{ old('bank_name', $user->employeeProfile?->bank_name) }}"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 placeholder-gray-400">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Account Number</label>
-                                <input type="text" name="account_number" value="{{ old('account_number', $user->employeeProfile?->account_number) }}"
-                                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Numbers only" maxlength="50" placeholder="e.g. 123456789012"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 font-mono placeholder-gray-400">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">IFSC Code</label>
-                                <input type="text" name="ifsc_code" value="{{ old('ifsc_code', $user->employeeProfile?->ifsc_code) }}"
-                                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800 font-mono placeholder-gray-400">
+                                <h3 class="text-2xl font-black text-slate-900 tracking-tight">Staff Submission Profile</h3>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Editable historical data</p>
                             </div>
                         </div>
+                        <div class="hidden md:block">
+                            <span class="px-5 py-2 rounded-2xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest">
+                                Status: {{ ucfirst($user->onboarding_status ?? 'N/A') }}
+                            </span>
+                        </div>
+                    </div>
 
-                        @if($user->employeeProfile)
-                            <!-- Read-only advanced onboarding snapshot -->
-                            <div class="mt-8 border-t border-dashed border-gray-200 pt-6">
-                                <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                    <i data-lucide="info" class="w-4 h-4 text-blue-500"></i>
-                                    Onboarding Snapshot (Read-only)
-                                </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-3 space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact Address</label>
+                            <textarea name="address" rows="3" 
+                                class="w-full px-5 py-4 rounded-3xl bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-800">{{ old('address', $user->employeeProfile?->address) }}</textarea>
+                        </div>
 
-                                <div class="space-y-5 text-sm text-gray-700">
-                                    {{-- Personal Information --}}
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <i data-lucide="user-circle" class="w-4 h-4 text-blue-500"></i>
-                                            <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Personal Information</span>
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            @if($user->employeeProfile->full_name_aadhaar)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Full Name (Aadhaar)</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->full_name_aadhaar }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->dob)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Date of Birth</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->dob->format('M d, Y') }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->gender)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Gender</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->gender }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->marital_status)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Marital Status</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->marital_status }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->father_spouse_name)
-                                                <div class="md:col-span-2">
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Father / Spouse Name</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->father_spouse_name }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->blood_group)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Blood Group</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->blood_group }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->permanent_address)
-                                                <div class="md:col-span-2">
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Permanent Address</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->permanent_address }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->address)
-                                                <div class="md:col-span-2">
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Current Address</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->address }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->secondary_phone)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Secondary Phone</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->secondary_phone }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->joining_date)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Joining Date</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->joining_date->format('M d, Y') }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Secondary Phone</label>
+                            <input type="tel" name="secondary_phone" value="{{ old('secondary_phone', $user->employeeProfile?->secondary_phone) }}" placeholder="Optional"
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-800">
+                        </div>
 
-                                    {{-- Identification & Documents --}}
-                                    @if($user->employeeProfile->aadhaar_number || $user->employeeProfile->pan_number || $user->employeeProfile->passport_number || $user->employeeProfile->dl_number || $user->employeeProfile->voter_id || $user->employeeProfile->submitted_documents)
-                                        <div>
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i data-lucide="id-card" class="w-4 h-4 text-purple-500"></i>
-                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Identification & Documents</span>
-                                            </div>
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                @if($user->employeeProfile->aadhaar_number)
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Aadhaar Number</span>
-                                                        <span class="font-mono tracking-[0.25em]">{{ $user->employeeProfile->aadhaar_number }}</span>
-                                                    </div>
-                                                @endif
-                                                @if($user->employeeProfile->pan_number)
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">PAN Number</span>
-                                                        <span class="font-mono uppercase">{{ $user->employeeProfile->pan_number }}</span>
-                                                    </div>
-                                                @endif
-                                                @if($user->employeeProfile->dl_number)
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Driver's License</span>
-                                                        <span class="font-medium">{{ $user->employeeProfile->dl_number }}</span>
-                                                    </div>
-                                                @endif
-                                                @if($user->employeeProfile->voter_id)
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Voter ID</span>
-                                                        <span class="font-medium">{{ $user->employeeProfile->voter_id }}</span>
-                                                    </div>
-                                                @endif
-                                                @if($user->employeeProfile->passport_number)
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Passport Number</span>
-                                                        <span class="font-medium">{{ $user->employeeProfile->passport_number }}</span>
-                                                    </div>
-                                                @endif
-                                                @if($user->employeeProfile->submitted_documents)
-                                                    <div class="md:col-span-2">
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Submitted Documents</span>
-                                                        <ul class="mt-1 text-xs text-gray-700 list-disc list-inside space-y-0.5">
-                                                            @foreach((array) $user->employeeProfile->submitted_documents as $doc)
-                                                                <li>{{ $doc }}</li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-                                                @endif
-                                            </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Expected Joining</label>
+                            <input type="date" name="joining_date" value="{{ old('joining_date', $user->employeeProfile?->joining_date ? \Carbon\Carbon::parse($user->employeeProfile->joining_date)->format('Y-m-d') : '') }}"
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-800">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Bank (Search Helper)</label>
+                            <input type="text" name="bank_name" value="{{ old('bank_name', $user->employeeProfile?->bank_name) }}"
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-800 uppercase tracking-tighter">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Account Number</label>
+                            <input type="text" name="account_number" value="{{ old('account_number', $user->employeeProfile?->account_number) }}"
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-mono font-bold text-slate-800 tracking-wider">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">IFSC Code</label>
+                            <input type="text" name="ifsc_code" value="{{ old('ifsc_code', $user->employeeProfile?->ifsc_code) }}"
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-mono font-bold text-slate-800 uppercase">
+                        </div>
+                    </div>
+                </div>
+
+                @if($user->employeeProfile)
+                <!-- Detailed JSON Views (Read Only / Pretty Cards) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Advanced Identity -->
+                    <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 flex flex-col">
+                        <h4 class="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <i data-lucide="id-card" class="w-4 h-4 text-purple-500"></i> Identity Stack
+                        </h4>
+                        
+                        <div class="space-y-4 flex-1">
+                            @php
+                                $idData = [
+                                    ['label' => 'Aadhaar Card', 'val' => $user->employeeProfile->aadhaar_number, 'mono' => true],
+                                    ['label' => 'PAN Card', 'val' => $user->employeeProfile->pan_number, 'mono' => true],
+                                    ['label' => 'License No.', 'val' => $user->employeeProfile->dl_number, 'mono' => false],
+                                    ['label' => 'Voter ID', 'val' => $user->employeeProfile->voter_id, 'mono' => false],
+                                ];
+                            @endphp
+
+                            <div class="grid grid-cols-2 gap-4">
+                                @foreach($idData as $id)
+                                    @if($id['val'])
+                                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                            <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $id['label'] }}</span>
+                                            <span class="block text-sm font-bold text-slate-700 @if($id['mono']) font-mono tracking-tight @endif">{{ $id['val'] }}</span>
                                         </div>
                                     @endif
+                                @endforeach
+                            </div>
 
-                                    {{-- Education & Work History --}}
-                                    @if($user->employeeProfile->educational_qualifications || $user->employeeProfile->employment_history)
-                                        <div>
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i data-lucide="graduation-cap" class="w-4 h-4 text-indigo-500"></i>
-                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Education & Work History</span>
-                                            </div>
-                                            <div class="space-y-3">
-                                                @if($user->employeeProfile->educational_qualifications)
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Educational Qualifications</span>
-                                                        <div class="mt-1 text-xs text-gray-700">
-                                                            @foreach((array) $user->employeeProfile->educational_qualifications as $edu)
-                                                                <div class="flex items-center justify-between py-1 border-b border-dashed border-gray-100 last:border-0">
-                                                                    <span>{{ $edu['name'] ?? '' }} @if(!empty($edu['inst'])) – {{ $edu['inst'] }} @endif</span>
-                                                                    <span class="text-gray-500">
-                                                                        @if(!empty($edu['year'])) {{ $edu['year'] }} @endif
-                                                                        @if(!empty($edu['grade'])) · {{ $edu['grade'] }} @endif
-                                                                    </span>
-                                                                </div>
-                                                            @endforeach
-                                                        </div>
-                                                    </div>
-                                                @endif
-
-                                                @if($user->employeeProfile->employment_history)
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Employment History</span>
-                                                        <div class="mt-1 text-xs text-gray-700">
-                                                            @foreach((array) $user->employeeProfile->employment_history as $job)
-                                                                <div class="py-1 border-b border-dashed border-gray-100 last:border-0">
-                                                                    <div class="font-medium">
-                                                                        {{ $job['company'] ?? '' }}
-                                                                        @if(!empty($job['role'])) – {{ $job['role'] }} @endif
-                                                                    </div>
-                                                                    <div class="text-[11px] text-gray-500">
-                                                                        @if(!empty($job['duration'])) {{ $job['duration'] }} @endif
-                                                                        @if(!empty($job['salary'])) · Last Salary: {{ $job['salary'] }} @endif
-                                                                    </div>
-                                                                </div>
-                                                            @endforeach
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- Emergency Contacts --}}
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <i data-lucide="phone-call" class="w-4 h-4 text-red-500"></i>
-                                            <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Emergency Contacts</span>
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            @if($user->employeeProfile->emergency_contact_name)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Primary Contact Name</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->emergency_contact_name }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->emergency_contact_phone)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Primary Contact Phone</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->emergency_contact_phone }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        @if($user->employeeProfile->emergency_contacts_json)
-                                            <div class="mt-3 space-y-1.5 text-xs text-gray-700">
-                                                @foreach((array) $user->employeeProfile->emergency_contacts_json as $contact)
-                                                    <div class="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                                                        <div>
-                                                            <div class="font-medium">{{ $contact['name'] ?? 'Contact' }}</div>
-                                                            <div class="text-[11px] text-gray-500">{{ $contact['relation'] ?? '' }}</div>
-                                                        </div>
-                                                        <div class="font-mono text-xs text-gray-800">{{ $contact['mobile'] ?? '' }}</div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
+                            @if($user->employeeProfile->submitted_documents)
+                                <div class="mt-4">
+                                    <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Submitted Documents Library</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach((array) $user->employeeProfile->submitted_documents as $doc)
+                                            <span class="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-[10px] font-black uppercase tracking-wider border border-purple-100">
+                                                {{ $doc }}
+                                            </span>
+                                        @endforeach
                                     </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
 
-                                    {{-- Bank Details --}}
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <i data-lucide="credit-card" class="w-4 h-4 text-green-500"></i>
-                                            <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Bank Account Details</span>
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            @if($user->employeeProfile->bank_name)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Bank Name</span>
-                                                    <span class="font-medium">{{ $user->employeeProfile->bank_name }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->account_number)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Account Number</span>
-                                                    <span class="font-mono font-medium">{{ $user->employeeProfile->account_number }}</span>
-                                                </div>
-                                            @endif
-                                            @if($user->employeeProfile->ifsc_code)
-                                                <div>
-                                                    <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">IFSC Code</span>
-                                                    <span class="font-mono font-medium">{{ $user->employeeProfile->ifsc_code }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
+                    <!-- Medical & Physical -->
+                    <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-8">
+                            <i data-lucide="activity" class="w-12 h-12 text-rose-500/10 group-hover:scale-125 transition-transform duration-500"></i>
+                        </div>
+                        <h4 class="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i> Health & Uniform
+                        </h4>
 
-                                    {{-- Nominee --}}
-                                    @if($user->employeeProfile->nominee_details)
-                                        @php $nom = $user->employeeProfile->nominee_details; @endphp
-                                        <div>
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i>
-                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Nominee Details</span>
-                                            </div>
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                @if(!empty($nom['name']))
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Nominee Name</span>
-                                                        <span class="font-medium">{{ $nom['name'] }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(!empty($nom['relation']))
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Relationship</span>
-                                                        <span class="font-medium">{{ $nom['relation'] }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(!empty($nom['dob']))
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Nominee DOB</span>
-                                                        <span class="font-medium">{{ \Carbon\Carbon::parse($nom['dob'])->format('M d, Y') }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(!empty($nom['share']))
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Share</span>
-                                                        <span class="font-medium">{{ $nom['share'] }}%</span>
-                                                    </div>
-                                                @endif
-                                            </div>
+                        <div class="space-y-6">
+                            @if($user->employeeProfile->blood_group)
+                                <div class="inline-flex items-center gap-3 px-4 py-2 bg-rose-50 border border-rose-100 rounded-2xl">
+                                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest leading-none">Blood Group</span>
+                                    <span class="text-lg font-black text-rose-600 leading-none">{{ $user->employeeProfile->blood_group }}</span>
+                                </div>
+                            @endif
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Medical Notes</span>
+                                    @if($user->employeeProfile->medical_info)
+                                        @php $med = (array) $user->employeeProfile->medical_info; @endphp
+                                        <div class="text-[11px] font-bold text-slate-600 space-y-1">
+                                            @if(!empty($med['conditions'])) <div class="flex gap-2"><span>•</span> {{ $med['conditions'] }}</div> @endif
+                                            @if(!empty($med['allergies'])) <div class="flex gap-2"><span>•</span> <span class="text-rose-500">Allergy: {{ $med['allergies'] }}</span></div> @endif
+                                            @if(empty($med['conditions']) && empty($med['allergies'])) <span class="italic font-normal">No specific data provided</span> @endif
                                         </div>
+                                    @else
+                                        <span class="text-xs italic text-slate-400">Clear background reported</span>
                                     @endif
-
-                                    {{-- Medical & Uniform --}}
-                                    @if($user->employeeProfile->medical_info || $user->employeeProfile->uniform_details)
-                                        <div>
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <i data-lucide="activity" class="w-4 h-4 text-emerald-500"></i>
-                                                <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Medical & Uniform</span>
-                                            </div>
-                                            <div class="space-y-3">
-                                                @if($user->employeeProfile->medical_info)
-                                                    @php $med = $user->employeeProfile->medical_info; @endphp
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Medical Information</span>
-                                                        <div class="mt-1 text-xs text-gray-700 space-y-1">
-                                                            @if(!empty($med['conditions']))
-                                                                <div>Conditions: {{ $med['conditions'] }}</div>
-                                                            @endif
-                                                            @if(!empty($med['allergies']))
-                                                                <div>Allergies: {{ $med['allergies'] }}</div>
-                                                            @endif
-                                                            @if(!empty($med['medications']))
-                                                                <div>Medications: {{ $med['medications'] }}</div>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                                @if($user->employeeProfile->uniform_details)
-                                                    @php $uni = $user->employeeProfile->uniform_details; @endphp
-                                                    <div>
-                                                        <span class="block text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Uniform Sizes</span>
-                                                        <span class="font-medium">
-                                                            @if(!empty($uni['shirt'])) Shirt: {{ $uni['shirt'] }}; @endif
-                                                            @if(!empty($uni['trouser'])) Trouser: {{ $uni['trouser'] }}; @endif
-                                                            @if(!empty($uni['shoes'])) Shoes: {{ $uni['shoes'] }}; @endif
-                                                        </span>
-                                                    </div>
-                                                @endif
-                                            </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Uniform Sizes</span>
+                                    @if($user->employeeProfile->uniform_details)
+                                        @php $uni = (array) $user->employeeProfile->uniform_details; @endphp
+                                        <div class="flex flex-col gap-2">
+                                            @if(!empty($uni['shirt']))
+                                                <div class="flex items-center justify-between text-[11px] font-bold py-1 border-b border-slate-50 italic">
+                                                    <span>Shirt / Kurta</span>
+                                                    <span class="text-blue-600 uppercase">{{ $uni['shirt'] }}</span>
+                                                </div>
+                                            @endif
+                                            @if(!empty($uni['trouser']))
+                                                <div class="flex items-center justify-between text-[11px] font-bold py-1 border-b border-slate-50 italic">
+                                                    <span>Trouser</span>
+                                                    <span class="text-blue-600 uppercase">{{ $uni['trouser'] }}</span>
+                                                </div>
+                                            @endif
+                                            @if(!empty($uni['shoes']))
+                                                <div class="flex items-center justify-between text-[11px] font-bold py-1 border-b border-slate-50 italic">
+                                                    <span>Safety Shoes</span>
+                                                    <span class="text-blue-600 uppercase">{{ $uni['shoes'] }}</span>
+                                                </div>
+                                            @endif
                                         </div>
+                                    @else
+                                        <span class="text-xs italic text-slate-400">Not assigned</span>
                                     @endif
                                 </div>
                             </div>
-                        @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education & Experience Full Lists -->
+                <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 md:p-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <!-- Education -->
+                        <div>
+                            <h4 class="text-lg font-black text-slate-900 tracking-tight mb-6 flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                                </span>
+                                Educational Milestones
+                            </h4>
+                            <div class="space-y-4 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+                                @if($user->employeeProfile->educational_qualifications)
+                                    @foreach((array) $user->employeeProfile->educational_qualifications as $edu)
+                                        <div class="relative pl-10">
+                                            <div class="absolute left-0 top-1.5 w-8 h-8 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center z-10">
+                                                <div class="w-2 h-2 rounded-full bg-orange-400"></div>
+                                            </div>
+                                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                                <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $edu['year'] ?? 'N/A' }}</span>
+                                                <h5 class="text-sm font-black text-slate-800 tracking-tight">{{ $edu['name'] ?? 'Qualification' }}</h5>
+                                                <p class="text-[11px] font-bold text-slate-500 uppercase mt-0.5 tracking-tighter">{{ $edu['inst'] ?? '' }}</p>
+                                                @if(!empty($edu['grade']))
+                                                    <span class="inline-block mt-2 px-2 py-0.5 bg-white rounded-lg text-[10px] font-black text-slate-700 shadow-sm">{{ $edu['grade'] }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p class="pl-10 text-xs italic text-slate-400">No records available</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Experience -->
+                        <div>
+                            <h4 class="text-lg font-black text-slate-900 tracking-tight mb-6 flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                    <i data-lucide="briefcase" class="w-4 h-4"></i>
+                                </span>
+                                Professional Journey
+                            </h4>
+                            <div class="space-y-4 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+                                @if($user->employeeProfile->employment_history)
+                                    @foreach((array) $user->employeeProfile->employment_history as $job)
+                                        <div class="relative pl-10">
+                                            <div class="absolute left-0 top-1.5 w-8 h-8 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center z-10">
+                                                <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                                            </div>
+                                            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <h5 class="text-sm font-black text-slate-800 tracking-tight">{{ $job['company'] ?? 'Previous Company' }}</h5>
+                                                        <p class="text-[11px] font-black text-blue-600 uppercase mt-0.5 tracking-tighter">{{ $job['role'] ?? '' }}</p>
+                                                    </div>
+                                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-1 bg-white rounded-lg">{{ $job['duration'] ?? '' }}</span>
+                                                </div>
+                                                @if(!empty($job['salary']))
+                                                    <p class="text-[10px] font-bold text-slate-500 mt-2 flex items-center gap-1">
+                                                        <i data-lucide="info" class="w-3 h-3"></i> Last Package: {{ $job['salary'] }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p class="pl-10 text-xs italic text-slate-400">No work history provided</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- ACCESS TAB -->
+        <div id="access" class="tab-content hidden">
+            <div class="space-y-8">
+                <!-- Job Role Selector -->
+                <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 md:p-10">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                            <i data-lucide="briefcase" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-900 tracking-tight">System Roles</h3>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Define primary responsibilities</p>
+                        </div>
                     </div>
 
-                    <!-- Role & Permissions Section -->
-                    <div class="border-t border-gray-100 pt-8">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <i data-lucide="briefcase" class="w-5 h-5 text-indigo-600"></i>
-                            Role & Access
-                        </h3>
-
-                        @if(isset($roles) && $roles->isNotEmpty())
-                        <div class="mb-6">
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Job Role</label>
-                            <select name="job_role_id" id="job_role_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none">
-                                <option value="">— No role —</option>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Assigned Designation</label>
+                            <select name="job_role_id" id="job_role_id" class="w-full px-5 py-4 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none font-bold text-slate-800 appearance-none bg-slate-50">
+                                <option value="">— Unassigned —</option>
                                 @foreach($roles as $r)
                                     <option value="{{ $r->id }}" {{ old('job_role_id', $user->job_role_id) == $r->id ? 'selected' : '' }}>{{ $r->name }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">Role permissions are applied automatically. You can add more below.</p>
                         </div>
-                        @endif
-
-                        <label class="block text-sm font-bold text-gray-700 mb-3">Access Permissions</label>
-                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200">
-                            @if($permissions->count() > 0)
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    @foreach($permissions as $permission)
-                                        <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
-                                            <div class="relative flex items-center">
-                                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" 
-                                                    {{ $user->permissions->contains($permission->id) ? 'checked' : '' }}
-                                                    class="peer w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 transition-colors">
-                                            </div>
-                                            <span class="text-sm font-semibold text-gray-700 peer-checked:text-blue-700 transition-colors">{{ $permission->name }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="text-gray-500 text-sm italic">No custom permissions defined yet.</div>
-                            @endif
+                        <div class="p-6 rounded-3xl bg-indigo-50 border border-indigo-100">
+                            <h5 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <i data-lucide="sparkles" class="w-3 h-3"></i> Role Inheritance
+                            </h5>
+                            <p class="text-xs font-bold text-indigo-900/60 leading-relaxed italic">Permissions in the role are automatically granted. Checkboxes below are for **EXTRA** overrides only.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Footer Actions -->
-                <div class="bg-gray-50 px-8 py-6 border-t border-gray-100 flex justify-end items-center gap-4">
-                    <a href="{{ route('admin.staff.index') }}" class="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
-                        Cancel
-                    </a>
-                    <button type="submit" class="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg hover:bg-blue-700 hover:shadow-blue-500/30 transition-all flex items-center gap-2">
-                        <i data-lucide="save" class="w-5 h-5"></i> Save Changes
-                    </button>
+                <!-- Custom Permissions Grid -->
+                <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 md:p-10">
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white">
+                            <i data-lucide="key" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-900 tracking-tight">Granular Overrides</h3>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Specific module access</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @php
+                            $rolePermissions = $user->jobRole ? $user->jobRole->permissions->pluck('id')->toArray() : [];
+                        @endphp
+                        @foreach($permissions as $permission)
+                            @php
+                                $isFromRole = in_array($permission->id, $rolePermissions);
+                                $isDirect = $user->permissions->contains($permission->id);
+                            @endphp
+                            <label class="group relative flex items-center gap-4 p-5 rounded-[28px] border-2 {{ $isFromRole ? 'border-amber-100 bg-amber-50/30' : 'border-slate-50 bg-slate-50' }} hover:bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/10 transition-all cursor-pointer">
+                                <div class="relative flex items-center shrink-0">
+                                    <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" 
+                                        {{ $isDirect || $isFromRole ? 'checked' : '' }}
+                                        @if($isFromRole) onclick="return false;" @endif
+                                        class="peer w-6 h-6 rounded-lg border-2 border-slate-300 text-blue-600 focus:ring-0 focus:ring-offset-0 transition-all checked:border-blue-600">
+                                    <i data-lucide="check" class="absolute inset-0 m-auto w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <span class="block text-sm font-black {{ $isFromRole ? 'text-amber-700' : 'text-slate-700' }} uppercase tracking-tight group-hover:text-blue-700 transition-colors">{{ str_replace(['module_', 'manage_'], '', $permission->name) }}</span>
+                                    @if($isFromRole)
+                                        <span class="inline-flex items-center gap-1.5 mt-1 border border-amber-200 bg-amber-100 px-2 py-0.5 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            <span class="text-[8px] font-black text-amber-700 uppercase tracking-widest">Via {{ $user->jobRole->name }}</span>
+                                        </span>
+                                    @else
+                                        <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{{ $permission->slug }}</span>
+                                    @endif
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
 
-    <script>
-        lucide.createIcons();
-        function previewImage(input) {
-             const preview = document.getElementById('photo_preview');
-             const placeholder = document.getElementById('photo_placeholder');
-             
-             if (input.files && input.files[0]) {
-                 const reader = new FileReader();
-                 
-                 reader.onload = function(e) {
-                     preview.src = e.target.result;
-                     preview.classList.remove('hidden');
-                     if(placeholder) placeholder.classList.add('hidden');
-                 }
-                 
-                 reader.readAsDataURL(input.files[0]);
-             }
-        }
+        <!-- Global Sticky Actions -->
+        <div class="fixed bottom-10 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl z-50">
+            <div class="bg-slate-900/95 backdrop-blur-xl p-3 rounded-[32px] border border-white/10 shadow-2xl flex items-center justify-between gap-4">
+                <a href="{{ route('admin.staff.index') }}" class="px-6 py-4 rounded-2xl text-white/50 hover:text-white font-black uppercase tracking-widest text-xs transition-colors">
+                    Discard changes
+                </a>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 px-10 py-4 rounded-2xl text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/30 transition-all active:scale-95 flex items-center gap-3">
+                    <i data-lucide="save" class="w-5 h-5"></i>
+                    Update Registry
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
 
-        // Toggle Password Visibility
-        function togglePassword(inputId, iconId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
+<style>
+    .tab-btn.active {
+        background-color: white;
+        color: #0f172a;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+</style>
+
+<script>
+    function switchTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        
+        // Show target content
+        document.getElementById(tabId).classList.remove('hidden');
+        
+        // Update button styles
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-white', 'text-slate-900', 'shadow-sm');
+            btn.classList.add('text-slate-500');
             
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.setAttribute('data-lucide', 'eye-off');
-            } else {
-                input.type = 'password';
-                icon.setAttribute('data-lucide', 'eye');
+            if (btn.getAttribute('data-tab') === tabId) {
+                btn.classList.add('active', 'bg-white', 'text-slate-900', 'shadow-sm');
+                btn.classList.remove('text-slate-500');
             }
-            lucide.createIcons();
+        });
+        
+        lucide.createIcons();
+    }
+
+    function previewImage(input) {
+        const preview = document.getElementById('photo_preview');
+        const placeholder = document.getElementById('photo_placeholder');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                if(placeholder) placeholder.classList.add('hidden');
+            }
+            
+            reader.readAsDataURL(input.files[0]);
         }
-    </script>
+    }
+
+    function togglePassword(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
+    // Initialize icons
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+</script>
 @endsection

@@ -155,7 +155,7 @@
                 if (photoFile) formData.append('photo', photoFile);
 
                 try {
-                    const response = await fetch(`{{ url('sop/' . $checklist->id . '/item') }}/${itemId}`, {
+                    const response = await fetch(`{{ route('sop.update_item', ['checklist' => $checklist->id, 'itemId' => ':itemId']) }}`.replace(':itemId', itemId), {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
