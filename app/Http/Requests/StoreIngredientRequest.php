@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreIngredientRequest extends FormRequest
 {
@@ -16,7 +17,14 @@ class StoreIngredientRequest extends FormRequest
         $id = $this->route('ingredient') ? $this->route('ingredient')->id : null;
 
         return [
-            'name' => 'required|string|max:255|unique:ingredients,name,' . $id,
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('ingredients')->ignore($id)->where(function ($query) {
+                    return $query->where('kitchen_id', app('current_kitchen')->id);
+                }),
+            ],
             'allergen_tags' => 'nullable|array',
             'allergen_tags.*' => 'string',
             'category_id' => 'required|exists:categories,id',
@@ -30,3 +38,4 @@ class StoreIngredientRequest extends FormRequest
         ];
     }
 }
+

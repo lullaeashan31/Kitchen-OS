@@ -54,6 +54,16 @@ class Purchase extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function getVendorNameAttribute(): string
+    {
+        if ($this->vendor instanceof Vendor) {
+            return $this->vendor->name;
+        }
+        
+        // Fallback to the string column if relationship is not set
+        return $this->getAttributes()['vendor'] ?? 'N/A';
+    }
+
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');

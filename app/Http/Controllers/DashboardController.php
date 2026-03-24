@@ -81,7 +81,7 @@ class DashboardController extends Controller
             ->exists();
 
         return [
-            'active_staff' => \App\Models\Attendance::whereDate('clock_in_time', today()->toDateString())->whereNull('clock_out_time')->count(),
+            'active_staff' => \App\Models\Attendance::whereNull('clock_out_time')->count(),
             'total_recipes' => Recipe::count(),
             'pending_ingredients' => \App\Models\Ingredient::where('status', 'pending')->count() ?? 0,
             'low_stock_count' => \App\Models\Ingredient::where(function ($q) {

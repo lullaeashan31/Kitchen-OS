@@ -56,11 +56,6 @@ class AttendanceController extends Controller
 
             if ($request->action_type === 'CLOCK_IN') {
                 if ($latestAttendance) {
-                    // Already clocked in.
-                    // Option A: Reject.
-                    // Option B: Auto clock-out previous and clock-in new? (Requirements say "Ek staff = ek active session")
-                    // Let's reject for strictness, or maybe the previous one was a mistake. 
-                    // For now, let's reject to prevent duplicates.
                     throw new \Exception('User is already clocked in. Please clock out first.');
                 }
 
@@ -80,17 +75,11 @@ class AttendanceController extends Controller
                         throw new \Exception("Location verification failed. You are {$distance}m away (Limit: 100m).");
                     }
                 } else {
-                    // Fallback if no target assigned? STRICT mode would fail.
-                    // "System verifies device GPS within 100 meter radius of assigned location"
-                    // If no assigned location, maybe allow or fail? 
-                    // Let's Log warning and Allow for now to avoid locking out unconfigured staff, or Fail?
-                    // User says "System verifies". Implies strictness.
-                    // But if I haven't set it up, I can't test. 
-                    // I will Log warning.
                     Log::warning("Staff {$user->staff_code} clocked in without assigned target location.");
                 }
 
                 Attendance::create([
+                    'kitchen_id' => $user->kitchen_id, // CRITICAL FIX: Ensure belongs to correct kitchen
                     'staff_code' => $user->staff_code,
                     'user_id' => $user->id,
                     'clock_in_time' => now(),
@@ -101,6 +90,9 @@ class AttendanceController extends Controller
                     'location_id' => $request->location_id,
                     'status' => 'success',
                 ]);
+
+                // Update User Status
+                $user->update(['attendance_status' => 'active']);
 
                 $message = 'Clocked In Successfully';
 
@@ -114,15 +106,12 @@ class AttendanceController extends Controller
                     'gps_latitude_out' => $request->gps_latitude,
                     'gps_longitude_out' => $request->gps_longitude,
                     'selfie_path_out' => $selfieUrl,
-                    // device_id out? we can assume same device or log if different? Schema has only one device_id column currently, or maybe I should check?
-                    // Ah, I put 'device_id' in schema, it's captured on IN. Do we need to capture OUT device?
-                    // The schema has `device_id` (singular). I'll assume the session checks device on entry.
-                    // If requirement demands tracking OUT device, I might need migration. 
-                    // "Device ID verify" -> usually means check against allowed devices.
                 ]);
 
-                $message = 'Clocked Out Successfully';
+                // Update User Status
+                $user->update(['attendance_status' => 'inactive']);
 
+                $message = 'Clocked Out Successfully';
 
             }
 
@@ -133,9 +122,11 @@ class AttendanceController extends Controller
                 'message' => $message,
                 'data' => [
                     'staff_name' => $user->name,
+                    'attendance_status' => $user->attendance_status,
                     'timestamp' => now()->toDateTimeString(),
                 ]
             ]);
+
 
         } catch (\Exception $e) {
             DB::rollBack();

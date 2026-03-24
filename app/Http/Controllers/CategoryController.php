@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
@@ -22,7 +23,14 @@ class CategoryController extends Controller
     public function store(Request $request, string $kitchen_slug)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories')->where(function ($query) {
+                    return $query->where('kitchen_id', app('current_kitchen')->id);
+                }),
+            ],
         ]);
 
         Category::create($validated);
@@ -38,8 +46,16 @@ class CategoryController extends Controller
     public function update(Request $request, string $kitchen_slug, Category $category)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories')->ignore($category->id)->where(function ($query) {
+                    return $query->where('kitchen_id', app('current_kitchen')->id);
+                }),
+            ],
         ]);
+
 
         $category->update($validated);
 

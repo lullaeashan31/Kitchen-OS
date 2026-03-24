@@ -40,6 +40,7 @@ class User extends Authenticatable
         'profile_photo_path',
         'is_password_changed',
         'job_role_id',
+        'attendance_status',
     ];
 
     /**

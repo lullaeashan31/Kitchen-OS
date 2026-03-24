@@ -17,19 +17,86 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class PurchaseController extends Controller
 {
     use AuthorizesRequests;
-    public function index(string $kitchen_slug)
+    public function index(Request $request, string $kitchen_slug)
     {
+        $view = $request->query('view', 'bill'); // Default to bill-wise
+
         $query = Purchase::with(['ingredient', 'creator', 'approver', 'vendor']);
 
-        // Staff can only see their own purchases? Or all? Usually safer to see own.
-        // User request doesn't specify visibility, but "Purchase & Inventory" usually implies transparency or role-based.
-        // Let's let admins see all, staff see theirs.
+        // Search Filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('ingredient', function($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('vendor', function($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('creator', function($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('date')) {
+            $query->whereDate('purchase_date', $request->date);
+        }
+
         if (Auth::user()->isStaff()) {
             $query->where('created_by', Auth::id());
         }
 
+        if ($view === 'bill') {
+            // Group by common attributes of a single upload session
+            // We use vendor_id, purchase_date, created_by, and invoice_photo_path as the grouping key
+            $purchases = $query->latest('purchase_date')->get()
+                ->groupBy(function ($item) {
+                    return $item->vendor_id . '-' . $item->purchase_date->format('Y-m-d') . '-' . $item->invoice_photo_path;
+                })
+                ->map(function ($group) {
+                    $first = $group->first();
+                    return (object) [
+                        'id' => $first->id, // Representing the "Bill ID" (using first item's ID)
+                        'purchase_date' => $first->purchase_date,
+                        'vendor' => $first->vendor,
+                        'vendor_name' => $first->vendor_name,
+                        'invoice_photo_path' => $first->invoice_photo_path,
+                        'goods_photo_path' => $first->goods_photo_path,
+                        'invoice_url' => $first->invoice_url,
+                        'goods_urls' => $first->goods_urls,
+                        'status' => $first->status,
+                        'creator' => $first->creator,
+                        'total_bill_amount' => $group->sum('total_price'),
+                        'items_count' => $group->count(),
+                        'items' => $group,
+                        // For approval logic, we check if ANY item is pending
+                        'is_pending' => $group->contains('status', 'pending'),
+                    ];
+                });
+
+            // Manual pagination for grouped collection
+            $perPage = 15;
+            $page = $request->input('page', 1);
+            $paginatedPurchases = new \Illuminate\Pagination\LengthAwarePaginator(
+                $purchases->forPage($page, $perPage),
+                $purchases->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            return view('admin.purchases.index', [
+                'purchases' => $paginatedPurchases,
+                'view' => 'bill'
+            ]);
+        }
+
         $purchases = $query->latest('purchase_date')->paginate(15);
-        return view('admin.purchases.index', compact('purchases')); // Reuse view or create new? Let's assume we'll update the view path in a bit.
+        return view('admin.purchases.index', [
+            'purchases' => $purchases,
+            'view' => 'item'
+        ]);
     }
 
     public function create(string $kitchen_slug)
@@ -205,6 +272,23 @@ class PurchaseController extends Controller
 
         return back()->with('success', 'Purchase approved and inventory updated.');
     }
+
+    public function bulkApprove(Request $request, string $kitchen_slug)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'No items selected for approval.');
+        }
+
+        $purchases = Purchase::whereIn('id', $ids)->where('status', 'pending')->get();
+
+        foreach ($purchases as $purchase) {
+            $this->approve($kitchen_slug, $purchase);
+        }
+
+        return back()->with('success', count($purchases) . ' items in bill approved.');
+    }
+
 
     public function reject(Request $request, string $kitchen_slug, Purchase $purchase)
     {

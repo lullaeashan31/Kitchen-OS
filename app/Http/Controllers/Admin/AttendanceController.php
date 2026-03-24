@@ -61,8 +61,11 @@ class AttendanceController extends Controller
 
         $attendance->update([
             'clock_out_time' => now(),
-            'status' => 'success', // Assume success if admin closes it
+            'status' => 'success',
         ]);
+
+        $attendance->user->update(['attendance_status' => 'inactive']);
+
 
         return redirect()->back()->with('success', 'Staff member clocked out manually.');
     }

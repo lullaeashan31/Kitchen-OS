@@ -87,9 +87,19 @@
                                     </div>
                                 @else
                                     <div class="flex flex-col gap-1">
-                                        <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase italic">Active</span>
+                                        @if($user->attendance_status === 'active')
+                                            <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase animate-pulse border border-emerald-200 shadow-sm">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-0.5"></span>
+                                                Clocked In
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center w-fit gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500 uppercase border border-gray-200">
+                                                Clocked Out
+                                            </span>
+                                        @endif
+                                        
                                         @if($user->employeeProfile)
-                                            <span class="text-[10px] text-gray-500 mt-1">✓ Profile Complete</span>
+                                            <span class="text-[10px] text-gray-400 mt-1 italic">Profile Verified</span>
                                         @endif
                                     </div>
                                 @endif

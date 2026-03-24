@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class QuickCreateIngredientRequest extends FormRequest
 {
@@ -22,10 +23,18 @@ class QuickCreateIngredientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:ingredients,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('ingredients')->where(function ($query) {
+                    return $query->where('kitchen_id', app('current_kitchen')->id);
+                }),
+            ],
             'category_id' => 'required|exists:categories,id',
             'storage_location' => 'required|string|in:Fridge,Freezer,Dry Store,Bar,Cellar',
             'measurement_unit' => 'required|string',
         ];
     }
 }
+

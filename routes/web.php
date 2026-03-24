@@ -138,9 +138,11 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
     Route::post('vendors', [VendorController::class, 'store'])->name('vendors.store');
     // Admin only actions
     Route::middleware(['admin'])->group(function () {
+        Route::post('purchases/bulk-approve', [\App\Http\Controllers\PurchaseController::class, 'bulkApprove'])->name('purchases.bulk_approve');
         Route::post('purchases/{purchase}/approve', [\App\Http\Controllers\PurchaseController::class, 'approve'])->name('purchases.approve');
         Route::post('purchases/{purchase}/reject', [\App\Http\Controllers\PurchaseController::class, 'reject'])->name('purchases.reject');
     });
+
     // Ingredients
     Route::post('ingredients/quick-store', [App\Http\Controllers\IngredientController::class, 'storeQuick'])->name('ingredients.storeQuick');
     Route::resource('ingredients', IngredientController::class);
