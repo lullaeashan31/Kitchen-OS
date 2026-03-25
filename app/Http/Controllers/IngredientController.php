@@ -26,6 +26,12 @@ class IngredientController extends Controller
     {
         $query = Ingredient::query()->withCount('recipes');
 
+        // Filter based on role: Staff see only their own ingredients (including pending), Admins see all
+        if ($request->user()->isStaff()) {
+            $query->where('created_by', $request->user()->id);
+        }
+
+
         if ($request->has('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
@@ -38,7 +44,7 @@ class IngredientController extends Controller
     public function create(string $kitchen_slug)
     {
         $this->authorize('create', Ingredient::class);
-        $categories = Category::where('status', 'active')->orderBy('name')->get();
+        $categories = Category::forIngredients()->where('status', 'active')->orderBy('name')->get();
         $units = \App\Enums\Unit::cases();
         return view('ingredients.create', compact('categories', 'units'));
     }
@@ -48,44 +54,50 @@ class IngredientController extends Controller
         $this->authorize('create', Ingredient::class);
 
         try {
+            \Log::info('Ingredient store payload:', $request->all());
             $data = $request->validated();
-
-            // Set default values for optional fields that might be empty
-            $data['current_stock'] = isset($data['current_stock']) ? $data['current_stock'] : 0;
-            $data['alert_threshold'] = isset($data['alert_threshold']) && $data['alert_threshold'] !== '' ? $data['alert_threshold'] : 0;
-            $data['status'] = $data['status'] ?? 'pending';
-            $data['price'] = $data['price'] ?? 0;
-            $data['purchase_unit'] = $data['purchase_unit'] ?? null;
-            $data['vendor'] = $data['vendor'] ?? null;
-            $data['storage_location'] = $data['storage_location'] ?? null;
-
-            // Handle allergen_tags - ensure it's properly formatted as array or null
-            if (isset($data['allergen_tags']) && is_array($data['allergen_tags']) && !empty($data['allergen_tags'])) {
-                $data['allergen_tags'] = array_values(array_filter($data['allergen_tags']));
-            } else {
-                $data['allergen_tags'] = null;
+            $kitchen = app('current_kitchen');
+            $data['kitchen_id'] = $kitchen->id;
+            if (\Illuminate\Support\Facades\Schema::hasColumn('ingredients', 'created_by')) {
+                $data['created_by'] = auth()->id();
             }
 
-            Ingredient::create($data);
+            
+            $user = auth()->user();
+            if ($user->isAdmin()) {
+                $data['status'] = 'approved';
+                $message = 'Ingredient "' . $data['name'] . '" created and approved.';
+            } else {
+                $data['status'] = 'pending';
+                $message = 'Ingredient "' . $data['name'] . '" submitted for admin approval.';
+            }
+
+            $data['purchase_quantity'] = (float)($data['purchase_quantity'] ?? 1);
+            $data['purchase_price'] = (float)($data['purchase_price'] ?? 0);
+            $data['price'] = $data['purchase_price'];
+
+            $ingredient = Ingredient::create($data);
 
             return redirect()->route('ingredients.index')
-                ->with('success', 'Ingredient created successfully.');
+                ->with('success', $message);
         } catch (\Exception $e) {
-            \Log::error('Ingredient creation failed: ' . $e->getMessage(), [
-                'data' => $request->all(),
-                'trace' => $e->getTraceAsString()
+            \Log::error('Ingredient creation CRASHED: ' . $e->getMessage(), [
+                'payload' => $request->all(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
 
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to create ingredient. Please check all required fields are filled.']);
+                ->withErrors(['error' => 'ERROR: ' . $e->getMessage()]);
         }
     }
 
     public function edit(string $kitchen_slug, Ingredient $ingredient)
     {
         $this->authorize('update', $ingredient);
-        $categories = Category::where('status', 'active')->orderBy('name')->get();
+        $categories = Category::forIngredients()->where('status', 'active')->orderBy('name')->get();
         $units = \App\Enums\Unit::cases();
         return view('ingredients.edit', compact('ingredient', 'categories', 'units'));
     }
@@ -119,31 +131,59 @@ class IngredientController extends Controller
     {
         // $this->authorize('create', Ingredient::class); // Optional based on specific permission needs
 
-        $ingredient = Ingredient::create([
+        $user = auth()->user();
+        $status = $user->isAdmin() ? 'approved' : 'pending';
+
+        $ingredientData = [
             'name' => $request->name,
             'category_id' => $request->category_id,
             'storage_location' => $request->storage_location,
             'measurement_unit' => $request->measurement_unit,
-            'status' => 'active', // Default status
-            'price' => 0, // Default price
-        ]);
+            'status' => $status,
+            'price' => 0,
+            'kitchen_id' => app('current_kitchen')->id,
+        ];
 
-        // Notify Admin
-        \App\Models\User::all()->filter(function ($user) {
-            return $user->isAdmin();
-        })->each(function ($admin) use ($ingredient) {
-            $admin->notify(new \App\Notifications\NewIngredientCreated($ingredient));
-        });
+        // Add created_by only if the column exists
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('ingredients', 'created_by')) {
+                $ingredientData['created_by'] = $user->id;
+            }
+        } catch (\Exception $e) {}
+
+        $ingredient = Ingredient::create($ingredientData);
+
+
+
+        // Notify Admin if created by staff
+        if ($status === 'pending') {
+            try {
+                \App\Models\User::withoutGlobalScopes()
+                    ->where('kitchen_id', app('current_kitchen')->id)
+                    ->get()
+                    ->filter(fn($u) => $u->isAdmin())
+                    ->each(fn($admin) => $admin->notify(new \App\Notifications\NewIngredientCreated($ingredient)));
+            } catch (\Exception $e) {
+                // Notification failure should not block ingredient creation
+                \Illuminate\Support\Facades\Log::warning('Failed to send ingredient notification: ' . $e->getMessage());
+            }
+        }
+
+
 
         return response()->json([
             'success' => true,
+            'status' => $ingredient->status,
             'ingredient' => [
                 'id' => $ingredient->id,
                 'name' => $ingredient->name,
                 'unit' => $ingredient->measurement_unit,
                 'price' => $ingredient->price,
             ],
-            'message' => 'Ingredient created successfully.'
+            'message' => $status === 'approved'
+                ? 'Ingredient created and approved.'
+                : 'Ingredient submitted for admin approval.'
         ]);
+
     }
 }

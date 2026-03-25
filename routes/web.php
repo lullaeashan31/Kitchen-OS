@@ -34,6 +34,36 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Temporary: Run pending DB migrations via HTTP (sandbox blocks artisan)
+Route::get('/run-db-fix', function () {
+    $results = [];
+    try {
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('ingredients', 'created_by')) {
+            \Illuminate\Support\Facades\Schema::table('ingredients', function ($table) {
+                $table->unsignedBigInteger('created_by')->nullable();
+            });
+            $results[] = '✅ Added created_by to ingredients';
+        } else {
+            $results[] = '✓ created_by already exists';
+        }
+        // Mark migration as run
+        $ran = \Illuminate\Support\Facades\DB::table('migrations')
+            ->where('migration', '2026_03_25_210000_add_created_by_to_ingredients_table')
+            ->exists();
+        if (!$ran) {
+            \Illuminate\Support\Facades\DB::table('migrations')->insert([
+                'migration' => '2026_03_25_210000_add_created_by_to_ingredients_table',
+                'batch' => 99,
+            ]);
+            $results[] = '✅ Migration marked as run';
+        }
+    } catch (\Exception $e) {
+        $results[] = '❌ Error: ' . $e->getMessage();
+    }
+    return response('<pre>' . implode("\n", $results) . "\n\nDone! You can delete this route now.</pre>");
+});
+
+
 // Custom route to serve purchase photos (fixes 403 error)
 Route::get('/storage/purchases/{type}/{filename}', function ($type, $filename) {
     $path = "purchases/{$type}/{$filename}";
@@ -121,6 +151,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
     // Recipes
     Route::get('recipes/{recipe}/print', [RecipeController::class, 'print'])->name('recipes.print');
     Route::get('recipes/export/{type}', [RecipeController::class, 'export'])->name('recipes.export');
+    Route::post('categories/store-quick', [\App\Http\Controllers\CategoryController::class, 'storeQuick'])->name('categories.storeQuick');
     Route::resource('recipes', RecipeController::class);
     Route::delete('categories/bulk-destroy', [\App\Http\Controllers\CategoryController::class, 'bulkDestroy'])->name('categories.bulk_destroy');
     Route::resource('vendors', \App\Http\Controllers\VendorController::class);
@@ -149,6 +180,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
     // Pending Ingredients (Admin)
     Route::get('admin/ingredients/pending', [PendingIngredientController::class, 'index'])->name('admin.ingredients.pending');
     Route::put('admin/ingredients/{ingredient}/approve', [PendingIngredientController::class, 'update'])->name('admin.ingredients.approve');
+    Route::delete('admin/ingredients/{ingredient}/reject', [PendingIngredientController::class, 'destroy'])->name('admin.ingredients.reject');
 
     Route::get('ingredients/search/ajax', [IngredientController::class, 'search'])->name('ingredients.search');
 

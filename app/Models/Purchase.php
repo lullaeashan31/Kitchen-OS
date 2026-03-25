@@ -18,6 +18,7 @@ class Purchase extends Model
         'vendor_id',
         'ingredient_id',
         'quantity',
+        'unit',
         'unit_price',
         'total_price',
         'purchase_date',

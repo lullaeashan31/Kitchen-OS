@@ -231,6 +231,22 @@
             height: 1.15rem;
         }
 
+        /* GLOBAL Tom Select Safety Fix */
+        .ts-dropdown {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        .ts-dropdown.active {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        .ts-wrapper.focus .ts-control {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        }
+
         body {
             font-size: 0.9rem;
         }
@@ -323,9 +339,16 @@
                             Recipe Management
                         </div>
                         @if(!auth()->user()->isStaff())
-                            <a href="{{ route('admin.ingredients.pending') }}" class="nav-link {{ request()->routeIs('admin.ingredients.pending') ? 'active' : '' }}">
-                                <i data-lucide="alert-circle" class="nav-icon text-orange-500"></i> Pending Ingredients
+                            <a href="{{ route('admin.ingredients.pending') }}" class="nav-link {{ request()->routeIs('admin.ingredients.pending') ? 'active' : '' }}" style="justify-content: space-between;">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="check-circle" class="nav-icon text-orange-500"></i> Ingredient Approvals
+                                </span>
+                                @php $pendingCount = \App\Models\Ingredient::where('status','pending')->count(); @endphp
+                                @if($pendingCount > 0)
+                                    <span style="background:#ea580c;color:white;font-size:0.65rem;font-weight:800;padding:1px 7px;border-radius:9999px;min-width:20px;text-align:center;">{{ $pendingCount }}</span>
+                                @endif
                             </a>
+
                         @endif
                         @if(auth()->user()->hasPermissionTo('module_production') || !auth()->user()->isStaff())
                             <a href="{{ route('production.create') }}" class="nav-link {{ request()->routeIs('production.*') ? 'active' : '' }}">

@@ -52,35 +52,65 @@
                         @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-semibold text-gray-700">Category <span class="text-red-500">*</span></label>
+                            <button type="button" onclick="openCategoryModal()" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded transition-all">
+                                <i data-lucide="plus" class="w-3 h-3"></i> Quick Add
+                            </button>
+                        </div>
                         <div class="relative">
                             <select name="category_id" required id="category-select"
                                 class="w-full px-4 py-2 rounded-lg border {{ $errors->has('category_id') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all appearance-none">
                                 <option value="" disabled>Select Category</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id', $recipe->category_id) == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
+                                        {{ $category->name }} @if($category->type == 'ingredient') (Ingredient) @endif
                                     </option>
                                 @endforeach
+
                             </select>
                         </div>
                         @error('category_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    @push('scripts')
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            new TomSelect('#category-select', {
-                                create: false,
-                                sortField: {
-                                    field: "text",
-                                    direction: "asc"
-                                },
-                                placeholder: "Search Category...",
-                            });
-                        });
-                    </script>
+                        <!-- Quick Category Modal -->
+    <div id="createCategoryModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i data-lucide="folder-plus" class="w-6 h-6 text-blue-500"></i>
+                    New Recipe Category
+                </h3>
+                <button type="button" onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-8">
+                <form id="quickCategoryForm" onsubmit="event.preventDefault(); submitQuickCategory();">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Category Name</label>
+                        <input type="text" id="quick_category_name" name="name" required
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium"
+                            placeholder="e.g. Desserts">
+                        <input type="hidden" name="type" value="recipe">
+                    </div>
+                    
+                    <div class="mt-8 flex gap-3">
+                        <button type="button" onclick="closeCategoryModal()"
+                            class="flex-1 py-3 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-all">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all">
+                            Create Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
                         <!-- Sub-Recipe Modal [NEW] -->
     <div id="addSubRecipeModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
@@ -159,6 +189,55 @@
         window.subRecipeStageId = {{ $subRecipeStage->id ?? 'null' }};
     </script>
 @endpush
+
+    @push('scripts')
+    <script>
+        (function() {
+            function initializeCategoryTS() {
+                // Helper to initialize TomSelect with standard best-practices for closing
+                const initTS = (id, options = {}) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+
+                    const config = {
+                        closeAfterSelect: true,
+                        onItemAdd: function() {
+                            this.close();
+                            this.blur();
+                        },
+                        onChange: function() {
+                            this.close();
+                            this.blur();
+                        },
+                        render: {
+                            option_create: function(data, escape) {
+                                return '<div class="create">Add <strong>' + escape(data.input) + '</strong>...</div>';
+                            }
+                        },
+                        ...options
+                    };
+                    return new TomSelect(el, config);
+                };
+
+                // Recipe Category Tom Select
+                window.categoryTomSelect = initTS('category-select', { 
+                    create: function(input, callback) {
+                        openCategoryModal(input, callback);
+                        return false;
+                    },
+                    placeholder: 'Select or type to create...',
+                    sortField: { field: "text", direction: "asc" }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeCategoryTS);
+            } else {
+                initializeCategoryTS();
+            }
+        })();
+    </script>
+    @endpush
 
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-3">Yields (Fill at least
@@ -555,9 +634,10 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Category</label>
                         <select name="category_id" id="quick_category_id" required
                             class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
-                            @foreach($categories as $category)
+                            @foreach($ingredientCategories as $category)
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                             @endforeach
+
                         </select>
                     </div>
                     <div>
@@ -1385,23 +1465,11 @@
                                 } catch(e) {
                                     console.log('Error closing dropdown:', e);
                                 }
-                                
-                                // Force hide all dropdowns
-                                const dropdowns = document.querySelectorAll('.ts-dropdown');
-                                dropdowns.forEach(dropdown => {
-                                    dropdown.style.display = 'none';
-                                    dropdown.style.visibility = 'hidden';
-                                    dropdown.style.opacity = '0';
-                                    dropdown.classList.remove('active');
-                                    dropdown.classList.add('hidden');
-                                });
                             }
                         }, 100);
                     },
                     onFocus: function() {
-                        console.log('TomSelect focused - opening dropdown');
                         const self = this;
-                        // Open dropdown when focused (even if item is selected)
                         setTimeout(() => {
                             if (!self.isOpen) {
                                 self.open();
@@ -1409,8 +1477,16 @@
                         }, 10);
                     },
                     onBlur: function() {
-                        console.log('TomSelect blurred');
-                        // Ensure dropdown is closed (with delay to allow option click)
+                        setTimeout(() => {
+                            const dropdown = document.querySelector('.ts-dropdown');
+                            if (dropdown) {
+                                dropdown.style.display = 'none';
+                                dropdown.style.visibility = 'hidden';
+                                dropdown.style.opacity = '0';
+                            }
+                        }, 200);
+                    }
+                });
                         setTimeout(() => {
                             const dropdown = document.querySelector('.ts-dropdown');
                             if (dropdown) {
@@ -1710,5 +1786,72 @@
                 // to avoid TomSelect recursion bugs, but we can re-enable later.
             });
         }
+
+        let categoryCallback = null;
+
+        function openCategoryModal(name = '', callback = null) {
+            categoryCallback = callback;
+            document.getElementById('quick_category_name').value = name;
+            document.getElementById('createCategoryModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('quick_category_name').focus(), 100);
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('createCategoryModal').classList.add('hidden');
+            document.getElementById('quickCategoryForm').reset();
+            if (categoryCallback) {
+                categoryCallback(false);
+                categoryCallback = null;
+            }
+        }
+
+        function submitQuickCategory() {
+            const form = document.getElementById('quickCategoryForm');
+            const data = Object.fromEntries(new FormData(form).entries());
+
+            if (!data.name) {
+                alert('Please enter a category name');
+                return;
+            }
+
+            fetch('{{ route("categories.storeQuick") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    const newOpt = { value: res.id, text: res.name };
+                    
+                    // Add to TomSelect
+                    if (window.categoryTomSelect) {
+                        window.categoryTomSelect.addOption(newOpt);
+                        window.categoryTomSelect.setValue(res.id);
+                    }
+
+                    if (categoryCallback) {
+                        categoryCallback(newOpt);
+                        categoryCallback = null;
+                    }
+
+                    closeCategoryModal();
+                } else {
+                    alert(res.message || 'Failed to create category');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Failed to connect to server');
+            });
+        }
+        
+        window.openCategoryModal = openCategoryModal;
+        window.closeCategoryModal = closeCategoryModal;
+        window.submitQuickCategory = submitQuickCategory;
     </script>
 @endpush

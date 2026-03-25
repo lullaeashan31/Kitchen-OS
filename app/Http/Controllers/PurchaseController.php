@@ -102,8 +102,9 @@ class PurchaseController extends Controller
     public function create(string $kitchen_slug)
     {
         // Show all ingredients regardless of status for purchase form
-        // Users can purchase any ingredient, even if it's pending approval
-        $ingredients = Ingredient::orderBy('name')
+        // Users can only purchase ingredients that have been approved by admin
+        $ingredients = Ingredient::approved()
+            ->orderBy('name')
             ->get()
             ->map(function ($ingredient) {
                 // Get last approved purchase price if available
@@ -175,18 +176,11 @@ class PurchaseController extends Controller
                     // Calculate Total Price (Input Qty * Input Unit Price)
                     $totalPrice = $inputQty * $inputUnitPrice;
 
-                    // Normalize Quantity to Ingredient's Base Unit
-                    // Skip conversion if ingredient has no unit or units match
-                    if (!$ingredient->measurement_unit || $inputUnit === $ingredient->measurement_unit) {
-                        $normalizedQty = $inputQty;
-                    } else {
-                        try {
-                            $normalizedQty = $unitService->convert($inputQty, $inputUnit, $ingredient->measurement_unit);
-                        } catch (\Exception $e) {
-                            // Log error and fallback (or throw to rollback)
-                            // For data integrity, it is safer to fail than to store wrong units.
-                            throw new \Exception("Unit conversion failed for {$ingredient->name}: " . $e->getMessage());
-                        }
+                    try {
+                        $normalizedQty = $ingredient->convertToBaseUnit($inputQty, $inputUnit);
+                    } catch (\Exception $e) {
+                        // Log error and fallback
+                        throw new \Exception("Unit conversion failed for {$ingredient->name} to base unit: " . $e->getMessage());
                     }
 
                     // Calculate Normalized Unit Price (Total / Normalized Qty)
@@ -196,8 +190,9 @@ class PurchaseController extends Controller
                     Purchase::create([
                         'ingredient_id' => $ingredient->id,
                         'quantity' => $normalizedQty,
+                        'unit' => $inputUnit,
                         'unit_price' => $normalizedUnitPrice,
-                        'total_price' => $totalPrice, // Total price remains same regardless of unit
+                        'total_price' => $totalPrice, 
                         'purchase_date' => $request->purchase_date,
                         'vendor_id' => $request->vendor_id,
                         'vendor' => \App\Models\Vendor::find($request->vendor_id)->name, // Keep for legacy/display compatibility if views use it
@@ -247,15 +242,20 @@ class PurchaseController extends Controller
             $newStock = $currentStock + $quantity;
 
             if ($newStock > 0) {
-                // Weighted Average
+                // Weighted Average - ensure units are consistent
                 $newAvgCost = (($currentStock * $currentAvgCost) + $totalPrice) / $newStock;
             } else {
                 $newAvgCost = $unitPrice;
             }
 
+            // Update basic configuration based on latest purchase
+            $ingredient->purchase_price = $purchase->total_price;
+            $ingredient->purchase_quantity = $purchase->quantity / $ingredient->getConversionMultiplier($purchase->unit, $ingredient->base_unit);
+            $ingredient->purchase_unit = $purchase->unit;
+            
             $ingredient->current_stock = $newStock;
             $ingredient->avg_cost = $newAvgCost;
-            $ingredient->price = $unitPrice; // Update latest price
+            $ingredient->price = $unitPrice; // Update latest unit price in base unit
             $ingredient->save();
 
             // Log Inventory Change

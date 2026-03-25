@@ -45,6 +45,9 @@
                             Name</th>
                         <th
                             style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">
+                            Type</th>
+                        <th
+                            style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">
                             Usage</th>
                         <th
                             style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">
@@ -60,6 +63,11 @@
                             </td>
                             <td style="padding: 0.75rem 1rem; font-weight: 500;">
                                 {{ $category->name }}
+                            </td>
+                            <td style="padding: 0.75rem 1rem;">
+                                <span class="badge {{ $category->type === 'recipe' ? 'badge-primary' : 'badge-gray' }}" style="font-size: 0.7rem;">
+                                    {{ ucfirst($category->type ?? 'ingredient') }}
+                                </span>
                             </td>
                             <td style="padding: 0.75rem 1rem; color: #64748b; font-size: 0.85rem;">
                                 {{ $category->recipes()->count() }} Recipes

@@ -92,26 +92,18 @@ class ProductionController extends Controller
             // Normalize recipe yield 
             $requiredQty = $requiredQtyRaw / $yieldValue;
 
-
-            // Check if units are set before conversion
-            if (!empty($ingredient->pivot->unit) && !empty($ingredient->measurement_unit)) {
-                try {
-                    $convertedQty = $this->unitService->convert(
-                        $requiredQty,
-                        $ingredient->pivot->unit, // From
-                        $ingredient->measurement_unit // To (Stock Unit)
-                    );
-                } catch (\Exception $e) {
-                    // Fallback if conversion fails
-                    $convertedQty = $requiredQty;
-                }
-            } else {
-                // No unit conversion needed if units are not set
+            try {
+                $convertedQty = $ingredient->convertToBaseUnit(
+                    $requiredQty,
+                    $ingredient->pivot->unit
+                );
+            } catch (\Exception $e) {
+                // Fallback if conversion fails
                 $convertedQty = $requiredQty;
             }
 
             if ($ingredient->current_stock < $convertedQty) {
-                $missingStock[] = $ingredient->name . " (Need: " . number_format($convertedQty, 3) . " " . $ingredient->measurement_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
+                $missingStock[] = $ingredient->name . " (Need: " . number_format($convertedQty, 3) . " " . $ingredient->base_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
             }
         }
 
@@ -167,35 +159,24 @@ class ProductionController extends Controller
                 ]);
 
 
-                // Check if units are set before conversion
-                if (!empty($ingredient->pivot->unit) && !empty($ingredient->measurement_unit)) {
-                    try {
-                        $deductAmount = $this->unitService->convert(
-                            $requiredQty,
-                            $ingredient->pivot->unit,
-                            $ingredient->measurement_unit
-                        );
-                        \Log::info("Unit Conversion", [
-                            'ingredient_id' => $ingredient->id,
-                            'from_unit' => $ingredient->pivot->unit,
-                            'to_unit' => $ingredient->measurement_unit,
-                            'requiredQty' => $requiredQty,
-                            'deductAmount' => $deductAmount,
-                        ]);
-                    } catch (\Exception $e) {
-                        $deductAmount = $requiredQty;
-                        \Log::warning("Unit conversion failed", [
-                            'ingredient_id' => $ingredient->id,
-                            'error' => $e->getMessage(),
-                            'using_requiredQty' => $deductAmount,
-                        ]);
-                    }
-                } else {
-                    // No unit conversion needed if units are not set
-                    $deductAmount = $requiredQty;
-                    \Log::info("No unit conversion", [
+                try {
+                    $deductAmount = $ingredient->convertToBaseUnit(
+                        $requiredQty,
+                        $ingredient->pivot->unit
+                    );
+                    \Log::info("Unit Conversion to Base", [
                         'ingredient_id' => $ingredient->id,
+                        'from_unit' => $ingredient->pivot->unit,
+                        'to_unit' => $ingredient->base_unit,
+                        'requiredQty' => $requiredQty,
                         'deductAmount' => $deductAmount,
+                    ]);
+                } catch (\Exception $e) {
+                    $deductAmount = $requiredQty;
+                    \Log::warning("Unit conversion failed for base unit", [
+                        'ingredient_id' => $ingredient->id,
+                        'error' => $e->getMessage(),
+                        'using_requiredQty' => $deductAmount,
                     ]);
                 }
 

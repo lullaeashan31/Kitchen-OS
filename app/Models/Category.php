@@ -14,7 +14,19 @@ class Category extends Model
         'kitchen_id',
         'name',
         'status',
+        'type',
     ];
+
+    // Scopes
+    public function scopeForIngredients($query)
+    {
+        return $query->where('type', 'ingredient');
+    }
+
+    public function scopeForRecipes($query)
+    {
+        return $query->where('type', 'recipe');
+    }
 
     // Relationships
     public function recipes()

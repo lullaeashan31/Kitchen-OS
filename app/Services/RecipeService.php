@@ -336,19 +336,16 @@ class RecipeService
             }
 
             try {
-                $cost = 0;
-                $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : $ingredient->price;
+                $ingredientPrice = $ingredient->price_per_base_unit;
+                $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : $ingredientPrice;
 
                 if ($unitCost > 0) {
                     try {
-                        if ($ingredient->measurement_unit) {
-                            $quantityInBase = $this->unitService->convert(
-                                $item['quantity'],
-                                $item['unit'],
-                                $ingredient->measurement_unit
-                            );
-                            $cost = $quantityInBase * $unitCost;
-                        }
+                        $quantityInBase = $ingredient->convertToBaseUnit(
+                            (float)$item['quantity'],
+                            $item['unit']
+                        );
+                        $cost = $quantityInBase * $unitCost;
                     } catch (\Exception $e) {
                         Log::warning('Unit conversion failed for ingredient cost calculation', [
                             'ingredient_id' => $ingredient->id,
@@ -402,21 +399,21 @@ class RecipeService
                     continue;
                 }
 
-                $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : ($ingredient->price ?? 0);
+                $ingredientPrice = $ingredient->price_per_base_unit;
+                $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : ($ingredientPrice ?? 0);
                 $cost = 0;
 
-                if ($unitCost > 0 && $ingredient->measurement_unit) {
+                if ($unitCost > 0) {
                     try {
-                        $quantityInBase = $this->unitService->convert(
-                            $recipeIngredient->quantity,
-                            $recipeIngredient->unit,
-                            $ingredient->measurement_unit
+                        $quantityInBase = $ingredient->convertToBaseUnit(
+                            (float)$recipeIngredient->quantity,
+                            $recipeIngredient->unit
                         );
                         $cost = $quantityInBase * $unitCost;
                     } catch (\Exception $e) {
-                        // If conversion fails, try direct calculation
-                        if ($recipeIngredient->unit === $ingredient->measurement_unit) {
-                            $cost = $recipeIngredient->quantity * $unitCost;
+                        // If conversion fails, try direct calculation fallback
+                        if ($recipeIngredient->unit === $ingredient->base_unit) {
+                            $cost = (float)$recipeIngredient->quantity * $unitCost;
                         } else {
                             $cost = 0;
                         }

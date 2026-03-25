@@ -15,6 +15,37 @@ class CategoryController extends Controller
         return view('categories.index', compact('categories'));
     }
 
+    public function storeQuick(Request $request, string $kitchen_slug)
+    {
+        $type = $request->get('type', 'recipe');
+
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories')->where(function ($query) use ($type) {
+                    return $query->where('kitchen_id', app('current_kitchen')->id)
+                        ->where('type', $type);
+                }),
+            ],
+            'type' => 'nullable|string|in:recipe,ingredient',
+        ]);
+
+        $category = Category::create([
+            'kitchen_id' => app('current_kitchen')->id,
+            'name' => $request->name,
+            'type' => $type,
+            'status' => 'active'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'id' => $category->id,
+            'name' => $category->name
+        ]);
+    }
+
     public function create(string $kitchen_slug)
     {
         return view('categories.create');
@@ -31,9 +62,15 @@ class CategoryController extends Controller
                     return $query->where('kitchen_id', app('current_kitchen')->id);
                 }),
             ],
+            'type' => 'required|string|in:ingredient,recipe',
         ]);
 
-        Category::create($validated);
+        Category::create([
+            'kitchen_id' => app('current_kitchen')->id,
+            'name' => $validated['name'],
+            'type' => $validated['type'],
+            'status' => 'active'
+        ]);
 
         return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
@@ -54,7 +91,9 @@ class CategoryController extends Controller
                     return $query->where('kitchen_id', app('current_kitchen')->id);
                 }),
             ],
+            'type' => 'required|string|in:recipe,ingredient',
         ]);
+
 
 
         $category->update($validated);

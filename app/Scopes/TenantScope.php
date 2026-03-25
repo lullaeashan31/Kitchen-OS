@@ -17,5 +17,7 @@ class TenantScope implements Scope
         if (app()->has('current_kitchen')) {
             $builder->where($model->getTable() . '.kitchen_id', app('current_kitchen')->id);
         }
+
+
     }
 }

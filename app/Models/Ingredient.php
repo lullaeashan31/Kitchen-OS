@@ -10,6 +10,24 @@ use Illuminate\Support\Str;
 class Ingredient extends Model
 {
     use HasFactory, BelongsToTenant;
+    
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($ingredient) {
+            if (empty($ingredient->base_unit)) {
+                $unit = strtolower($ingredient->measurement_unit);
+                if (in_array($unit, ['kg', 'g', 'gram', 'grams', 'kilogram'])) {
+                    $ingredient->base_unit = 'g';
+                } elseif (in_array($unit, ['l', 'liter', 'litre', 'ml', 'milliliter'])) {
+                    $ingredient->base_unit = 'ml';
+                } else {
+                    $ingredient->base_unit = $ingredient->measurement_unit;
+                }
+            }
+        });
+    }
 
     protected $fillable = [
         'kitchen_id',
@@ -18,6 +36,9 @@ class Ingredient extends Model
         'avg_cost',
         'measurement_unit',
         'purchase_unit',
+        'purchase_quantity',
+        'purchase_price',
+        'base_unit',
         'category_id',
         'vendor',
         'status',
@@ -25,6 +46,7 @@ class Ingredient extends Model
         'alert_threshold',
         'allergen_tags',
         'storage_location',
+        'created_by',
     ];
 
     protected function casts(): array
@@ -38,6 +60,11 @@ class Ingredient extends Model
     public function setNameAttribute($value)
     {
         $this->attributes['name'] = Str::title($value);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     // Relationships
@@ -166,5 +193,76 @@ class Ingredient extends Model
 
         // Ensure stock is not negative (but allow 0)
         return max(0, $calculated);
+    }
+
+    /**
+     * Get the conversion multiplier for a unit to its base unit.
+     */
+    public static function getConversionMultiplier(?string $fromUnit, ?string $toUnit): float
+    {
+        if (!$fromUnit || !$toUnit) return 1.0;
+        
+        $fromUnit = strtolower(trim($fromUnit));
+        $toUnit = strtolower(trim($toUnit));
+
+        if ($fromUnit === $toUnit) return 1.0;
+
+        $conversions = [
+            'kg' => ['g' => 1000, 'gram' => 1000, 'grams' => 1000],
+            'kilogram' => ['g' => 1000, 'gram' => 1000, 'grams' => 1000],
+            'liter' => ['ml' => 1000, 'milliliter' => 1000, 'milliliters' => 1000],
+            'litre' => ['ml' => 1000, 'milliliter' => 1000, 'milliliters' => 1000],
+            'l' => ['ml' => 1000, 'milliliter' => 1000, 'milliliters' => 1000],
+        ];
+
+        return $conversions[$fromUnit][$toUnit] ?? 1.0;
+    }
+
+    /**
+     * Calculate price per base unit (e.g. per gram or per ml).
+     */
+    public function getPricePerBaseUnitAttribute(): float
+    {
+        if ($this->purchase_quantity <= 0) return (float) $this->price; // Fallback to legacy price if no purchase info
+        
+        $multiplier = self::getConversionMultiplier($this->purchase_unit, $this->base_unit);
+        $totalBaseUnits = (float)$this->purchase_quantity * $multiplier;
+        
+        if ($totalBaseUnits <= 0) return (float) $this->price;
+        
+        return (float)$this->purchase_price / $totalBaseUnits;
+    }
+
+    // Scopes
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    // Helpers
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
+    }
+
+    public function convertToBaseUnit(float $quantity, string $unit): float
+    {
+        $multiplier = self::getConversionMultiplier($unit, $this->base_unit);
+        return $quantity * $multiplier;
     }
 }

@@ -53,7 +53,9 @@ class RecipeController extends Controller
         }
 
         $recipes = $query->latest()->paginate(10);
-        $categories = Category::all();
+        $categories = Category::withoutGlobalScopes()->orderBy('name')->get();
+
+
 
         return view('recipes.index', compact('recipes', 'categories'));
     }
@@ -61,8 +63,13 @@ class RecipeController extends Controller
     public function create(string $kitchen_slug)
     {
         try {
-            $categories = Category::all();
+            $categories = Category::withoutGlobalScopes()->orderBy('name')->get();
+            $ingredientCategories = Category::forIngredients()->withoutGlobalScopes()->orderBy('name')->get();
+
+
+
             $units = Unit::cases();
+
 
             // Fetch Sub-Recipes: Show all recipes that produce an ingredient
             $subRecipes = Recipe::where(function ($query) {
@@ -75,7 +82,8 @@ class RecipeController extends Controller
                 ->get();
             $producedIngredientIds = $subRecipes->pluck('produces_ingredient_id')->filter()->toArray();
 
-            $ingredients = \App\Models\Ingredient::whereNotIn('id', $producedIngredientIds)
+            $ingredients = \App\Models\Ingredient::approved()
+                ->whereNotIn('id', $producedIngredientIds)
                 ->orderBy('name')
                 ->get()
                 ->map(function ($ingredient) {
@@ -90,7 +98,8 @@ class RecipeController extends Controller
                     return $ingredient;
                 });
 
-            return view('recipes.create', compact('categories', 'units', 'ingredients', 'subRecipes'));
+            return view('recipes.create', compact('categories', 'ingredientCategories', 'units', 'ingredients', 'subRecipes'));
+
         } catch (\Throwable $e) {
             Log::error('Recipe create page error: ' . $e->getMessage(), [
                 'exception' => $e,
@@ -143,8 +152,12 @@ class RecipeController extends Controller
         $this->authorize('update', $recipe);
 
         try {
-            $categories = Category::all();
+            $categories = Category::withoutGlobalScopes()->orderBy('name')->get();
+            $ingredientCategories = Category::forIngredients()->withoutGlobalScopes()->orderBy('name')->get();
+
+
             $units = Unit::cases();
+
 
             // Fetch Sub-Recipes: Show all recipes that produce an ingredient
             // This includes recipes marked as sub-recipes OR recipes that have produces_ingredient_id
@@ -158,9 +171,9 @@ class RecipeController extends Controller
                 ->get();
             $producedIngredientIds = $subRecipes->pluck('produces_ingredient_id')->toArray();
 
-            // Raw Ingredients: All ingredients (not just approved) and NOT produced by any sub-recipe
-            // Users should be able to use any ingredient in recipes, even if pending approval
-            $ingredients = \App\Models\Ingredient::whereNotIn('id', $producedIngredientIds)
+            // Approved Ingredients: Only ingredients approved by admin and NOT produced by any sub-recipe
+            $ingredients = \App\Models\Ingredient::approved()
+                ->whereNotIn('id', $producedIngredientIds)
                 ->orderBy('name')
                 ->get();
 
@@ -177,7 +190,8 @@ class RecipeController extends Controller
                 'recipeIngredients.ingredient'
             ]);
 
-            return view('recipes.edit', compact('recipe', 'categories', 'units', 'ingredients', 'subRecipes'));
+            return view('recipes.edit', compact('recipe', 'categories', 'ingredientCategories', 'units', 'ingredients', 'subRecipes'));
+
         } catch (\Exception $e) {
             \Log::error('Recipe edit failed: ' . $e->getMessage(), [
                 'recipe_id' => $recipe->id,

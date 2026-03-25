@@ -50,8 +50,8 @@ class NewIngredientCreated extends Notification
         return [
             'ingredient_id' => $this->ingredient->id,
             'name' => $this->ingredient->name,
-            'message' => 'New ingredient created: ' . $this->ingredient->name,
-            'action_url' => route('ingredients.show', $this->ingredient->id),
+            'message' => 'New ingredient pending approval: ' . $this->ingredient->name,
+            'action_url' => url('/'),
         ];
     }
 }
