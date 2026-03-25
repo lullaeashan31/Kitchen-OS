@@ -133,20 +133,44 @@
 
                         <div
                             class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-green-50/50 p-6 rounded-2xl border border-green-100">
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Salary (Base)</label>
-                                <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                                    <input type="number" name="monthly_salary" value="{{ old('monthly_salary') }}" required
-                                        min="0"
-                                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
-                                </div>
-                                @error('monthly_salary')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                            <div class="col-span-1 md:col-span-2">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Salary Type</label>
+                                <select name="salary_type" id="salary_type" required
+                                    class="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
+                                    <option value="monthly" {{ old('salary_type') == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                    <option value="daily" {{ old('salary_type') == 'daily' ? 'selected' : '' }}>Daily</option>
+                                    <option value="hourly" {{ old('salary_type') == 'hourly' ? 'selected' : '' }}>Hourly</option>
+                                </select>
                             </div>
 
-                            <div>
+                            <div id="salary_monthly_div">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Base Salary</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                    <input type="number" name="monthly_salary" value="{{ old('monthly_salary') }}" min="0" step="0.01"
+                                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
+                                </div>
+                            </div>
+                            
+                            <div id="salary_daily_div" class="hidden">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Daily Base Salary</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                    <input type="number" name="daily_salary" value="{{ old('daily_salary') }}" min="0" step="0.01"
+                                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
+                                </div>
+                            </div>
+
+                            <div id="salary_hourly_div" class="hidden">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Hourly Base Rate</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                    <input type="number" name="hourly_salary" value="{{ old('hourly_salary') }}" min="0" step="0.01"
+                                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none">
+                                </div>
+                            </div>
+
+                            <div id="off_days_div">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Monthly Off Days</label>
                                 <input type="number" name="weekly_off_day" value="{{ old('weekly_off_day', 7) }}" min="1"
                                     max="7" required
@@ -270,6 +294,17 @@
         document.querySelector('input[name="variable_enabled"]').addEventListener('change', function () {
             document.getElementById('max_variable_input').classList.toggle('hidden', !this.checked);
         });
+
+        // Toggle Salary Types
+        document.getElementById('salary_type').addEventListener('change', function () {
+            document.getElementById('salary_monthly_div').classList.toggle('hidden', this.value !== 'monthly');
+            document.getElementById('off_days_div').classList.toggle('hidden', this.value !== 'monthly');
+            document.getElementById('salary_daily_div').classList.toggle('hidden', this.value !== 'daily');
+            document.getElementById('salary_hourly_div').classList.toggle('hidden', this.value !== 'hourly');
+        });
+        
+        // Trigger initial state
+        document.getElementById('salary_type').dispatchEvent(new Event('change'));
 
         // Toggle Password Visibility
         function togglePassword(inputId, iconId) {

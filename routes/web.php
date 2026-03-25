@@ -34,36 +34,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Temporary: Run pending DB migrations via HTTP (sandbox blocks artisan)
-Route::get('/run-db-fix', function () {
-    $results = [];
-    try {
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ingredients', 'created_by')) {
-            \Illuminate\Support\Facades\Schema::table('ingredients', function ($table) {
-                $table->unsignedBigInteger('created_by')->nullable();
-            });
-            $results[] = '✅ Added created_by to ingredients';
-        } else {
-            $results[] = '✓ created_by already exists';
-        }
-        // Mark migration as run
-        $ran = \Illuminate\Support\Facades\DB::table('migrations')
-            ->where('migration', '2026_03_25_210000_add_created_by_to_ingredients_table')
-            ->exists();
-        if (!$ran) {
-            \Illuminate\Support\Facades\DB::table('migrations')->insert([
-                'migration' => '2026_03_25_210000_add_created_by_to_ingredients_table',
-                'batch' => 99,
-            ]);
-            $results[] = '✅ Migration marked as run';
-        }
-    } catch (\Exception $e) {
-        $results[] = '❌ Error: ' . $e->getMessage();
-    }
-    return response('<pre>' . implode("\n", $results) . "\n\nDone! You can delete this route now.</pre>");
-});
-
-
 // Custom route to serve purchase photos (fixes 403 error)
 Route::get('/storage/purchases/{type}/{filename}', function ($type, $filename) {
     $path = "purchases/{$type}/{$filename}";
@@ -252,6 +222,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
 
         // Settings Routes
         Route::get('settings/location', [\App\Http\Controllers\Admin\SettingsController::class, 'location'])->name('settings.location');
+        Route::post('settings/location', [\App\Http\Controllers\Admin\SettingsController::class, 'updateLocation'])->name('settings.location.update');
         Route::get('settings/devices', [\App\Http\Controllers\Admin\SettingsController::class, 'devices'])->name('settings.devices');
 
         // Inventory

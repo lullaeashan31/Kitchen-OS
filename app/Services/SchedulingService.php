@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class SchedulingService
 {
     /**
-     * Generate schedule for a given date range.
+     * Generate schedule for a given date range with fair rotation.
      */
     public function generateSchedule($startDate, $endDate)
     {
@@ -25,30 +25,42 @@ class SchedulingService
         ];
 
         DB::transaction(function () use ($start, $end, &$results) {
-            $currentDate = $start->copy();
-            $shifts = Shift::where('is_active', true)->get();
-            $staff = User::where('role', 'staff')
+            $shifts = Shift::where('is_active', true)->orderBy('start_time')->get();
+            $staff = User::where('role', \App\Enums\UserRole::Staff)
                 ->where('onboarding_status', 'active')
                 ->get();
 
+            if ($staff->isEmpty()) return;
+
+            // Sort staff by current assignment count to ensure even distribution
+            // (We'll track this in a local array for the range)
+            $staffAssignedCounts = $staff->pluck('id')->fill(0)->toArray();
+            $staffIds = $staff->pluck('id')->toArray();
+            shuffle($staffIds); // Randomize initial order for fairness over weeks
+
+            $currentDate = $start->copy();
             while ($currentDate <= $end) {
                 foreach ($shifts as $shift) {
-                    $required = $shift->required_staff ?? 1; // Fallback to 1
+                    $required = (int)($shift->required_staff ?? 1);
 
-                    // 1. Find available staff
-                    $availableStaff = $this->getAvailableStaffForDate($staff, $currentDate);
+                    // 1. Get available staff for this date (considering leaves/off-days)
+                    $availableOnDate = $this->getAvailableStaffForDate($staff, $currentDate);
 
-                    // 2. Filter out those already assigned on this date
-                    $alreadyAssignedIds = ShiftAssignment::where('date', $currentDate->toDateString())
+                    // 2. Filter out already assigned today
+                    $alreadyAssignedToday = ShiftAssignment::where('date', $currentDate->toDateString())
                         ->pluck('user_id')
                         ->toArray();
 
-                    $eligibleStaff = $availableStaff->filter(function ($s) use ($alreadyAssignedIds) {
-                        return !in_array($s->id, $alreadyAssignedIds);
+                    $eligible = $availableOnDate->filter(fn($s) => !in_array($s->id, $alreadyAssignedToday));
+
+                    // 3. To rotate fairly, sort eligible staff by their assignment count (asc)
+                    // We'll calculate current counts from global history + this local run
+                    $eligible = $eligible->sortBy(function ($user) {
+                        return ShiftAssignment::where('user_id', $user->id)->count();
                     });
 
-                    // 3. Assign up to 'required' count
-                    $toAssign = $eligibleStaff->take($required);
+                    // 4. Assign up to 'required' count
+                    $toAssign = $eligible->take($required);
 
                     foreach ($toAssign as $user) {
                         ShiftAssignment::updateOrCreate(

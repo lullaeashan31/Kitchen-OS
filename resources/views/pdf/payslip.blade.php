@@ -112,10 +112,35 @@
     </div>
 
     <div class="section">
+        <div class="section-title">Attendance Summary</div>
+        <table>
+            <tr>
+                <td class="label">Salary Model:</td>
+                <td class="value">{{ ucfirst($record->salary_type) }}</td>
+            </tr>
+            @if($record->salary_type == 'hourly')
+            <tr>
+                <td class="label">Total Working Hours:</td>
+                <td class="value">{{ number_format($record->working_hours, 2) }} Hrs</td>
+            </tr>
+            @else
+            <tr>
+                <td class="label">Present Days:</td>
+                <td class="value">{{ $record->present_days }} Days</td>
+            </tr>
+            <tr>
+                <td class="label">Absent Days:</td>
+                <td class="value">{{ $record->absent_days }} Days</td>
+            </tr>
+            @endif
+        </table>
+    </div>
+
+    <div class="section">
         <div class="section-title">Earnings Breakdown</div>
         <table>
             <tr>
-                <td class="label">Base Salary (Attendance Based):</td>
+                <td class="label">Base Salary @if($record->salary_type == 'monthly')(Prorated)@endif:</td>
                 <td class="value">₹{{ number_format($record->base_salary, 2) }}</td>
             </tr>
             <tr>

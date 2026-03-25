@@ -9,9 +9,22 @@ class SettingsController extends Controller
 {
     public function location(string $kitchen_slug)
     {
-        // Placeholder for location logic (Google Maps API key, Geofencing radius, etc.)
-        // For now, static config or just a view
-        return view('admin.settings.location');
+        $kitchen = auth()->user()->kitchen;
+        return view('admin.settings.location', compact('kitchen'));
+    }
+
+    public function updateLocation(Request $request, string $kitchen_slug)
+    {
+        $request->validate([
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'geofence_radius' => 'required|integer|min:0',
+        ]);
+
+        $kitchen = auth()->user()->kitchen;
+        $kitchen->update($request->only(['latitude', 'longitude', 'geofence_radius']));
+
+        return redirect()->back()->with('success', 'Location settings updated.');
     }
 
     public function devices(string $kitchen_slug)

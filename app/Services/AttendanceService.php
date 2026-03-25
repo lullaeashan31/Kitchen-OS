@@ -52,22 +52,52 @@ class AttendanceService
      */
     public function calculateNetSalary(\App\Models\User $user, $month, $year)
     {
-        $monthlySalary = (float) ($user->monthly_salary ?? 0);
+        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        // 1. Get attendance records for the month
+        $attendances = Attendance::where('user_id', $user->id)
+            ->whereBetween('clock_in_time', [$startDate, $endDate])
+            ->get();
+
+        $daysPresent = $attendances->count();
+        $totalHours = 0;
+
+        foreach ($attendances as $att) {
+            if ($att->clock_in_time && $att->clock_out_time) {
+                $totalHours += $att->clock_out_time->diffInHours($att->clock_in_time);
+            } else {
+                // Approximate 8 hours if no clock out
+                $totalHours += 8;
+            }
+        }
+
+        $salaryType = $user->salary_type ?? 'monthly';
+
+        if ($salaryType === 'hourly') {
+            $hourlyRate = (float)($user->hourly_salary ?? 0);
+            return round($hourlyRate * $totalHours, 2);
+        }
+
+        if ($salaryType === 'daily') {
+            $dailyRate = (float)($user->daily_salary ?? 0);
+            return round($dailyRate * $daysPresent, 2);
+        }
+
+        // Monthly Salary Logic
+        $monthlySalary = (float)($user->monthly_salary ?? 0);
         if ($monthlySalary <= 0) {
             return 0;
         }
 
-        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
-
-        $weeklyOff = $user->weekly_off_day ? trim($user->weekly_off_day) : null;
         $totalDaysInMonth = $startDate->daysInMonth;
-
+        
+        // Calculate Scheduled Days considering weekly off
+        $weeklyOff = $user->weekly_off_day ? trim($user->weekly_off_day) : null;
         if (is_numeric($weeklyOff)) {
             $offDaysCount = (int) $weeklyOff;
             $scheduledDays = max(0, $totalDaysInMonth - $offDaysCount);
         } else {
-            // Legacy string-based logic (e.g. "Sunday")
             $scheduledDays = 0;
             $tempDate = $startDate->copy();
             while ($tempDate <= $endDate) {
@@ -83,18 +113,49 @@ class AttendanceService
             return round($monthlySalary, 2);
         }
 
-        $daysWorked = Attendance::where('user_id', $user->id)
-            ->whereBetween('clock_in_time', [$startDate, $endDate])
-            ->count();
-
-        // If no attendance records, use full monthly salary as base (so payroll overview shows correct amount)
-        if ($daysWorked <= 0) {
-            return round($monthlySalary, 2);
-        }
-
+        // If no attendance records at all, maybe they haven't started using attendance module yet
+        // Returning 0 might upset them if they just want base payroll, but the requirement says:
+        // "Salary = (30000 / 30) × 26" or (monthly / scheduled_days) * present_days
         $dailyRate = $monthlySalary / $scheduledDays;
-        $netSalary = $dailyRate * $daysWorked;
+        
+        // Capping daysPresent to scheduledDays just in case
+        $paidDays = min($daysPresent, $scheduledDays);
+        
+        // If there is ZERO attendance tracked, and user wants default payroll behavior, 
+        // they might expect the full amount. However, strict attendance integration means 0.
+        // I will adhere to the formula: (salary / totalDays) * present
+        
+        $netSalary = $dailyRate * $paidDays;
 
         return round($netSalary, 2);
+    }    /**
+     * Get detailed attendance stats for a user in a given month.
+     */
+    public function getMonthlyStats(User $user, $month, $year)
+    {
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        $presentDays = Attendance::where('user_id', $user->id)
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->whereIn('status', ['present', 'half_day'])
+            ->count();
+
+        $absentDays = Attendance::where('user_id', $user->id)
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->where('status', 'absent')
+            ->count();
+
+        $totalHours = Attendance::where('user_id', $user->id)
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->sum('total_hours');
+
+        return [
+            'present_days' => $presentDays,
+            'absent_days' => $absentDays,
+            'working_hours' => $totalHours,
+            'total_month_days' => $startDate->daysInMonth,
+            'salary_type' => $user->salary_type ?: 'monthly'
+        ];
     }
 }

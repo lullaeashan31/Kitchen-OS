@@ -53,9 +53,7 @@ class RecipeController extends Controller
         }
 
         $recipes = $query->latest()->paginate(10);
-        $categories = Category::withoutGlobalScopes()->orderBy('name')->get();
-
-
+        $categories = Category::orderBy('name')->get();
 
         return view('recipes.index', compact('recipes', 'categories'));
     }
@@ -63,8 +61,9 @@ class RecipeController extends Controller
     public function create(string $kitchen_slug)
     {
         try {
-            $categories = Category::withoutGlobalScopes()->orderBy('name')->get();
-            $ingredientCategories = Category::forIngredients()->withoutGlobalScopes()->orderBy('name')->get();
+            $categories = Category::orderBy('name')->get();
+            $ingredientCategories = Category::forIngredients()->orderBy('name')->get();
+
 
 
 
@@ -152,8 +151,8 @@ class RecipeController extends Controller
         $this->authorize('update', $recipe);
 
         try {
-            $categories = Category::withoutGlobalScopes()->orderBy('name')->get();
-            $ingredientCategories = Category::forIngredients()->withoutGlobalScopes()->orderBy('name')->get();
+            $categories = Category::orderBy('name')->get();
+            $ingredientCategories = Category::forIngredients()->orderBy('name')->get();
 
 
             $units = Unit::cases();

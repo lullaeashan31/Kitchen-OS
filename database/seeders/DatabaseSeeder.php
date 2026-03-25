@@ -47,9 +47,6 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin123'),
             'role' => UserRole::Staff,
             'staff_code' => '123456',
-            'target_latitude' => 28.6139,
-            'target_longitude' => 77.2090, // Example location
-            'target_location_name' => 'Main Kitchen',
             'is_password_changed' => true,
         ]);
 
@@ -79,6 +76,15 @@ class DatabaseSeeder extends Seeder
         $ingredients = ['Salt', 'Pepper', 'Olive Oil', 'Garlic', 'Onion', 'Tomato', 'Chicken Breast', 'Rice', 'Flour', 'Sugar', 'Milk', 'Eggs'];
         foreach ($ingredients as $ing) {
             Ingredient::firstOrCreate(['name' => $ing]);
+        }
+        // Shifts
+        $shifts = [
+            ['name' => 'Morning', 'start_time' => '09:00:00', 'end_time' => '17:00:00', 'is_active' => true],
+            ['name' => 'Evening', 'start_time' => '14:00:00', 'end_time' => '22:00:00', 'is_active' => true],
+            ['name' => 'Night', 'start_time' => '22:00:00', 'end_time' => '06:00:00', 'is_active' => true],
+        ];
+        foreach ($shifts as $shift) {
+            \App\Models\Shift::firstOrCreate(['name' => $shift['name']], $shift);
         }
     }
 }

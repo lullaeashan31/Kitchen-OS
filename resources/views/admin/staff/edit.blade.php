@@ -111,12 +111,10 @@
                                 <p class="text-[10px] font-bold text-blue-500/70 text-center uppercase tracking-wider">Used for biometric & tablet logins</p>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Monthly Off Days</label>
-                                <div class="relative">
-                                    <input type="number" name="weekly_off_day" value="{{ old('weekly_off_day', $user->weekly_off_day) }}" min="0" required
-                                        class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-bold text-slate-800">
-                                    <span class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs uppercase">Days</span>
+                            <div class="space-y-2 opacity-30 pointer-events-none">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Legacy Field</label>
+                                <div class="px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-slate-400 italic">
+                                    Moved to Payroll ↓
                                 </div>
                             </div>
                         </div>
@@ -132,14 +130,42 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                            <div class="space-y-2">
+                            <div class="col-span-1 md:col-span-2 space-y-2">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Salary Payment Model</label>
+                                <select name="salary_type" id="salary_type" required
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-bold text-slate-800 appearance-none">
+                                    <option value="monthly" {{ old('salary_type', $user->salary_type) == 'monthly' ? 'selected' : '' }}>Monthly Fixed</option>
+                                    <option value="daily" {{ old('salary_type', $user->salary_type) == 'daily' ? 'selected' : '' }}>Daily Wage</option>
+                                    <option value="hourly" {{ old('salary_type', $user->salary_type) == 'hourly' ? 'selected' : '' }}>Hourly Rate</option>
+                                </select>
+                            </div>
+
+                            <div id="salary_monthly_div" class="space-y-2">
                                 <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Base Monthly Salary (₹)</label>
                                 <input type="number" name="monthly_salary" value="{{ old('monthly_salary', $user->monthly_salary) }}" min="0" step="0.01"
                                     class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-black text-lg text-slate-800">
                             </div>
 
+                            <div id="salary_daily_div" class="space-y-2 hidden">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Standard Daily Wage (₹)</label>
+                                <input type="number" name="daily_salary" value="{{ old('daily_salary', $user->daily_salary) }}" min="0" step="0.01"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-black text-lg text-slate-800">
+                            </div>
+
+                            <div id="salary_hourly_div" class="space-y-2 hidden">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Hourly Service Rate (₹)</label>
+                                <input type="number" name="hourly_salary" value="{{ old('hourly_salary', $user->hourly_salary) }}" min="0" step="0.01"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-black text-lg text-slate-800">
+                            </div>
+
+                            <div id="off_days_div_parent" class="hidden">
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Monthly Off Days Policy</label>
+                                <input type="number" name="weekly_off_day" value="{{ old('weekly_off_day', $user->weekly_off_day) }}" min="0" 
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-bold text-slate-800">
+                            </div>
+
                             <div class="space-y-2">
-                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Max Variable Incentive (₹)</label>
+                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">High-Incentive Cap (₹)</label>
                                 <input type="number" name="max_variable_amount" value="{{ old('max_variable_amount', $user->max_variable_amount) }}" min="0" step="0.01"
                                     class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all outline-none font-black text-lg text-slate-800">
                             </div>
@@ -571,6 +597,19 @@
 </style>
 
 <script>
+    // Salary Type Toggles
+    const salaryTypeSelect = document.getElementById('salary_type');
+    if (salaryTypeSelect) {
+        salaryTypeSelect.addEventListener('change', function() {
+            document.getElementById('salary_monthly_div').classList.toggle('hidden', this.value !== 'monthly');
+            document.getElementById('off_days_div_parent').classList.toggle('hidden', this.value !== 'monthly');
+            document.getElementById('salary_daily_div').classList.toggle('hidden', this.value !== 'daily');
+            document.getElementById('salary_hourly_div').classList.toggle('hidden', this.value !== 'hourly');
+        });
+        // Initial Trigger
+        salaryTypeSelect.dispatchEvent(new Event('change'));
+    }
+
     function switchTab(tabId) {
         // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));

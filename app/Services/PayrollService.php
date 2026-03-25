@@ -39,8 +39,11 @@ class PayrollService
                     // Use fresh data from DB so latest monthly_salary is used
                     $user->refresh();
 
-                    // 1. Calculate Base Salary (uses monthly_salary from staff profile)
+                    // 1. Calculate Base Salary
                     $baseSalary = $this->attendanceService->calculateNetSalary($user, $month, $year);
+
+                    // 1.1 Get Stats
+                    $stats = $this->attendanceService->getMonthlyStats($user, $month, $year);
 
                     // 2. Fetch Performance Bonus
                     $review = PerformanceReview::where('user_id', $user->id)
@@ -54,6 +57,10 @@ class PayrollService
                     PayrollRecord::updateOrCreate(
                         ['user_id' => $user->id, 'month' => $month, 'year' => $year],
                         [
+                            'salary_type' => $stats['salary_type'],
+                            'present_days' => $stats['present_days'],
+                            'absent_days' => $stats['absent_days'],
+                            'working_hours' => $stats['working_hours'],
                             'base_salary' => $baseSalary,
                             'bonus' => $bonus,
                             'net_salary' => $baseSalary + $bonus,

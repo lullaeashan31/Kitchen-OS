@@ -220,14 +220,9 @@
                 };
 
                 // Recipe Category Tom Select
-                window.categoryTomSelect = initTS('category-select', { 
-                    create: function(input, callback) {
-                        openCategoryModal(input, callback);
-                        return false;
-                    },
-                    placeholder: 'Select or type to create...',
-                    sortField: { field: "text", direction: "asc" }
-                });
+                // Disabled so it acts as a normal dropdown like the user expects
+                // window.categoryTomSelect = initTS('category-select', { ... });
+
             }
 
             if (document.readyState === 'loading') {
@@ -1828,11 +1823,10 @@
                 if (res.success) {
                     const newOpt = { value: res.id, text: res.name };
                     
-                    // Add to TomSelect
-                    if (window.categoryTomSelect) {
-                        window.categoryTomSelect.addOption(newOpt);
-                        window.categoryTomSelect.setValue(res.id);
-                    }
+                    // Add to native select
+                    const select = document.getElementById('category-select');
+                    const o = new Option(res.name, res.id, true, true);
+                    select.add(o);
 
                     if (categoryCallback) {
                         categoryCallback(newOpt);

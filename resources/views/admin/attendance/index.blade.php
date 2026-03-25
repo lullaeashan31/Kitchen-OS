@@ -79,13 +79,13 @@
                             <td class="p-5">
                                 <div class="flex gap-2">
                                     @if($attendance->selfie_path_in)
-                                        <a href="{{ $attendance->selfie_path_in }}" target="_blank" 
+                                        <a href="{{ \Illuminate\Support\Facades\Storage::url($attendance->selfie_path_in) }}" target="_blank" 
                                            class="p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors" title="In Selfie">
                                             <i data-lucide="camera" class="w-4 h-4"></i>
                                         </a>
                                     @endif
                                     @if($attendance->selfie_path_out)
-                                        <a href="{{ $attendance->selfie_path_out }}" target="_blank" 
+                                        <a href="{{ \Illuminate\Support\Facades\Storage::url($attendance->selfie_path_out) }}" target="_blank" 
                                            class="p-1.5 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 transition-colors" title="Out Selfie">
                                             <i data-lucide="camera" class="w-4 h-4"></i>
                                         </a>

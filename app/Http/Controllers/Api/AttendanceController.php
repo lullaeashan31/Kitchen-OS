@@ -59,11 +59,14 @@ class AttendanceController extends Controller
                     throw new \Exception('User is already clocked in. Please clock out first.');
                 }
 
-                // Check GPS distance (100 meter rule)
-                $targetLat = $user->target_latitude;
-                $targetLng = $user->target_longitude;
+                // Check GPS distance
+                $kitchen = $user->kitchen;
+                $targetLat = $user->target_latitude ?: ($kitchen->latitude ?? null);
+                $targetLng = $user->target_longitude ?: ($kitchen->longitude ?? null);
+                $radius = $kitchen->geofence_radius ?? 100;
 
-                if ($targetLat && $targetLng) {
+                // Debug Bypass: If limit is set to 0, skip verification
+                if ($targetLat && $targetLng && $radius > 0) {
                     $distance = $this->calculateDistance(
                         $request->gps_latitude,
                         $request->gps_longitude,
@@ -71,11 +74,13 @@ class AttendanceController extends Controller
                         $targetLng
                     );
 
-                    if ($distance > 100) { // 100 meters
-                        throw new \Exception("Location verification failed. You are {$distance}m away (Limit: 100m).");
+                    if ($distance > $radius) {
+                        throw new \Exception("Location verification failed. You are {$distance}m away (Limit: {$radius}m). To disable this, set Radius to 0 in Location Settings.");
                     }
                 } else {
-                    Log::warning("Staff {$user->staff_code} clocked in without assigned target location.");
+                    if (!$targetLat || !$targetLng) {
+                        Log::warning("Staff {$user->staff_code} clocked in without any target location defined.");
+                    }
                 }
 
                 Attendance::create([

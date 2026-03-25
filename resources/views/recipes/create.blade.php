@@ -327,7 +327,7 @@
                                 </option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }} @if($category->type == 'ingredient') (Ingredient) @endif
+                                        {{ $category->name }}
                                     </option>
                                 @endforeach
 
@@ -942,12 +942,8 @@
                     ...options
                 });
             };
-
-            window.categoryTomSelect = initTS('category-select', {
-                create: (input, callback) => { openCategoryModal(input, callback); return false; },
-                placeholder: 'Select or type to create...'
-            });
-
+            // Category select is now a standard HTML select, so no TomSelect init needed.
+            // window.categoryTomSelect is no longer used for category.
             if (stageCount === 0) addNewSet();
             calculateTotal();
         });
@@ -996,11 +992,14 @@
                 body: JSON.stringify({ name: name, type: 'recipe' })
             }).then(r => r.json()).then(res => {
                 if (res.success) {
-                    const opt = { value: res.id, text: res.name };
-                    if (window.categoryTomSelect) { window.categoryTomSelect.addOption(opt); window.categoryTomSelect.setValue(res.id); }
-                    if (window.categoryCallback) { window.categoryCallback(opt); window.categoryCallback = null; }
+                    const select = document.getElementById('category-select');
+                    const option = new Option(res.name, res.id, true, true);
+                    select.add(option);
                     closeCategoryModal();
                 }
+            }).catch(e => {
+                alert('Error creating category');
+                console.error(e);
             });
         }
 

@@ -38,10 +38,13 @@ class StaffController extends Controller
             'job_role_id' => 'nullable|exists:roles,id',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
-            'monthly_salary' => 'required|numeric|min:0',
+            'monthly_salary' => 'nullable|numeric|min:0',
+            'salary_type' => 'required|in:monthly,daily,hourly',
+            'daily_salary' => 'nullable|numeric|min:0',
+            'hourly_salary' => 'nullable|numeric|min:0',
             'variable_enabled' => 'boolean',
             'max_variable_amount' => 'nullable|numeric|min:0',
-            'weekly_off_day' => 'required|string|max:20',
+            'weekly_off_day' => 'nullable|numeric|min:0|max:31',
         ]);
 
         $createData = [
@@ -50,10 +53,13 @@ class StaffController extends Controller
             'staff_code' => $validated['staff_code'],
             'password' => Hash::make($validated['password']),
             'role' => \App\Enums\UserRole::Staff,
-            'monthly_salary' => $validated['monthly_salary'],
+            'salary_type' => $validated['salary_type'],
+            'monthly_salary' => $validated['monthly_salary'] ?? 0,
+            'daily_salary' => $validated['daily_salary'] ?? 0,
+            'hourly_salary' => $validated['hourly_salary'] ?? 0,
             'variable_enabled' => $request->has('variable_enabled'),
             'max_variable_amount' => $validated['max_variable_amount'] ?? 0,
-            'weekly_off_day' => $validated['weekly_off_day'],
+            'weekly_off_day' => $validated['weekly_off_day'] ?? 0,
             'onboarding_status' => 'pending',
             'is_password_changed' => false, // Force change
             'job_role_id' => $validated['job_role_id'] ?? null,
@@ -118,9 +124,12 @@ class StaffController extends Controller
             'permissions.*' => 'exists:permissions,id',
             // Salary & employment (User)
             'monthly_salary' => 'nullable|numeric|min:0',
+            'salary_type' => 'required|in:monthly,daily,hourly',
+            'daily_salary' => 'nullable|numeric|min:0',
+            'hourly_salary' => 'nullable|numeric|min:0',
             'variable_enabled' => 'boolean',
             'max_variable_amount' => 'nullable|numeric|min:0',
-            'weekly_off_day' => 'nullable|string|max:20',
+            'weekly_off_day' => 'nullable|numeric|min:0|max:31',
             // Employee profile / onboarding
             'address' => 'nullable|string',
             'secondary_phone' => 'nullable|digits:10',
@@ -150,10 +159,13 @@ class StaffController extends Controller
             'name' => $validated['name'],
             'phone' => $validated['phone'],
             'staff_code' => $validated['staff_code'],
+            'salary_type' => $validated['salary_type'],
             'monthly_salary' => $validated['monthly_salary'] ?? 0,
+            'daily_salary' => $validated['daily_salary'] ?? 0,
+            'hourly_salary' => $validated['hourly_salary'] ?? 0,
             'variable_enabled' => $request->boolean('variable_enabled'),
             'max_variable_amount' => $validated['max_variable_amount'] ?? 0,
-            'weekly_off_day' => $validated['weekly_off_day'] ?? null,
+            'weekly_off_day' => $validated['weekly_off_day'] ?? 0,
             'job_role_id' => $validated['job_role_id'] ?? null,
         ];
         if (isset($validated['password'])) {
