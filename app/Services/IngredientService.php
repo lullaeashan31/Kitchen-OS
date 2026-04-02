@@ -24,11 +24,15 @@ class IngredientService
     /**
      * Search ingredients for autocomplete.
      */
-    public function search(string $query, int $limit = 10)
+    public function search(string $query, int $limit = 10, bool $onlyApproved = true)
     {
-        return Ingredient::where('name', 'like', "%{$query}%")
-            ->limit($limit)
-            ->get();
+        $builder = Ingredient::where('name', 'like', "%{$query}%");
+        
+        if ($onlyApproved) {
+            $builder->approved();
+        }
+
+        return $builder->limit($limit)->get();
     }
 
     /**

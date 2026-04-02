@@ -132,17 +132,16 @@ class IngredientController extends Controller
         // $this->authorize('create', Ingredient::class); // Optional based on specific permission needs
 
         $user = auth()->user();
-        $status = $user->isAdmin() ? 'approved' : 'pending';
+        
+        // FORCED: All requests from the recipe creation page go through the pending queue for verification
+        // as requested by the user, even if created by an Admin.
+        $status = 'pending';
 
-        $ingredientData = [
-            'name' => $request->name,
-            'category_id' => $request->category_id,
-            'storage_location' => $request->storage_location,
-            'measurement_unit' => $request->measurement_unit,
+        $ingredientData = array_merge($request->validated(), [
             'status' => $status,
-            'price' => 0,
             'kitchen_id' => app('current_kitchen')->id,
-        ];
+            'price' => $request->purchase_price ?? 0,
+        ]);
 
         // Add created_by only if the column exists
         try {

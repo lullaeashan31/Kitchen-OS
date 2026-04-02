@@ -108,7 +108,7 @@ class Ingredient extends Model
     {
         $purchases = $this->relationLoaded('purchases')
             ? $this->purchases
-            : $this->purchases()->where(['status' => 'approved'])->with('vendor')->get();
+            : $this->purchases()->where(function($q) { $q->where('status', 'approved'); })->with('vendor')->get();
 
         $byVendor = [];
         foreach ($purchases as $p) {
@@ -128,7 +128,7 @@ class Ingredient extends Model
         // Sum all additions from purchases, production, and positive adjustments
         return (float) $this->logs()
             ->whereIn('action', ['purchase_approved', 'RECIPE_PRODUCTION'])
-            ->where('quantity_change', '>', 0)
+            ->where(function($q) { $q->where('quantity_change', '>', 0); })
             ->sum('quantity_change');
     }
 
@@ -137,7 +137,7 @@ class Ingredient extends Model
         // Sum all deductions from recipe use, POS sales, and sales report uploads
         $totalDeducted = $this->logs()
             ->whereIn('action', ['RECIPE_USE', 'POS_SALE', 'sales_report'])
-            ->where('quantity_change', '<', 0)
+            ->where(function($q) { $q->where('quantity_change', '<', 0); })
             ->sum('quantity_change');
 
         return abs((float) $totalDeducted);

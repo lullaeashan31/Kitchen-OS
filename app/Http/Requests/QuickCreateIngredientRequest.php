@@ -32,8 +32,15 @@ class QuickCreateIngredientRequest extends FormRequest
                 }),
             ],
             'category_id' => 'required|exists:categories,id',
-            'storage_location' => 'required|string|in:Fridge,Freezer,Dry Store,Bar,Cellar',
+            'storage_location' => 'required|string',
             'measurement_unit' => 'required|string',
+            'alert_threshold' => 'nullable|numeric|min:0',
+            'vendor' => 'nullable|string|max:255',
+            'purchase_quantity' => 'nullable|numeric|min:0.001',
+            'purchase_unit' => 'nullable|string|max:255',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'allergen_tags' => 'nullable|array',
+            'allergen_tags.*' => 'string',
         ];
     }
 }

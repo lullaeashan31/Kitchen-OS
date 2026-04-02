@@ -225,9 +225,10 @@ class PurchaseController extends Controller
         }
 
         DB::transaction(function () use ($purchase) {
-            // Relock and Refresh Ingredient for atomic update
+            /** @var Purchase $purchase */
+            /** @var Ingredient|null $ingredient */
             $ingredient = $purchase->ingredient()->lockForUpdate()->first();
-            if (!$ingredient) return;
+            if (!($ingredient instanceof Ingredient)) return;
 
             $purchase->update([
                 'status' => 'approved',

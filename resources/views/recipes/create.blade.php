@@ -843,72 +843,161 @@
 
     <!-- Quick Create Ingredient Modal -->
     <div id="createIngredientModal"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
-                <div>
-                    <h3 class="text-lg font-bold text-white">Request New Ingredient</h3>
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 flex justify-between items-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]"></div>
+                <div class="relative">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="plus-square" class="w-6 h-6"></i>
+                        Request New Ingredient
+                    </h3>
                     @if(!auth()->user()->isAdmin())
-                        <p class="text-blue-100 text-xs mt-0.5">Will be sent for Admin approval before use</p>
+                        <p class="text-blue-100 text-sm mt-0.5 opacity-90">Requires Admin approval before becoming active</p>
                     @endif
                 </div>
-                <button type="button" onclick="closeIngredientModal()" class="text-blue-200 hover:text-white">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button type="button" onclick="closeIngredientModal()" class="text-blue-100 hover:text-white transition-colors relative">
+                    <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </div>
-            <div class="p-6">
-                <form id="quickIngredientForm" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Name</label>
-                        <input type="text" name="name" id="quick_name" required
-                            class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none">
+            
+            <div class="p-8 max-h-[75vh] overflow-y-auto">
+                <form id="quickIngredientForm" class="space-y-8">
+                    <!-- Section 1: Basic Info -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="info" class="w-3.5 h-3.5"></i> Basic Information
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="col-span-full">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Ingredient Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="name" id="quick_name" required
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none transition-all font-medium placeholder-gray-400"
+                                    placeholder="e.g. Extra Virgin Olive Oil">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+                                <select name="category_id" required
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none bg-white cursor-pointer font-medium">
+                                    <option value="">Select Category...</option>
+                                    @foreach($ingredientCategories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Usage Unit <span class="text-red-500">*</span></label>
+                                <select name="measurement_unit" required
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none bg-white cursor-pointer font-medium">
+                                    <option value="">Select Unit...</option>
+                                    @foreach($units as $unit)
+                                        <option value="{{ $unit->value }}">{{ $unit->label() }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
-                            <select name="category_id" required
-                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
-                                @foreach($ingredientCategories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
 
+                    <!-- Section 2: Purchase Details -->
+                    <div class="space-y-4 p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
+                        <h4 class="text-xs font-bold text-blue-500 uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Purchase Metrics
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Purchase Qty</label>
+                                <input type="number" name="purchase_quantity" step="0.001" min="0" value="1"
+                                    class="w-full px-3 py-2.5 rounded-lg border-2 border-white focus:border-blue-400 outline-none bg-white font-bold text-center">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Purchase Unit</label>
+                                <select name="purchase_unit" 
+                                    class="w-full px-3 py-2.5 rounded-lg border-2 border-white focus:border-blue-400 outline-none bg-white font-bold cursor-pointer">
+                                    <option value="">Select...</option>
+                                    @foreach($units as $unit)
+                                        <option value="{{ $unit->value }}">{{ $unit->label() }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-span-full md:col-span-1">
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Standard Price</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
+                                    <input type="number" name="purchase_price" step="0.01" min="0" placeholder="0.00"
+                                        class="w-full pl-8 pr-3 py-2.5 rounded-lg border-2 border-white focus:border-blue-400 outline-none bg-white font-bold">
+                                </div>
+                            </div>
+                            <div class="col-span-full">
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">Primary Vendor (Optional)</label>
+                                <input type="text" name="vendor" placeholder="e.g. Local Market"
+                                    class="w-full px-4 py-2.5 rounded-lg border-2 border-white focus:border-blue-400 outline-none bg-white font-medium">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Alerts & Storage -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-gray-400"></i> Storage
+                            </label>
+                            <select name="storage_location" required
+                                class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none bg-white cursor-pointer font-medium">
+                                <option value="Fridge">Fridge</option>
+                                <option value="Freezer">Freezer</option>
+                                <option value="Dry Store" selected>Dry Store</option>
+                                <option value="Bar">Bar</option>
+                                <option value="Other">Other</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Unit</label>
-                            <select name="measurement_unit" required
-                                class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
-                                @foreach($units as $unit)
-                                    <option value="{{ $unit->value }}">{{ $unit->label() }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                <i data-lucide="bell" class="w-4 h-4 text-gray-400"></i> Alert At
+                            </label>
+                            <input type="number" name="alert_threshold" step="0.01" min="0" value="0"
+                                class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none font-bold text-center">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Storage</label>
-                        <select name="storage_location" required
-                            class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white">
-                            <option value="Fridge">Fridge</option>
-                            <option value="Freezer">Freezer</option>
-                            <option value="Dry Store">Dry Store</option>
-                            <option value="Bar">Bar</option>
-                        </select>
+
+                    <!-- Section 4: Allergens -->
+                    <div class="space-y-3">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Allergen Safety
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            @foreach(App\Enums\Allergen::cases() as $allergen)
+                                <label class="flex items-center gap-2.5 p-2 rounded-xl bg-gray-50 hover:bg-red-50 border border-gray-100 transition-all cursor-pointer group">
+                                    <input type="checkbox" name="allergen_tags[]" value="{{ $allergen->value }}" 
+                                        class="rounded text-red-500 focus:ring-red-500/20 w-4 h-4 transition-all">
+                                    <span class="text-xs font-bold text-gray-600 group-hover:text-red-700">{{ $allergen->label() }}</span>
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
-                    <button type="button" onclick="submitQuickIngredient()"
-                        class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg mt-4 hover:bg-blue-700 flex items-center justify-center gap-2">
-                        <i data-lucide="send" class="w-4 h-4"></i>
-                        @if(auth()->user()->isAdmin())
-                            Save & Approve Ingredient
-                        @else
-                            Submit for Approval
-                        @endif
-                    </button>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="closeIngredientModal()"
+                            class="flex-1 py-4 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl transition-all">
+                            Cancel
+                        </button>
+                        <button type="button" onclick="submitQuickIngredient()"
+                            class="flex-[2] py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                            Submit Request
+                        </button>
+                    </div>
                 </form>
                 <!-- Success message shown after submit -->
-                <div id="ingredientSubmitSuccess" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
-                    <div class="text-green-600 font-bold text-base">✅ Request Submitted!</div>
-                    <p class="text-green-700 text-sm mt-1" id="ingredientSubmitMsg"></p>
-                    <button onclick="closeIngredientModal()" class="mt-3 px-6 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700">Close</button>
+                <div id="ingredientSubmitSuccess" class="hidden py-12 px-6 text-center animate-fade-in-up">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="check-circle-2" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 mb-2">Request Processed!</div>
+                    <p class="text-gray-500 text-base mb-8 max-w-sm mx-auto" id="ingredientSubmitMsg"></p>
+                    <button onclick="closeIngredientModal()" 
+                        class="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all">
+                        Return to Recipe
+                    </button>
                 </div>
             </div>
         </div>
@@ -963,10 +1052,36 @@
             calculateTotal();
         }
 
+        function removeRow(btn) {
+            btn.closest('tr').remove();
+            calculateTotal();
+        }
+
+        function removeStage(btn) {
+            const container = document.getElementById('stages-container');
+            if (container.querySelectorAll('.stage-block').length <= 1) {
+                alert('Recipe must have at least one set/stage.');
+                return;
+            }
+            if (confirm('Are you sure you want to remove this entire set?')) {
+                btn.closest('.stage-block').remove();
+                calculateTotal();
+            }
+        }
+
         function calculateTotal() {
             let total = 0;
-            document.querySelectorAll('.cost-display').forEach(el => total += parseFloat(el.textContent || 0));
-            document.querySelectorAll('.cost-val').forEach(el => total += parseFloat(el.textContent || 0));
+            // Ingredients cost
+            document.querySelectorAll('.cost-display').forEach(el => {
+                const val = parseFloat(el.textContent.replace(/,/g, ''));
+                if (!isNaN(val)) total += val;
+            });
+            // Sub-recipes cost
+            document.querySelectorAll('.cost-val').forEach(el => {
+                const val = parseFloat(el.textContent.replace(/,/g, ''));
+                if (!isNaN(val)) total += val;
+            });
+            
             const display = document.getElementById('totalCostDisplay');
             if (display) display.textContent = total.toFixed(2);
         }
@@ -1019,10 +1134,20 @@
 
         function submitQuickIngredient() {
             const form = document.getElementById('quickIngredientForm');
-            const data = Object.fromEntries(new FormData(form).entries());
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Handle multiple checkboxes for allergen_tags
+            const allergenTags = formData.getAll('allergen_tags[]');
+            data.allergen_tags = allergenTags;
+
             fetch('{{ route('ingredients.storeQuick') }}', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                    'Accept': 'application/json' 
+                },
                 body: JSON.stringify(data)
             }).then(r => r.json()).then(res => {
                 if (res.success) {
@@ -1031,7 +1156,7 @@
                         const newOptionInfo = {
                             id: res.ingredient.id,
                             name: res.ingredient.name,
-                            unit: res.ingredient.unit, // Use 'unit' from response
+                            unit: res.ingredient.unit,
                             price: res.ingredient.price
                         };
 
@@ -1047,7 +1172,7 @@
                             s.appendChild(o);
                         });
 
-                        // Update the hidden options template div so future rows get it too
+                        // Update the hidden options template div
                         const optDiv = document.getElementById('ingredientOptions');
                         if (optDiv) {
                             const o = document.createElement('option');
@@ -1059,13 +1184,15 @@
                         }
 
                         closeIngredientModal();
-                        form.reset();
                     } else {
-                        // Staff created - show pending approval message instead
+                        // Staff created - show success state in modal
                         form.classList.add('hidden');
                         document.getElementById('ingredientSubmitSuccess').classList.remove('hidden');
                         document.getElementById('ingredientSubmitMsg').textContent =
-                            '"' + res.ingredient.name + '" has been sent to Admin for approval. It will appear in the ingredient list once approved.';
+                            '"' + res.ingredient.name + '" has been sent to Admin for approval. It will appear once approved.';
+                        
+                        // Re-initialize icons for the success message
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
                     }
                 } else {
                     alert(res.message || 'Failed to submit ingredient.');
