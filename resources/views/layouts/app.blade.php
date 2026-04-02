@@ -231,13 +231,14 @@
             height: 1.15rem;
         }
 
-        /* GLOBAL Tom Select Safety Fix */
+        /* GLOBAL Tom Select Safety Fix - Less aggressive */
         .ts-dropdown {
-            display: none !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
+            display: none;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1000 !important;
         }
-        .ts-dropdown.active {
+        .ts-dropdown.active, .ts-wrapper.focus .ts-dropdown {
             display: block !important;
             opacity: 1 !important;
             visibility: visible !important;

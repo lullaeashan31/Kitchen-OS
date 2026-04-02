@@ -1730,9 +1730,18 @@
                     if (result.success) {
                         const newOpt = { value: result.ingredient.id, text: result.ingredient.name + ' (' + result.ingredient.unit + ')', price: result.ingredient.price, unit: result.ingredient.unit };
 
-                        document.querySelectorAll('.ingredient-select').forEach(select => {
+                        document.querySelectorAll('.ingredient-select, #produces_ingredient_id').forEach(select => {
+                            // If it's a TomSelect
                             if (select.tomselect) {
                                 select.tomselect.addOption(newOpt);
+                            } else {
+                                // Standard select
+                                const o = document.createElement('option');
+                                o.value = newOpt.value;
+                                o.textContent = newOpt.text;
+                                o.setAttribute('data-price', newOpt.price);
+                                o.setAttribute('data-unit', newOpt.unit);
+                                select.appendChild(o);
                             }
                         });
 

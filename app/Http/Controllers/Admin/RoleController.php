@@ -35,8 +35,10 @@ class RoleController extends Controller
             'slug' => $validated['slug'],
             'description' => $validated['description'] ?? null,
         ]);
-        $role->permissions()->sync($request->permissions ?? []);
-        return redirect()->route('admin.roles.index')->with('success', 'Role created successfully.');
+        $role->permissions()->sync($request->input('permissions', []));
+
+        return redirect()->route('admin.roles.index', ['kitchen_slug' => $kitchen_slug])
+            ->with('success', 'Role generated and permissions linked successfully.');
     }
 
     public function edit(string $kitchen_slug, Role $role)
@@ -54,13 +56,18 @@ class RoleController extends Controller
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
+
         $role->update([
             'name' => $validated['name'],
             'slug' => $validated['slug'],
             'description' => $validated['description'] ?? null,
         ]);
-        $role->permissions()->sync($request->permissions ?? []);
-        return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully.');
+
+        // Carefully sync permissions
+        $role->permissions()->sync($request->input('permissions', []));
+
+        return redirect()->route('admin.roles.index', ['kitchen_slug' => $kitchen_slug])
+            ->with('success', 'Role "' . $role->name . '" updated successfully.');
     }
 
     public function destroy(string $kitchen_slug, Role $role)

@@ -238,6 +238,9 @@
                                     <h3 class="font-black text-slate-900">Profile Photo</h3>
                                     <p class="text-xs text-slate-500 mt-1">Please upload a clear, professional photo of yourself.</p>
                                 </div>
+                                @error('profile_photo')
+                                    <span class="text-xs text-rose-600 font-bold block mt-1">{{ $message }}</span>
+                                @enderror
                              </div>
                         </div>
 
@@ -365,6 +368,9 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-black text-slate-900 uppercase tracking-tighter">Aadhaar Card (12 Digits)</label>
                                 <input type="text" name="aadhaar_number" value="{{ old('aadhaar_number') }}" required maxlength="12" pattern="\d{12}" class="form-input font-bold tracking-[0.2em] md:tracking-[0.3em] text-center" placeholder="0000 0000 0000">
+                                @error('aadhaar_card_file')
+                                    <span class="text-xs text-rose-600 font-bold block mt-1">{{ $message }}</span>
+                                @enderror
                                 @error('aadhaar_number')
                                     <span class="text-xs text-rose-600 font-bold ml-1">{{ $message }}</span>
                                 @enderror
@@ -384,6 +390,9 @@
                             <div class="space-y-2">
                                 <label class="text-sm font-black text-slate-900 uppercase tracking-tighter">PAN Card (10 Chars)</label>
                                 <input type="text" name="pan_number" value="{{ old('pan_number') }}" required maxlength="10" class="form-input font-bold tracking-[0.2em] md:tracking-[0.3em] text-center uppercase" placeholder="ABCDE1234F">
+                                @error('pan_card_file')
+                                    <span class="text-xs text-rose-600 font-bold block mt-1">{{ $message }}</span>
+                                @enderror
                                 @error('pan_number')
                                     <span class="text-xs text-rose-600 font-bold ml-1">{{ $message }}</span>
                                 @enderror
@@ -1036,10 +1045,10 @@
         $errorStep = null;
         $fieldStepMap = [
             // Step 1: Personal
-            'full_name_aadhaar' => 1, 'dob' => 1, 'gender' => 1, 'marital_status' => 1, 'blood_group' => 1,
-            'father_spouse_name' => 1, 'mother_name' => 1, 'permanent_address' => 1, 'address' => 1,
+            'profile_photo' => 1, 'full_name_aadhaar' => 1, 'dob' => 1, 'gender' => 1, 'marital_status' => 1, 'blood_group' => 1,
+            'father_spouse_name' => 1, 'mother_name' => 1, 'permanent_address' => 1, 'address' => 1, 'email' => 1,
             // Step 2: Docs
-            'aadhaar_number' => 2, 'pan_number' => 2,
+            'aadhaar_number' => 2, 'pan_number' => 2, 'aadhaar_card_file' => 2, 'pan_card_file' => 2,
             // Step 4: Bank & Emergency
             'bank_name' => 4, 'account_holder_name' => 4, 'account_number' => 4, 'ifsc_code' => 4, 'account_type' => 4,
             'emergency_contacts_json.0.name' => 4, 'emergency_contacts_json.0.relation' => 4, 'emergency_contacts_json.0.mobile' => 4,
@@ -1101,10 +1110,15 @@
 
         function validateStep(step) {
             const currentStepEl = document.getElementById(`step_${step}`);
-            const inputs = currentStepEl.querySelectorAll('[required]');
+            const requiredInputs = currentStepEl.querySelectorAll('[required]');
+            const allInputs = currentStepEl.querySelectorAll('input, select, textarea');
             let isValid = true;
 
-            inputs.forEach(input => {
+            // Remove all existing manual error messages first
+            currentStepEl.querySelectorAll('.js-error-msg').forEach(e => e.remove());
+
+            // 1. Check Required Fields
+            requiredInputs.forEach(input => {
                 let currentInputValid = true;
                 if (input.type === 'checkbox') {
                     currentInputValid = input.checked;
@@ -1115,32 +1129,72 @@
                     currentInputValid = input.value.trim() !== '';
                 }
 
-                // Remove any existing manual error messages
-                const existingError = input.parentElement.querySelector('.js-error-msg');
-                if (existingError) existingError.remove();
-
                 if (!currentInputValid) {
                     isValid = false;
-                    input.classList.add('border-rose-400', 'ring-4', 'ring-rose-400/10');
-                    
-                    // Add error message text
-                    const errorMsg = document.createElement('span');
-                    errorMsg.className = 'text-xs text-rose-600 font-bold ml-1 block mt-1 js-error-msg';
-                    errorMsg.textContent = 'This field is required';
-                    input.parentElement.appendChild(errorMsg);
-
-                    setTimeout(() => input.classList.remove('ring-4', 'ring-rose-400/10'), 3000);
+                    showFieldError(input, 'This field is required');
                 } else {
                     input.classList.remove('border-rose-400');
                 }
             });
 
+            // 2. Check File Types and Sizes (even if not required, if a file is selected)
+            allInputs.forEach(input => {
+                if (input.type === 'file' && input.files.length > 0) {
+                    const file = input.files[0];
+                    const fileName = file.name.toLowerCase();
+                    const fileSize = file.size / 1024 / 1024; // in MB
+
+                    if (input.name === 'profile_photo') {
+                        const allowed = ['jpg', 'jpeg', 'png'];
+                        const ext = fileName.split('.').pop();
+                        if (!allowed.includes(ext)) {
+                            isValid = false;
+                            showFieldError(input, 'Profile photo must be an image (JPG, PNG)');
+                        }
+                    } else if (input.name === 'aadhaar_card_file' || input.name === 'pan_card_file') {
+                        const allowed = ['jpg', 'jpeg', 'png', 'pdf'];
+                        const ext = fileName.split('.').pop();
+                        if (!allowed.includes(ext)) {
+                            isValid = false;
+                            showFieldError(input, 'File must be JPG, PNG or PDF');
+                        }
+                    }
+
+                    if (fileSize > 5) {
+                        isValid = false;
+                        showFieldError(input, 'File size must be less than 5MB');
+                    }
+                }
+            });
+
             if (!isValid) {
-                const firstError = currentStepEl.querySelector('.border-rose-400');
-                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const firstError = currentStepEl.querySelector('.js-error-msg');
+                if (firstError) {
+                    firstError.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
 
             return isValid;
+        }
+
+        function showFieldError(input, message) {
+            input.classList.add('border-rose-400', 'ring-4', 'ring-rose-400/10');
+            
+            // Avoid duplicate error messages if multiple rules fail
+            if (input.parentElement.querySelector('.js-error-msg')) return;
+
+            const errorMsg = document.createElement('span');
+            errorMsg.className = 'text-xs text-rose-600 font-bold ml-1 block mt-1 js-error-msg animate-pulse';
+            errorMsg.textContent = message;
+            
+            // Try to append after the input's container or parent
+            if (input.type === 'checkbox' || input.type === 'radio' || input.type === 'file') {
+                input.closest('.space-y-2')?.appendChild(errorMsg) || input.parentElement.appendChild(errorMsg);
+            } else {
+                input.parentElement.appendChild(errorMsg);
+            }
+
+            setTimeout(() => input.classList.remove('ring-4', 'ring-rose-400/10'), 3000);
         }
 
         function updateUI() {

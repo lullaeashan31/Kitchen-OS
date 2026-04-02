@@ -225,6 +225,10 @@ class PurchaseController extends Controller
         }
 
         DB::transaction(function () use ($purchase) {
+            // Relock and Refresh Ingredient for atomic update
+            $ingredient = $purchase->ingredient()->lockForUpdate()->first();
+            if (!$ingredient) return;
+
             $purchase->update([
                 'status' => 'approved',
                 'approved_by' => Auth::id(),
@@ -232,7 +236,6 @@ class PurchaseController extends Controller
             ]);
 
             // Update Ingredient Stock & Avg Price
-            $ingredient = $purchase->ingredient;
             $currentStock = $ingredient->current_stock;
             $currentAvgCost = $ingredient->avg_cost ?? 0;
             $quantity = $purchase->quantity;
@@ -250,7 +253,7 @@ class PurchaseController extends Controller
 
             // Update basic configuration based on latest purchase
             $ingredient->purchase_price = $purchase->total_price;
-            $ingredient->purchase_quantity = $purchase->quantity / $ingredient->getConversionMultiplier($purchase->unit, $ingredient->base_unit);
+            $ingredient->purchase_quantity = $purchase->quantity / Ingredient::getConversionMultiplier($purchase->unit, $ingredient->base_unit);
             $ingredient->purchase_unit = $purchase->unit;
             
             $ingredient->current_stock = $newStock;
@@ -260,13 +263,14 @@ class PurchaseController extends Controller
 
             // Log Inventory Change
             InventoryLog::create([
+                'kitchen_id' => $ingredient->kitchen_id,
                 'ingredient_id' => $ingredient->id,
                 'user_id' => Auth::id(), // Admin who approved
                 'quantity_change' => $quantity,
                 'action' => 'purchase_approved',
                 'stock_before' => $currentStock,
                 'stock_after' => $newStock,
-                'notes' => 'Purchase Approved. Vendor: ' . $purchase->vendor . '. Invoice: ' . $purchase->id,
+                'reason' => 'Purchase Approved. Vendor: ' . $purchase->vendor . '. Invoice: ' . $purchase->id,
             ]);
         });
 

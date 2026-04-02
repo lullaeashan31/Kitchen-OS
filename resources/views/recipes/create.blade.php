@@ -1028,13 +1028,36 @@
                 if (res.success) {
                     if (res.status === 'approved') {
                         // Admin created - add directly to all ingredient dropdowns
-                        document.querySelectorAll('.ingredient-select').forEach(s => {
+                        const newOptionInfo = {
+                            id: res.ingredient.id,
+                            name: res.ingredient.name,
+                            unit: res.ingredient.unit, // Use 'unit' from response
+                            price: res.ingredient.price
+                        };
+
+                        const formattedText = `${newOptionInfo.name} (${newOptionInfo.unit})`;
+
+                        // Update all active ingredient selects
+                        document.querySelectorAll('.ingredient-select, #produces_ingredient_id').forEach(s => {
                             const o = document.createElement('option');
-                            o.value = res.ingredient.id;
-                            o.textContent = res.ingredient.name;
-                            o.setAttribute('data-price', res.ingredient.price);
+                            o.value = newOptionInfo.id;
+                            o.textContent = formattedText;
+                            o.setAttribute('data-price', newOptionInfo.price);
+                            o.setAttribute('data-unit', newOptionInfo.unit);
                             s.appendChild(o);
                         });
+
+                        // Update the hidden options template div so future rows get it too
+                        const optDiv = document.getElementById('ingredientOptions');
+                        if (optDiv) {
+                            const o = document.createElement('option');
+                            o.value = newOptionInfo.id;
+                            o.textContent = formattedText;
+                            o.setAttribute('data-price', newOptionInfo.price);
+                            o.setAttribute('data-unit', newOptionInfo.unit);
+                            optDiv.appendChild(o);
+                        }
+
                         closeIngredientModal();
                         form.reset();
                     } else {
