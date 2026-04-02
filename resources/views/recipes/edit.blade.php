@@ -181,6 +181,7 @@
             background-size: 20px 20px;
         }
     </style>
+@push('scripts')
     <script>
         // Pre-load existing sub-recipes from "Sub-Recipes" stage
         @php

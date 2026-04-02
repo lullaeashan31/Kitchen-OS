@@ -274,8 +274,8 @@
             }
         }
 
-        window.addIngredientRowNow = addIngredientRowNow;
-        window.addIngredientRow = addIngredientRowNow;
+        window.addIngredientRowNow = addIngredientRow;
+        window.addIngredientRow = addIngredientRow;
     </script>
 
     <form action="{{ route('recipes.store') }}" method="POST" id="recipeForm"
@@ -539,7 +539,8 @@
                                         </tbody>
                                     </table>
                                     <div class="flex border-t-2 border-blue-200">
-                                    <button type="button" onclick="return addIngredientRowNow(this);\"\n                                        class=\"flex-1 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 text-base font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
+                                    <button type="button" onclick="addIngredientRow(this)"
+                                        class="flex-1 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 text-base font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
                                         <i data-lucide="plus-circle" class="w-5 h-5"></i>
                                         <span>+ Add Ingredient</span>
                                     </button>
@@ -646,7 +647,7 @@
                         </tbody>
                     </table>
                     <div class="flex border-t-2 border-blue-200">
-                        <button type="button" onclick="return addIngredientRowNow(this);"
+                        <button type="button" onclick="addIngredientRow(this)"
                             class="flex-1 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 text-base font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
                             <i data-lucide="plus-circle" class="w-5 h-5"></i>
                             <span>+ Add Ingredient</span>
@@ -1022,6 +1023,42 @@
         let ingredientOptionsHTML = '';
 
         window.addedSubRecipes = [];
+
+        // Sub-Recipe Mode Toggle
+        let subRecipeEnabled = {{ old('is_sub_recipe', 0) ? 'true' : 'false' }};
+
+        function toggleSubRecipe() {
+            subRecipeEnabled = !subRecipeEnabled;
+            document.getElementById('is_sub_recipe').value = subRecipeEnabled ? 1 : 0;
+            
+            const bg = document.getElementById('subRecipeToggleBg');
+            const dot = document.getElementById('subRecipeToggleDot');
+            const fields = document.getElementById('subRecipeFields');
+
+            if (subRecipeEnabled) {
+                bg.classList.remove('bg-gray-200');
+                bg.classList.add('bg-indigo-500');
+                dot.classList.remove('translate-x-0');
+                dot.classList.add('translate-x-4');
+                fields.classList.remove('hidden');
+            } else {
+                bg.classList.add('bg-gray-200');
+                bg.classList.remove('bg-indigo-500');
+                dot.classList.add('translate-x-0');
+                dot.classList.remove('translate-x-4');
+                fields.classList.add('hidden');
+            }
+        }
+
+        // Set initial toggle state on page load (for old() values on validation error)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (subRecipeEnabled) {
+                const bg = document.getElementById('subRecipeToggleBg');
+                const dot = document.getElementById('subRecipeToggleDot');
+                if (bg) bg.classList.replace('bg-gray-200', 'bg-indigo-500');
+                if (dot) dot.classList.replace('translate-x-0', 'translate-x-4');
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             const ingredientOptionsEl = document.getElementById('ingredientOptions');

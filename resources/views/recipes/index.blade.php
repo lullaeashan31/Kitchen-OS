@@ -108,13 +108,13 @@
                                 <div class="text-xs text-gray-400 font-mono">v{{ $recipe->version }} • {{ $recipe->yields }} Portions</div>
                                 <div class="sm:hidden mt-1">
                                     <span class="px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                        {{ $recipe->category->name ?? 'Uncategorized' }}
+                                        {{ $recipe->category?->name ?? 'Uncategorized' }}
                                     </span>
                                 </div>
                             </td>
                             <td class="p-3 md:p-4 lg:p-5 hidden sm:table-cell">
                                 <span class="px-2 md:px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                    {{ $recipe->category->name ?? 'Uncategorized' }}
+                                    {{ $recipe->category?->name ?? 'Uncategorized' }}
                                 </span>
                             </td>
                             <td class="p-3 md:p-4 lg:p-5">
@@ -138,7 +138,7 @@
                                 </td>
                             @endif
                             <td class="p-3 md:p-4 lg:p-5 hidden lg:table-cell">
-                                <div class="text-sm font-medium text-gray-700">{{ $recipe->creator->name }}</div>
+                                <div class="text-sm font-medium text-gray-700">{{ $recipe->creator?->name ?? 'Unknown' }}</div>
                                 <div class="text-xs text-gray-400">{{ $recipe->updated_at->diffForHumans() }}</div>
                             </td>
                             <td class="p-3 md:p-4 lg:p-5 text-right">
