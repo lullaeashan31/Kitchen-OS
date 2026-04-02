@@ -275,8 +275,9 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Secondary Phone</label>
-                            <input type="tel" name="secondary_phone" value="{{ old('secondary_phone', $user->employeeProfile?->secondary_phone) }}" placeholder="Optional"
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Secondary Phone (10 Digits)</label>
+                            <input type="tel" name="secondary_phone" value="{{ old('secondary_phone', $user->employeeProfile?->secondary_phone) }}" placeholder="10 Digits"
+                                maxlength="10" pattern="\d{10}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)"
                                 class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-800">
                         </div>
 

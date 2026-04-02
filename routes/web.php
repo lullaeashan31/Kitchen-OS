@@ -48,8 +48,31 @@ Route::get('/storage/purchases/{type}/{filename}', function ($type, $filename) {
     return response($file, 200)->header('Content-Type', $mimeType);
 })->where(['type' => 'invoices|goods', 'filename' => '.*']);
 
+// Custom route to serve attendance photos (fixes 403 error)
+Route::get('/storage/attendance/{path}', function ($path) {
+    $full_path = "attendance/{$path}";
+
+    // Check public disk first
+    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($full_path)) {
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+    } 
+    // Fallback to local (private) disk if it's there
+    elseif (\Illuminate\Support\Facades\Storage::disk('local')->exists($full_path)) {
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+    } 
+    else {
+        abort(404);
+    }
+
+    $file = $disk->get($full_path);
+    $mimeType = $disk->mimeType($full_path);
+
+    return response($file, 200)->header('Content-Type', $mimeType);
+})->where('path', '.*');
+
 // Onboarding Wizard (Public with Token)
 Route::get('/onboarding/{token}', [\App\Http\Controllers\Employee\OnboardingWizardController::class, 'show'])->name('onboarding.wizard');
+Route::post('/onboarding/check-email', [\App\Http\Controllers\Employee\OnboardingWizardController::class, 'checkEmail'])->name('onboarding.check_email');
 Route::post('/onboarding/{token}', [\App\Http\Controllers\Employee\OnboardingWizardController::class, 'submit'])->name('onboarding.submit');
 
 Route::get('/time-clock', [AttendanceViewController::class, 'tablet'])->name('attendance.tablet');

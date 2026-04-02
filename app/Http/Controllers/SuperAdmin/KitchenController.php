@@ -40,7 +40,7 @@ class KitchenController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:kitchens,slug',
             'admin_name' => 'required|string|max:255',
-            'admin_phone' => 'required|digits:10|unique:users,phone',
+            'admin_phone' => 'required|digits_between:10,15|unique:users,phone',
             'admin_code' => 'required|numeric|digits:6|unique:users,staff_code',
             'admin_password' => 'required|string|min:8',
         ]);
@@ -105,7 +105,7 @@ class KitchenController extends Controller
             'slug' => 'required|string|max:255|unique:kitchens,slug,' . $kitchen->id,
             'is_active' => 'required|boolean',
             'admin_name' => 'required|string|max:255',
-            'admin_phone' => 'required|digits:10|unique:users,phone,' . ($admin ? $admin->id : 'NULL'),
+            'admin_phone' => 'required|digits_between:10,15|unique:users,phone,' . ($admin ? $admin->id : 'NULL'),
             'admin_code' => 'required|numeric|digits:6|unique:users,staff_code,' . ($admin ? $admin->id : 'NULL'),
             'admin_password' => 'nullable|string|min:8',
         ]);

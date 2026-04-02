@@ -116,7 +116,7 @@
                                 class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none text-gray-800">{{ old('address', $user->employeeProfile?->address) }}</textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Secondary Phone</label>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Secondary Phone (10 Digits)</label>
                             <input type="tel" name="secondary_phone"
                                 value="{{ old('secondary_phone', $user->employeeProfile?->secondary_phone) }}"
                                 inputmode="numeric" pattern="[0-9]*"

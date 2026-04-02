@@ -31,6 +31,7 @@ class EmployeeProfile extends Model
         'dob',
         'gender',
         'father_spouse_name',
+        'mother_name',
         'marital_status',
         'blood_group',
         'permanent_address',

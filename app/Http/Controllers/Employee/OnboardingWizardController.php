@@ -9,6 +9,7 @@ use App\Models\EmployeeProfile;
 use App\Models\HrPolicyLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class OnboardingWizardController extends Controller
 {
@@ -21,6 +22,9 @@ class OnboardingWizardController extends Controller
         }
 
         $user = $onboardingToken->user;
+        if (!$user) {
+            return abort(404, 'User associated with this link no longer exists.');
+        }
         $profile = $user->employeeProfile ?? new EmployeeProfile();
 
         return view('employee.onboarding.wizard', compact('user', 'profile', 'token'));
@@ -35,17 +39,25 @@ class OnboardingWizardController extends Controller
         }
 
         $user = $onboardingToken->user;
+        if (!$user) {
+            return abort(404, 'User associated with this link no longer exists.');
+        }
 
         $validated = $request->validate([
             // SECTION A: PERSONAL INFORMATION
             'full_name_aadhaar' => 'required|string|max:255',
             'dob' => 'required|date',
             'gender' => 'required|string',
-            'email' => 'required|email|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
             'father_spouse_name' => 'required|string|max:255',
             'marital_status' => 'required|string',
             'blood_group' => 'required|string',
-            'secondary_phone' => 'nullable|string|max:15',
+            'secondary_phone' => 'nullable|digits:10',
             'mother_name' => 'required|string|max:255',
             'permanent_address' => 'required|string',
             'address' => 'required|string',
@@ -208,5 +220,16 @@ class OnboardingWizardController extends Controller
         });
 
         return view('employee.onboarding.success');
+    }
+
+    public function checkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email', 'user_id' => 'required|exists:users,id']);
+        
+        $taken = \App\Models\User::where('email', $request->email)
+            ->where('id', '!=', $request->user_id)
+            ->exists();
+            
+        return response()->json(['taken' => $taken]);
     }
 }

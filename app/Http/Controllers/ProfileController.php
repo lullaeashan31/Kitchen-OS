@@ -35,7 +35,7 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|digits:10|unique:users,phone,' . $user->id,
+            'phone' => 'required|digits_between:10,15|unique:users,phone,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120',
             'address' => 'nullable|string',

@@ -88,14 +88,8 @@
                     if (tbody) {
                         // Create a simple button to trigger addIngredientRowNow
                         var addBtn = stageBlock.querySelector('button[onclick*="addIngredientRow"]');
-                        if (addBtn && typeof addIngredientRowNow === 'function') {
-                            // Call addIngredientRowNow to add first row
-                            addIngredientRowNow(addBtn);
-                        } else if (typeof addIngredientRowToTbody === 'function') {
-                            addIngredientRowToTbody(tbody, stageIndex);
-                        } else if (typeof window.addIngredientRowToTbody === 'function') {
-                            window.addIngredientRowToTbody(tbody, stageIndex);
-                        }
+                        // Call addIngredientRow to add first row
+                        addIngredientRow(addBtn);
                     }
                 }, 300);
 
@@ -140,7 +134,8 @@
         };
 
         // Simple function to add ingredient row - available immediately
-        function addIngredientRowNow(btn) {
+        // Simple function to add ingredient row - available immediately
+        function addIngredientRow(btn) {
             try {
                 console.log('addIngredientRowNow called');
                 var stageBlock = btn.closest('.stage-block');
@@ -791,7 +786,7 @@
                     <div class="relative">
                         <select id="sub-recipe-selector" onchange="window.handleSubRecipeSelect(this)"
                             class="w-full h-[56px] px-5 rounded-xl border-2 border-gray-200 focus:border-indigo-500 py-3 appearance-none bg-white cursor-pointer focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-base font-semibold shadow-sm hover:border-indigo-300">
-                            <option value="">🔍 Search Sub-Recipes...</option>
+                            <option value="">-- Select Sub-Recipe --</option>
                             @if(count($subRecipes) > 0)
                                 @foreach($subRecipes as $sub)
                                     <option value="{{ $sub->id }}" data-name="{{ $sub->name }}"
@@ -877,13 +872,22 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
-                                <select name="category_id" required
-                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none bg-white cursor-pointer font-medium">
-                                    <option value="">Select Category...</option>
-                                    @foreach($ingredientCategories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="relative group">
+                                    <select name="category_id" id="quick_category_select" required
+                                        class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none bg-white cursor-pointer font-medium appearance-none">
+                                        <option value="">Select Category...</option>
+                                        @foreach($ingredientCategories as $category)
+                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" onclick="openCategoryModal('', (res) => { if(res){ const s = document.getElementById('quick_category_select'); const o = new Option(res.name, res.id, true, true); s.add(o); } })"
+                                        class="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-all" title="Add New Category">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </button>
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Usage Unit <span class="text-red-500">*</span></label>
@@ -1017,22 +1021,61 @@
         let stageCount = {{ count(old('stages', [])) }};
         let ingredientOptionsHTML = '';
 
+        window.addedSubRecipes = [];
+
         document.addEventListener('DOMContentLoaded', () => {
             const ingredientOptionsEl = document.getElementById('ingredientOptions');
             if (ingredientOptionsEl) ingredientOptionsHTML = ingredientOptionsEl.innerHTML;
 
-            const initTS = (id, options = {}) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                return new TomSelect(el, {
-                    closeAfterSelect: true,
-                    onItemAdd: function() { this.close(); this.blur(); },
-                    render: { option_create: (data, escape) => `<div class="create">Add <strong>${escape(data.input)}</strong>...</div>` },
-                    ...options
+            // Standard select used instead of TomSelect as requested
+            window.subRecipeSelector = null;
+
+            // Form Submit Override to inject sub-recipes
+            const form = document.getElementById('recipeForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (window.addedSubRecipes.length > 0) {
+                        const stageIdx = 999;
+                        const container = document.createElement('div');
+                        container.style.display = 'none';
+                        
+                        // Create a special stage name
+                        const nameInput = document.createElement('input');
+                        nameInput.type = 'hidden';
+                        nameInput.name = `stages[${stageIdx}][name]`;
+                        nameInput.value = 'Sub-Recipes';
+                        container.appendChild(nameInput);
+                        
+                        const methodInput = document.createElement('input');
+                        methodInput.type = 'hidden';
+                        methodInput.name = `stages[${stageIdx}][method]`;
+                        methodInput.value = 'Included sub-recipes';
+                        container.appendChild(methodInput);
+
+                        window.addedSubRecipes.forEach((sub, idx) => {
+                            const idInput = document.createElement('input');
+                            idInput.type = 'hidden';
+                            idInput.name = `stages[${stageIdx}][ingredients][${idx}][ingredient_id]`;
+                            idInput.value = sub.ingId;
+                            container.appendChild(idInput);
+                            
+                            const qtyInput = document.createElement('input');
+                            qtyInput.type = 'hidden';
+                            qtyInput.name = `stages[${stageIdx}][ingredients][${idx}][quantity]`;
+                            qtyInput.value = sub.qty;
+                            container.appendChild(qtyInput);
+                            
+                            const unitInput = document.createElement('input');
+                            unitInput.type = 'hidden';
+                            unitInput.name = `stages[${stageIdx}][ingredients][${idx}][unit]`;
+                            unitInput.value = sub.unit;
+                            container.appendChild(unitInput);
+                        });
+                        this.appendChild(container);
+                    }
                 });
-            };
-            // Category select is now a standard HTML select, so no TomSelect init needed.
-            // window.categoryTomSelect is no longer used for category.
+            }
+
             if (stageCount === 0) addNewSet();
             calculateTotal();
         });
@@ -1101,7 +1144,7 @@
         function submitQuickCategory() {
             const name = document.getElementById('quick_category_name').value;
             if (!name) return alert('Enter name');
-            fetch('{{ route("categories.storeQuick") }}', {
+            fetch('{{ route("categories.storeQuick", ["kitchen_slug" => request()->route("kitchen_slug")]) }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                 body: JSON.stringify({ name: name, type: 'recipe' })
@@ -1109,7 +1152,12 @@
                 if (res.success) {
                     const select = document.getElementById('category-select');
                     const option = new Option(res.name, res.id, true, true);
-                    select.add(option);
+                    if (select) select.add(option);
+                    
+                    if (window.categoryCallback) {
+                        window.categoryCallback(res);
+                        window.categoryCallback = null; // Prevent closeCategoryModal from firing it again
+                    }
                     closeCategoryModal();
                 }
             }).catch(e => {
@@ -1141,7 +1189,7 @@
             const allergenTags = formData.getAll('allergen_tags[]');
             data.allergen_tags = allergenTags;
 
-            fetch('{{ route('ingredients.storeQuick') }}', {
+            fetch('{{ route('ingredients.storeQuick', ['kitchen_slug' => request()->route('kitchen_slug')]) }}', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 
@@ -1203,17 +1251,52 @@
             });
         }
 
+        window.handleSubRecipeSelect = function(el) {
+            const opt = el.options[el.selectedIndex];
+            const unitDisplay = document.getElementById('sub-recipe-unit-display');
+            if (opt && unitDisplay) {
+                unitDisplay.value = opt.dataset.unit || 'pcs';
+            }
+        }
+
         function openSubRecipeModal() { document.getElementById('addSubRecipeModal').classList.remove('hidden'); }
-        function closeSubRecipeModal() { document.getElementById('addSubRecipeModal').classList.add('hidden'); }
+        function closeSubRecipeModal() { 
+            document.getElementById('addSubRecipeModal').classList.add('hidden'); 
+            const select = document.getElementById('sub-recipe-selector');
+            if (select) select.value = '';
+            document.getElementById('sub-recipe-qty').value = 1;
+            document.getElementById('sub-recipe-unit-display').value = '';
+        }
         
         function confirmAddSubRecipe() {
             const select = document.getElementById('sub-recipe-selector');
-            const qty = document.getElementById('sub-recipe-qty').value;
-            const opt = select.options[select.selectedIndex];
-            if (!select.value) return alert('Select sub-recipe');
+            const qty = parseFloat(document.getElementById('sub-recipe-qty').value);
+            if (isNaN(qty) || qty <= 0) return alert('Enter valid quantity');
+
+            let val = '';
+            let opt = null;
+
+            if (window.subRecipeSelector) {
+                val = window.subRecipeSelector.getValue();
+                opt = window.subRecipeSelector.options[val];
+            } else {
+                val = select.value;
+                opt = select.options[select.selectedIndex];
+            }
+
+            if (!val) return alert('Select sub-recipe');
             
-            const subData = { name: opt.dataset.name, qty: qty, unit: opt.dataset.unit, price: opt.dataset.price };
-            if (!window.addedSubRecipes) window.addedSubRecipes = [];
+            const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
+            
+            const subData = { 
+                id: val,
+                ingId: originalOpt?.dataset?.ingId || val,
+                name: originalOpt?.dataset?.name || opt?.text || 'Unknown', 
+                qty: qty, 
+                unit: originalOpt?.dataset?.unit || opt?.dataset?.unit || 'pcs', 
+                price: parseFloat(originalOpt?.dataset?.price || opt?.dataset?.price || 0) 
+            };
+
             window.addedSubRecipes.push(subData);
             renderSubRecipeCards();
             calculateTotal();
@@ -1222,16 +1305,29 @@
 
         function renderSubRecipeCards() {
             const container = document.getElementById('sub-recipes-container');
+            if (!container) return;
             container.querySelectorAll('.sub-recipe-card').forEach(e => e.remove());
             document.getElementById('no-sub-recipes-msg').classList.toggle('hidden', window.addedSubRecipes.length > 0);
             window.addedSubRecipes.forEach((s, i) => {
                 const cost = (s.qty * s.price).toFixed(2);
                 const card = document.createElement('div');
-                card.className = 'sub-recipe-card bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center';
-                card.innerHTML = `<div class="flex items-center gap-3"><div><h4 class="font-bold">${s.name}</h4><p class="text-xs text-gray-500">${s.qty} ${s.unit} • ₹${cost}</p></div></div><button type="button" onclick="window.addedSubRecipes.splice(${i},1);renderSubRecipeCards();calculateTotal();" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button><span class="cost-val hidden">${cost}</span>`;
+                card.className = 'sub-recipe-card bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center animate-fade-in-up';
+                card.innerHTML = `<div class="flex items-center gap-3">
+                    <div class="p-2 bg-white rounded-lg shadow-sm text-indigo-500">
+                        <i data-lucide="component" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold">${s.name}</h4>
+                        <p class="text-xs text-gray-500">${s.qty} ${s.unit} • ₹${cost}</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.addedSubRecipes.splice(${i},1);renderSubRecipeCards();calculateTotal();" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+                <span class="cost-val hidden">${cost}</span>`;
                 container.appendChild(card);
             });
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
     </script>
 @endpush

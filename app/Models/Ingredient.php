@@ -117,7 +117,7 @@ class Ingredient extends Model
             if (!isset($byVendor[$vid])) {
                 $byVendor[$vid] = ['name' => $vname, 'price' => $p->unit_price, 'quantity' => 0];
             }
-            $byVendor[$vid]['quantity'] += (float) $p->quantity;
+            $byVendor[$vid]['quantity'] += $this->convertFromBaseUnit((float) $p->quantity);
             $byVendor[$vid]['price'] = $p->unit_price; // keep last price
         }
         return collect(array_values($byVendor));
@@ -126,21 +126,23 @@ class Ingredient extends Model
     public function getTotalPurchasedAttribute()
     {
         // Sum all additions from purchases, production, and positive adjustments
-        return (float) $this->logs()
+        $totalBase = (float) $this->logs()
             ->whereIn('action', ['purchase_approved', 'RECIPE_PRODUCTION'])
             ->where(function($q) { $q->where('quantity_change', '>', 0); })
             ->sum('quantity_change');
+
+        return $this->convertFromBaseUnit($totalBase);
     }
 
     public function getTotalUsedAttribute()
     {
         // Sum all deductions from recipe use, POS sales, and sales report uploads
-        $totalDeducted = $this->logs()
+        $totalDeductedBase = $this->logs()
             ->whereIn('action', ['RECIPE_USE', 'POS_SALE', 'sales_report'])
             ->where(function($q) { $q->where('quantity_change', '<', 0); })
             ->sum('quantity_change');
 
-        return abs((float) $totalDeducted);
+        return abs($this->convertFromBaseUnit((float) $totalDeductedBase));
     }
 
     /**
@@ -150,7 +152,8 @@ class Ingredient extends Model
      */
     public function getCurrentStockDisplayAttribute()
     {
-        return (float) ($this->attributes['current_stock'] ?? 0);
+        $baseStock = (float) ($this->attributes['current_stock'] ?? 0);
+        return $this->convertFromBaseUnit($baseStock);
     }
 
     /**
@@ -159,12 +162,13 @@ class Ingredient extends Model
      */
     public function getCalculatedCurrentStockAttribute()
     {
-        $logsSum = $this->logs()->sum('quantity_change');
+        $logsSumBase = (float) $this->logs()->sum('quantity_change');
         
         // If we want a calculated check, we must know the "starting balance".
         // In this system, starting balance is the stock during master upload (no logs).
-        // Let's assume the column is generally accurate.
-        return (float) ($this->attributes['current_stock'] ?? 0);
+        // For simple verification, we just convert the current stock.
+        $baseStock = (float) ($this->attributes['current_stock'] ?? 0);
+        return $this->convertFromBaseUnit($baseStock);
     }
 
     /**
@@ -236,5 +240,11 @@ class Ingredient extends Model
     {
         $multiplier = self::getConversionMultiplier($unit, $this->base_unit);
         return $quantity * $multiplier;
+    }
+
+    public function convertFromBaseUnit(float $quantity): float
+    {
+        $multiplier = self::getConversionMultiplier($this->measurement_unit, $this->base_unit);
+        return $multiplier > 0 ? ($quantity / $multiplier) : $quantity;
     }
 }

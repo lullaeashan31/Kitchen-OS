@@ -31,7 +31,7 @@ class StaffController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|digits:10|unique:users',
+            'phone' => 'required|digits_between:10,15|unique:users',
             'staff_code' => 'required|numeric|digits:6|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120', // Optional 5MB max
@@ -115,7 +115,7 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|digits:10|unique:users,phone,' . $id,
+            'phone' => 'required|digits_between:10,15|unique:users,phone,' . $id,
             'staff_code' => 'required|numeric|digits:6|unique:users,staff_code,' . $id,
             'password' => 'nullable|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:5120',

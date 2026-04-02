@@ -58,20 +58,36 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                        @foreach($permissions as $p)
-                            <label class="group relative flex items-center gap-3 p-4 rounded-2xl border-2 {{ in_array($p->id, old('permissions', [])) ? 'border-emerald-100 bg-emerald-50/50' : 'border-gray-50 bg-gray-50/30' }} hover:bg-white hover:border-emerald-200 transition-all cursor-pointer">
-                                <div class="relative flex items-center shrink-0">
-                                    <input type="checkbox" name="permissions[]" value="{{ $p->id }}"
-                                        {{ in_array($p->id, old('permissions', [])) ? 'checked' : '' }}
-                                        class="peer checkbox-item w-6 h-6 rounded-lg border-2 border-gray-300 text-emerald-600 focus:ring-0 focus:ring-offset-0 transition-all checked:border-emerald-600">
-                                    <i data-lucide="check" class="absolute inset-0 m-auto w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                    <div class="space-y-8 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                        @php 
+                            $grouped = $permissions->groupBy(function($p) {
+                                if (str_starts_with($p->slug, 'module_')) return 'Module Access';
+                                if (str_starts_with($p->slug, 'manage_')) return 'Management';
+                                if (str_starts_with($p->slug, 'view_')) return 'Visibility';
+                                return 'Core Permissions';
+                            });
+                        @endphp
+                        
+                        @foreach($grouped as $groupName => $groupPermissions)
+                            <div class="space-y-3">
+                                <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-3 py-1 rounded inline-block">{{ $groupName }}</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    @foreach($groupPermissions as $p)
+                                        <label class="group relative flex items-center gap-3 p-4 rounded-2xl border-2 {{ in_array($p->id, old('permissions', [])) ? 'border-emerald-100 bg-emerald-50/50' : 'border-gray-50 bg-gray-50/30' }} hover:bg-white hover:border-emerald-200 transition-all cursor-pointer">
+                                            <div class="relative flex items-center shrink-0">
+                                                <input type="checkbox" name="permissions[]" value="{{ $p->id }}"
+                                                    {{ in_array($p->id, old('permissions', [])) ? 'checked' : '' }}
+                                                    class="peer checkbox-item w-6 h-6 rounded-lg border-2 border-gray-300 text-emerald-600 focus:ring-0 focus:ring-offset-0 transition-all checked:border-emerald-600">
+                                                <i data-lucide="check" class="absolute inset-0 m-auto w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="block text-sm font-black text-slate-700 uppercase tracking-tight group-hover:text-emerald-700 transition-colors">{{ $p->name }}</span>
+                                                <span class="block text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $p->slug }}</span>
+                                            </div>
+                                        </label>
+                                    @endforeach
                                 </div>
-                                <div class="flex-1">
-                                    <span class="block text-sm font-black text-slate-700 uppercase tracking-tight group-hover:text-emerald-700 transition-colors">{{ $p->name }}</span>
-                                    <span class="block text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $p->slug }}</span>
-                                </div>
-                            </label>
+                            </div>
                         @endforeach
                     </div>
                 </div>

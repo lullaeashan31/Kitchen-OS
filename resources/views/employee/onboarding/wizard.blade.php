@@ -338,8 +338,15 @@
                         </div>
                         
                         <div class="md:col-span-2 space-y-2">
-                            <label class="text-sm font-bold text-slate-700 ml-1">Alternate Phone (Optional)</label>
-                            <input type="tel" name="secondary_phone" maxlength="10" class="form-input" placeholder="Emergency backup number">
+                            <label class="text-sm font-bold text-slate-700 ml-1">Alternate Phone (Exactly 10 Digits)</label>
+                            <input type="tel" name="secondary_phone" maxlength="10" minlength="10" 
+                                pattern="\d{10}" inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)"
+                                class="form-input @error('secondary_phone') border-rose-500 @enderror" 
+                                placeholder="Emergency backup number (10 digits)">
+                            @error('secondary_phone')
+                                <span class="text-xs text-rose-600 font-bold ml-1">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -667,8 +674,11 @@
                                         @enderror
                                     </div>
                                     <div class="space-y-2">
-                                        <label class="text-[10px] md:text-xs font-black text-rose-400 uppercase tracking-widest">Primary Mobile</label>
-                                        <input type="tel" name="emergency_contacts_json[0][mobile]" value="{{ old('emergency_contacts_json.0.mobile') }}" required class="form-input border-rose-200">
+                                        <label class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1.5 ml-1">Contact Mobile (10 Digits)</label>
+                                        <input type="tel" name="emergency_contacts_json[0][mobile]" value="{{ old('emergency_contacts_json.0.mobile') }}" required 
+                                            maxlength="10" pattern="\d{10}" inputmode="numeric"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)"
+                                            class="form-input border-rose-200" placeholder="Required">
                                         @error('emergency_contacts_json.0.mobile')
                                             <span class="text-xs text-rose-600 font-bold ml-1">{{ $message }}</span>
                                         @enderror
@@ -684,8 +694,11 @@
                                         <input type="text" name="emergency_contacts_json[1][relation]" class="form-input border-slate-200">
                                     </div>
                                     <div class="space-y-2">
-                                        <label class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Secondary Mobile</label>
-                                        <input type="tel" name="emergency_contacts_json[1][mobile]" class="form-input border-slate-200">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact Mobile (10 Digits)</label>
+                                        <input type="tel" name="emergency_contacts_json[1][mobile]" 
+                                            maxlength="10" pattern="\d{10}" inputmode="numeric"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)"
+                                            class="form-input border-slate-200" placeholder="10 Digits">
                                     </div>
                                 </div>
                             </div>
@@ -1090,9 +1103,9 @@
         let currentStep = {{ $errorStep ?? 1 }};
         const totalSteps = 9;
 
-        function moveStep(delta) {
+        async function moveStep(delta) {
             if (currentStep + delta < 1 || currentStep + delta > totalSteps) return;
-            if (delta > 0 && !validateStep(currentStep)) return;
+            if (delta > 0 && !(await validateStep(currentStep))) return;
 
             document.getElementById(`step_${currentStep}`).classList.remove('active');
             document.getElementById(`stepper_${currentStep}`).classList.remove('active');
@@ -1108,64 +1121,88 @@
             updateUI();
         }
 
-        function validateStep(step) {
+        async function validateStep(step) {
             const currentStepEl = document.getElementById(`step_${step}`);
-            const requiredInputs = currentStepEl.querySelectorAll('[required]');
             const allInputs = currentStepEl.querySelectorAll('input, select, textarea');
             let isValid = true;
 
             // Remove all existing manual error messages first
             currentStepEl.querySelectorAll('.js-error-msg').forEach(e => e.remove());
+            currentStepEl.querySelectorAll('.border-rose-400').forEach(e => e.classList.remove('border-rose-400', 'ring-4', 'ring-rose-400/10'));
 
-            // 1. Check Required Fields
-            requiredInputs.forEach(input => {
+            for(let input of allInputs) {
                 let currentInputValid = true;
-                if (input.type === 'checkbox') {
-                    currentInputValid = input.checked;
-                } else if (input.type === 'radio') {
-                    const radios = currentStepEl.querySelectorAll(`input[name="${input.name}"]`);
-                    currentInputValid = Array.from(radios).some(r => r.checked);
-                } else {
-                    currentInputValid = input.value.trim() !== '';
+                let customMessage = '';
+
+                // 1. Basic Validity (Required, Pattern, Min/Max Length, Type)
+                if (!input.checkValidity()) {
+                    currentInputValid = false;
+                    
+                    if (input.validity.valueMissing) {
+                        customMessage = 'This field is required';
+                    } else if (input.validity.patternMismatch || input.validity.tooShort || input.validity.tooLong) {
+                        if (input.name === 'secondary_phone' || input.name === 'phone' || input.name.includes('mobile')) {
+                            customMessage = 'Must be exactly 10 digits';
+                        } else {
+                            customMessage = 'Please follow the requested format';
+                        }
+                    } else if (input.validity.typeMismatch) {
+                        customMessage = `Please enter a valid ${input.type}`;
+                    } else {
+                        customMessage = input.validationMessage;
+                    }
+                }
+
+                // 2. AJAX Check for Email if step is 1
+                if (currentInputValid && input.name === 'email' && step === 1) {
+                    try {
+                        const response = await fetch('{{ route('onboarding.check_email') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ email: input.value, user_id: {{ $user->id }} })
+                        });
+                        const data = await response.json();
+                        if (data.taken) {
+                            currentInputValid = false;
+                            customMessage = 'This email has already been taken';
+                        }
+                    } catch (e) { console.error('Email check failed', e); }
+                }
+
+                // 3. Custom Logic for File Types/Sizes
+                if (currentInputValid && input.type === 'file' && input.files.length > 0) {
+                    const file = input.files[0];
+                    const fileName = file.name.toLowerCase();
+                    const fileSize = file.size / 1024 / 1024;
+                    const ext = fileName.split('.').pop();
+
+                    if (input.name === 'profile_photo') {
+                        if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+                            currentInputValid = false;
+                            customMessage = 'Profile photo must be JPG or PNG';
+                        }
+                    } else if (input.name === 'aadhaar_card_file' || input.name === 'pan_card_file') {
+                        if (!['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) {
+                            currentInputValid = false;
+                            customMessage = 'File must be JPG, PNG or PDF';
+                        }
+                    }
+
+                    if (currentInputValid && fileSize > 5) {
+                        currentInputValid = false;
+                        customMessage = 'File size must be less than 5MB';
+                    }
                 }
 
                 if (!currentInputValid) {
                     isValid = false;
-                    showFieldError(input, 'This field is required');
-                } else {
-                    input.classList.remove('border-rose-400');
+                    showFieldError(input, customMessage);
                 }
-            });
-
-            // 2. Check File Types and Sizes (even if not required, if a file is selected)
-            allInputs.forEach(input => {
-                if (input.type === 'file' && input.files.length > 0) {
-                    const file = input.files[0];
-                    const fileName = file.name.toLowerCase();
-                    const fileSize = file.size / 1024 / 1024; // in MB
-
-                    if (input.name === 'profile_photo') {
-                        const allowed = ['jpg', 'jpeg', 'png'];
-                        const ext = fileName.split('.').pop();
-                        if (!allowed.includes(ext)) {
-                            isValid = false;
-                            showFieldError(input, 'Profile photo must be an image (JPG, PNG)');
-                        }
-                    } else if (input.name === 'aadhaar_card_file' || input.name === 'pan_card_file') {
-                        const allowed = ['jpg', 'jpeg', 'png', 'pdf'];
-                        const ext = fileName.split('.').pop();
-                        if (!allowed.includes(ext)) {
-                            isValid = false;
-                            showFieldError(input, 'File must be JPG, PNG or PDF');
-                        }
-                    }
-
-                    if (fileSize > 5) {
-                        isValid = false;
-                        showFieldError(input, 'File size must be less than 5MB');
-                    }
-                }
-            });
+            }
 
             if (!isValid) {
                 const firstError = currentStepEl.querySelector('.js-error-msg');
@@ -1176,6 +1213,17 @@
 
             return isValid;
         }
+
+        // Add real-time cleanup listeners to all inputs
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('border-rose-400', 'ring-4', 'ring-rose-400/10');
+                    const error = this.parentElement.querySelector('.js-error-msg');
+                    if (error) error.remove();
+                }
+            });
+        });
 
         function showFieldError(input, message) {
             input.classList.add('border-rose-400', 'ring-4', 'ring-rose-400/10');
