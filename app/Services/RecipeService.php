@@ -11,13 +11,11 @@ use App\Services\DriveService;
 
 class RecipeService
 {
-    protected $unitService;
     protected $driveService;
     protected $googleDriveService;
 
-    public function __construct(UnitConversionService $unitService, DriveService $driveService, GoogleDriveService $googleDriveService)
+    public function __construct(DriveService $driveService, GoogleDriveService $googleDriveService)
     {
-        $this->unitService = $unitService;
         $this->driveService = $driveService;
         $this->googleDriveService = $googleDriveService;
     }
@@ -336,24 +334,9 @@ class RecipeService
             }
 
             try {
-                $ingredientPrice = $ingredient->price_per_base_unit;
-                $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : $ingredientPrice;
-
-                if ($unitCost > 0) {
-                    try {
-                        $quantityInBase = $ingredient->convertToBaseUnit(
-                            (float)$item['quantity'],
-                            $item['unit']
-                        );
-                        $cost = $quantityInBase * $unitCost;
-                    } catch (\Exception $e) {
-                        Log::warning('Unit conversion failed for ingredient cost calculation', [
-                            'ingredient_id' => $ingredient->id,
-                            'error' => $e->getMessage(),
-                        ]);
-                        $cost = 0;
-                    }
-                }
+                // Simplified costing: quantity * latest purchase price (no conversion)
+                $unitCost = $ingredient->latest_price;
+                $cost = (float)$item['quantity'] * $unitCost;
 
                 \App\Models\RecipeIngredient::create([
                     'recipe_id' => $recipe->id,
@@ -399,26 +382,9 @@ class RecipeService
                     continue;
                 }
 
-                $ingredientPrice = $ingredient->price_per_base_unit;
-                $unitCost = $ingredient->avg_cost > 0 ? $ingredient->avg_cost : ($ingredientPrice ?? 0);
-                $cost = 0;
-
-                if ($unitCost > 0) {
-                    try {
-                        $quantityInBase = $ingredient->convertToBaseUnit(
-                            (float)$recipeIngredient->quantity,
-                            $recipeIngredient->unit
-                        );
-                        $cost = $quantityInBase * $unitCost;
-                    } catch (\Exception $e) {
-                        // If conversion fails, try direct calculation fallback
-                        if ($recipeIngredient->unit === $ingredient->base_unit) {
-                            $cost = (float)$recipeIngredient->quantity * $unitCost;
-                        } else {
-                            $cost = 0;
-                        }
-                    }
-                }
+                // Simplified costing (no conversion)
+                $unitCost = $ingredient->latest_price;
+                $cost = (float)$recipeIngredient->quantity * $unitCost;
 
                 // Update cost
                 $recipeIngredient->update(['cost' => $cost]);

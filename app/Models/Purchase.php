@@ -137,4 +137,11 @@ class Purchase extends Model
         $urls = $this->getGoodsUrlsAttribute();
         return $urls[0] ?? null;
     }
+    /**
+     * Scope for approved purchases.
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
 }

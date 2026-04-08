@@ -152,7 +152,7 @@
                                             <td class="py-3 px-2 align-top">
                                                 <input type="number" name="items[{{ $index }}][unit_price]"
                                                     class="w-full px-3 py-2 rounded-lg border {{ $errors->has('items.'.$index.'.unit_price') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none unit-price-input"
-                                                    step="0.01" min="0" placeholder="0.00" value="{{ $item['unit_price'] ?? '' }}">
+                                                    step="0.01" min="0" max="9999999" placeholder="0.00" value="{{ $item['unit_price'] ?? '' }}">
                                                 <span class="text-xs text-gray-400 block mt-1 text-right">Per <span class="unit-text">Unit</span></span>
                                                 @error('items.'.$index.'.unit_price') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                             </td>
@@ -229,7 +229,7 @@
                 <td class="py-3 px-2 align-top">
                     <input type="number" name="items[INDEX][unit_price]"
                         class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none unit-price-input"
-                        step="0.01" min="0" placeholder="0.00">
+                        step="0.01" min="0" max="9999999" placeholder="0.00">
                     <span class="text-xs text-gray-400 block mt-1 text-right">Per <span class="unit-text">Unit</span></span>
                 </td>
 
@@ -489,11 +489,36 @@
 
                 // Update Input (Always update to suggested price to fix "Zero" issue)
                 unitPriceInput.value = scaledPrice > 0 ? scaledPrice.toFixed(2) : '';
+                validateUnitPrice(unitPriceInput);
+            }
+
+            function validateUnitPrice(input) {
+                const val = parseFloat(input.value) || 0;
+                const max = 9999999;
+                let errorMsg = input.parentNode.querySelector('.unit-price-error');
+                
+                if (val > max) {
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('p');
+                        errorMsg.className = 'text-red-500 text-[10px] mb-1 font-semibold unit-price-error';
+                        errorMsg.textContent = 'Max 7 digits (9,999,999)';
+                        input.parentNode.insertBefore(errorMsg, input);
+                    }
+                    input.classList.add('border-red-500');
+                    input.classList.remove('border-gray-200');
+                } else {
+                    if (errorMsg) errorMsg.remove();
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-gray-200');
+                }
             }
 
             function calculateTotalFromPrice(row) {
+                const unitPriceInput = row.querySelector('.unit-price-input');
+                validateUnitPrice(unitPriceInput);
+
                 const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
-                const unitPrice = parseFloat(row.querySelector('.unit-price-input').value) || 0;
+                const unitPrice = parseFloat(unitPriceInput.value) || 0;
                 const totalInput = row.querySelector('.total-price-input');
 
                 const total = qty * unitPrice;
@@ -513,6 +538,7 @@
                     unitPriceInput.value = unitPrice.toFixed(2);
                 }
 
+                validateUnitPrice(unitPriceInput);
                 calculateGrandTotal();
             }
 
@@ -573,6 +599,7 @@
                          // Initialize listeners
                         const qtyInput = row.querySelector('.quantity-input');
                         const unitPriceInput = row.querySelector('.unit-price-input');
+                        validateUnitPrice(unitPriceInput);
                         const totalPriceInput = row.querySelector('.total-price-input');
                         const unitSelect = row.querySelector('.unit-select');
 

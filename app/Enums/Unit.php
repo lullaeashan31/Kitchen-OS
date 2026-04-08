@@ -28,33 +28,11 @@ enum Unit: string
     }
 
     /**
-     * Convert value from this unit to target unit
+     * Conversion disabled - returns input value (simplified system)
      */
     public function convertTo(float $value, Unit $toUnit): float
     {
-        // Convert to base unit first (grams for weight, ml for volume)
-        $baseValue = match ($this) {
-            self::Gram => $value,
-            self::Kilogram => $value * 1000,
-            self::Milliliter => $value,
-            self::Liter => $value * 1000,
-            self::Tablespoon => $value * 15, // 1 tbsp = 15ml
-            self::Teaspoon => $value * 5, // 1 tsp = 5ml
-            self::Cup => $value * 240, // 1 cup = 240ml
-            self::Piece => $value, // Cannot convert pieces
-        };
-
-        // Convert from base unit to target unit
-        return match ($toUnit) {
-            self::Gram => $baseValue,
-            self::Kilogram => $baseValue / 1000,
-            self::Milliliter => $baseValue,
-            self::Liter => $baseValue / 1000,
-            self::Tablespoon => $baseValue / 15,
-            self::Teaspoon => $baseValue / 5,
-            self::Cup => $baseValue / 240,
-            self::Piece => $baseValue, // Cannot convert pieces
-        };
+        return $value;
     }
 
     /**

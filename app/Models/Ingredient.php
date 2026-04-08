@@ -16,15 +16,9 @@ class Ingredient extends Model
         parent::boot();
 
         static::saving(function ($ingredient) {
+            // No automated unit conversion - use what's provided
             if (empty($ingredient->base_unit)) {
-                $unit = strtolower($ingredient->measurement_unit);
-                if (in_array($unit, ['kg', 'g', 'gram', 'grams', 'kilogram'])) {
-                    $ingredient->base_unit = 'g';
-                } elseif (in_array($unit, ['l', 'liter', 'litre', 'ml', 'milliliter'])) {
-                    $ingredient->base_unit = 'ml';
-                } else {
-                    $ingredient->base_unit = $ingredient->measurement_unit;
-                }
+                $ingredient->base_unit = $ingredient->measurement_unit;
             }
         });
     }
@@ -59,7 +53,7 @@ class Ingredient extends Model
     // Mutator to auto-capitalize name
     public function setNameAttribute($value)
     {
-        $this->attributes['name'] = Str::title($value);
+        $this->attributes['name'] = \Illuminate\Support\Str::title($value);
     }
 
     public function creator()
@@ -101,6 +95,24 @@ class Ingredient extends Model
     }
 
     /**
+     * Get the latest unit price from approved purchases.
+     */
+    public function getLatestPriceAttribute(): float
+    {
+        $latest = $this->purchases()
+            ->approved()
+            ->orderBy('purchase_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($latest instanceof Purchase) {
+            return (float) $latest->unit_price;
+        }
+
+        return (float) ($this->price ?? 0);
+    }
+
+    /**
      * Vendor-wise purchase summary: vendor name, price (last), total qty from that vendor.
      * Only approved purchases; uses already loaded purchases when possible.
      */
@@ -108,7 +120,7 @@ class Ingredient extends Model
     {
         $purchases = $this->relationLoaded('purchases')
             ? $this->purchases
-            : $this->purchases()->where(function($q) { $q->where('status', 'approved'); })->with('vendor')->get();
+            : $this->purchases()->where('status', 'approved')->with('vendor')->get();
 
         $byVendor = [];
         foreach ($purchases as $p) {
@@ -117,7 +129,7 @@ class Ingredient extends Model
             if (!isset($byVendor[$vid])) {
                 $byVendor[$vid] = ['name' => $vname, 'price' => $p->unit_price, 'quantity' => 0];
             }
-            $byVendor[$vid]['quantity'] += $this->convertFromBaseUnit((float) $p->quantity);
+            $byVendor[$vid]['quantity'] += (float) $p->quantity; // No conversion
             $byVendor[$vid]['price'] = $p->unit_price; // keep last price
         }
         return collect(array_values($byVendor));
@@ -126,87 +138,29 @@ class Ingredient extends Model
     public function getTotalPurchasedAttribute()
     {
         // Sum all additions from purchases, production, and positive adjustments
-        $totalBase = (float) $this->logs()
+        return (float) $this->logs()
             ->whereIn('action', ['purchase_approved', 'RECIPE_PRODUCTION'])
-            ->where(function($q) { $q->where('quantity_change', '>', 0); })
+            ->where('quantity_change', '>', 0)
             ->sum('quantity_change');
-
-        return $this->convertFromBaseUnit($totalBase);
     }
 
     public function getTotalUsedAttribute()
     {
         // Sum all deductions from recipe use, POS sales, and sales report uploads
-        $totalDeductedBase = $this->logs()
+        $totalDeducted = $this->logs()
             ->whereIn('action', ['RECIPE_USE', 'POS_SALE', 'sales_report'])
-            ->where(function($q) { $q->where('quantity_change', '<', 0); })
+            ->where('quantity_change', '<', 0)
             ->sum('quantity_change');
 
-        return abs($this->convertFromBaseUnit((float) $totalDeductedBase));
+        return abs((float) $totalDeducted);
     }
 
     /**
-     * Get current stock for display - uses the current_stock database column as source of truth.
-     * All operations (Purchases, Production, POS, Adjustments) correctly update this column.
-     * This avoids calculation errors when initial stock balances come from master imports.
+     * Display current stock exactly as stored in DB.
      */
     public function getCurrentStockDisplayAttribute()
     {
-        $baseStock = (float) ($this->attributes['current_stock'] ?? 0);
-        return $this->convertFromBaseUnit($baseStock);
-    }
-
-    /**
-     * Audit: Calculate current stock dynamically from inventory logs if possible.
-     * This can be used for verification, but is NOT the primary display source.
-     */
-    public function getCalculatedCurrentStockAttribute()
-    {
-        $logsSumBase = (float) $this->logs()->sum('quantity_change');
-        
-        // If we want a calculated check, we must know the "starting balance".
-        // In this system, starting balance is the stock during master upload (no logs).
-        // For simple verification, we just convert the current stock.
-        $baseStock = (float) ($this->attributes['current_stock'] ?? 0);
-        return $this->convertFromBaseUnit($baseStock);
-    }
-
-    /**
-     * Get the conversion multiplier for a unit to its base unit.
-     */
-    public static function getConversionMultiplier(?string $fromUnit, ?string $toUnit): float
-    {
-        if (!$fromUnit || !$toUnit) return 1.0;
-        
-        $fromUnit = strtolower(trim($fromUnit));
-        $toUnit = strtolower(trim($toUnit));
-
-        if ($fromUnit === $toUnit) return 1.0;
-
-        $conversions = [
-            'kg' => ['g' => 1000, 'gram' => 1000, 'grams' => 1000],
-            'kilogram' => ['g' => 1000, 'gram' => 1000, 'grams' => 1000],
-            'liter' => ['ml' => 1000, 'milliliter' => 1000, 'milliliters' => 1000],
-            'litre' => ['ml' => 1000, 'milliliter' => 1000, 'milliliters' => 1000],
-            'l' => ['ml' => 1000, 'milliliter' => 1000, 'milliliters' => 1000],
-        ];
-
-        return $conversions[$fromUnit][$toUnit] ?? 1.0;
-    }
-
-    /**
-     * Calculate price per base unit (e.g. per gram or per ml).
-     */
-    public function getPricePerBaseUnitAttribute(): float
-    {
-        if ($this->purchase_quantity <= 0) return (float) $this->price; // Fallback to legacy price if no purchase info
-        
-        $multiplier = self::getConversionMultiplier($this->purchase_unit, $this->base_unit);
-        $totalBaseUnits = (float)$this->purchase_quantity * $multiplier;
-        
-        if ($totalBaseUnits <= 0) return (float) $this->price;
-        
-        return (float)$this->purchase_price / $totalBaseUnits;
+        return (float) ($this->attributes['current_stock'] ?? 0);
     }
 
     // Scopes
@@ -235,16 +189,5 @@ class Ingredient extends Model
     {
         return $this->status === 'rejected';
     }
-
-    public function convertToBaseUnit(float $quantity, string $unit): float
-    {
-        $multiplier = self::getConversionMultiplier($unit, $this->base_unit);
-        return $quantity * $multiplier;
-    }
-
-    public function convertFromBaseUnit(float $quantity): float
-    {
-        $multiplier = self::getConversionMultiplier($this->measurement_unit, $this->base_unit);
-        return $multiplier > 0 ? ($quantity / $multiplier) : $quantity;
-    }
 }
+

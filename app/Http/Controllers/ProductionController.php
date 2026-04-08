@@ -15,9 +15,9 @@ class ProductionController extends Controller
 {
     protected $unitService;
 
-    public function __construct(\App\Services\UnitConversionService $unitService)
+    public function __construct()
     {
-        $this->unitService = $unitService;
+        // No conversion service needed
     }
 
     /**
@@ -90,20 +90,11 @@ class ProductionController extends Controller
         foreach ($recipe->ingredients as $ingredient) {
             $requiredQtyRaw = $ingredient->pivot->quantity * $portions;
             // Normalize recipe yield 
+            // Simplified: No unit conversion
             $requiredQty = $requiredQtyRaw / $yieldValue;
 
-            try {
-                $convertedQty = $ingredient->convertToBaseUnit(
-                    $requiredQty,
-                    $ingredient->pivot->unit
-                );
-            } catch (\Exception $e) {
-                // Fallback if conversion fails
-                $convertedQty = $requiredQty;
-            }
-
-            if ($ingredient->current_stock < $convertedQty) {
-                $missingStock[] = $ingredient->name . " (Need: " . number_format($convertedQty, 3) . " " . $ingredient->base_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
+            if ($ingredient->current_stock < $requiredQty) {
+                $missingStock[] = $ingredient->name . " (Need: " . number_format($requiredQty, 3) . " " . $ingredient->measurement_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
             }
         }
 
@@ -159,26 +150,8 @@ class ProductionController extends Controller
                 ]);
 
 
-                try {
-                    $deductAmount = $ingredient->convertToBaseUnit(
-                        $requiredQty,
-                        $ingredient->pivot->unit
-                    );
-                    \Log::info("Unit Conversion to Base", [
-                        'ingredient_id' => $ingredient->id,
-                        'from_unit' => $ingredient->pivot->unit,
-                        'to_unit' => $ingredient->base_unit,
-                        'requiredQty' => $requiredQty,
-                        'deductAmount' => $deductAmount,
-                    ]);
-                } catch (\Exception $e) {
-                    $deductAmount = $requiredQty;
-                    \Log::warning("Unit conversion failed for base unit", [
-                        'ingredient_id' => $ingredient->id,
-                        'error' => $e->getMessage(),
-                        'using_requiredQty' => $deductAmount,
-                    ]);
-                }
+                // Simplified: No conversion
+                $deductAmount = $requiredQty;
 
                 // Refresh ingredient to get latest stock from database
                 $ingredient->refresh();
@@ -292,21 +265,8 @@ class ProductionController extends Controller
                 $totalOutput = $outputPerYield * $portions;
 
 
-                // Convert to ingredient's measurement unit if needed
-                if (!empty($recipe->output_unit) && !empty($producedIngredient->measurement_unit)) {
-                    try {
-                        $addAmount = $this->unitService->convert(
-                            $totalOutput,
-                            $recipe->output_unit,
-                            $producedIngredient->measurement_unit
-                        );
-                    } catch (\Exception $e) {
-                        $addAmount = $totalOutput;
-                    }
-                } else {
-                    // No unit conversion needed if units are not set
-                    $addAmount = $totalOutput;
-                }
+                // No unit conversion needed
+                $addAmount = $totalOutput;
 
                 $before = $producedIngredient->current_stock;
                 $after = $before + $addAmount;
@@ -502,20 +462,8 @@ class ProductionController extends Controller
                 $requiredQtyRaw = $ingredient->pivot->quantity * $portions;
                 $requiredQty = $requiredQtyRaw / $yieldValue;
 
-                // Check if units are set before conversion
-                if (!empty($ingredient->pivot->unit) && !empty($ingredient->measurement_unit)) {
-                    try {
-                        $convertedQty = $this->unitService->convert(
-                            $requiredQty,
-                            $ingredient->pivot->unit,
-                            $ingredient->measurement_unit
-                        );
-                    } catch (\Exception $e) {
-                        $convertedQty = $requiredQty;
-                    }
-                } else {
-                    $convertedQty = $requiredQty;
-                }
+                // No unit conversion
+                $convertedQty = $requiredQty;
 
                 if ($ingredient->current_stock < $convertedQty) {
                     $missingStock[] = $ingredient->name . " (Need: " . number_format($convertedQty, 3) . " " . $ingredient->measurement_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
@@ -548,20 +496,8 @@ class ProductionController extends Controller
                     $qtyPerPortion = $ingredient->pivot->quantity / $yieldValue;
                     $requiredQty = $qtyPerPortion * $portions;
 
-                    // Check if units are set before conversion
-                    if (!empty($ingredient->pivot->unit) && !empty($ingredient->measurement_unit)) {
-                        try {
-                            $deductAmount = $this->unitService->convert(
-                                $requiredQty,
-                                $ingredient->pivot->unit,
-                                $ingredient->measurement_unit
-                            );
-                        } catch (\Exception $e) {
-                            $deductAmount = $requiredQty;
-                        }
-                    } else {
-                        $deductAmount = $requiredQty;
-                    }
+                    // No unit conversion
+                    $deductAmount = $requiredQty;
 
                     // Refresh ingredient to get latest stock from database
                     $ingredient->refresh();
@@ -662,20 +598,8 @@ class ProductionController extends Controller
                     $outputPerYield = $recipe->output_quantity;
                     $totalOutput = $outputPerYield * $portions;
 
-                    // Convert to ingredient's measurement unit if needed
-                    if (!empty($recipe->output_unit) && !empty($producedIngredient->measurement_unit)) {
-                        try {
-                            $addAmount = $this->unitService->convert(
-                                $totalOutput,
-                                $recipe->output_unit,
-                                $producedIngredient->measurement_unit
-                            );
-                        } catch (\Exception $e) {
-                            $addAmount = $totalOutput;
-                        }
-                    } else {
-                        $addAmount = $totalOutput;
-                    }
+                    // No unit conversion needed
+                    $addAmount = $totalOutput;
 
                     $before = $producedIngredient->current_stock;
                     $after = $before + $addAmount;

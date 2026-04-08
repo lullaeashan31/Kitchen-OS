@@ -116,18 +116,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label text-indigo-700 font-bold">Total Purchase Price (Excl. Tax)</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-slate-400">$</span>
-                                    </div>
-                                    <input type="number" name="purchase_price" class="form-control pl-8 border-indigo-300 bg-indigo-50/30" step="0.01" min="0" value="{{ old('purchase_price') }}" required placeholder="0.00">
-                                </div>
-                                <p class="text-xs text-indigo-500 mt-2 italic flex items-center gap-1">
-                                    <i data-lucide="calculator" class="w-3 h-3"></i> Setup standard cost per packaging unit.
-                                </p>
-                            </div>
+
                         </div>
                     </div>
 

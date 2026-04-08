@@ -53,7 +53,7 @@ class RecipeController extends Controller
         }
 
         $recipes = $query->latest()->paginate(10);
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::forRecipes()->where('status', 'active')->orderBy('name')->get();
 
         return view('recipes.index', compact('recipes', 'categories'));
     }
@@ -61,8 +61,8 @@ class RecipeController extends Controller
     public function create(string $kitchen_slug)
     {
         try {
-            $categories = Category::orderBy('name')->get();
-            $ingredientCategories = Category::forIngredients()->orderBy('name')->get();
+            $categories = Category::forRecipes()->where('status', 'active')->orderBy('name')->get();
+            $ingredientCategories = Category::forIngredients()->where('status', 'active')->orderBy('name')->get();
 
 
 
@@ -86,14 +86,7 @@ class RecipeController extends Controller
                 ->orderBy('name')
                 ->get()
                 ->map(function ($ingredient) {
-                    // Get last approved purchase price if available
-                    $lastPurchase = \App\Models\Purchase::where('ingredient_id', $ingredient->id)
-                        ->where('status', 'approved')
-                        ->latest('approved_at')
-                        ->first();
-
-                    // Use last purchase price OR current ingredient price OR 0
-                    $ingredient->latest_price = $lastPurchase ? $lastPurchase->unit_price : ($ingredient->price ?? 0);
+                    // Use the centralized latest_price attribute
                     return $ingredient;
                 });
 
@@ -151,8 +144,8 @@ class RecipeController extends Controller
         $this->authorize('update', $recipe);
 
         try {
-            $categories = Category::orderBy('name')->get();
-            $ingredientCategories = Category::forIngredients()->orderBy('name')->get();
+            $categories = Category::forRecipes()->where('status', 'active')->orderBy('name')->get();
+            $ingredientCategories = Category::forIngredients()->where('status', 'active')->orderBy('name')->get();
 
 
             $units = Unit::cases();

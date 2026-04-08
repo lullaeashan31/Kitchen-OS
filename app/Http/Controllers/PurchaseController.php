@@ -135,7 +135,7 @@ class PurchaseController extends Controller
             'items.*.ingredient_id' => 'required|exists:ingredients,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
             // 'items.*.unit_price' => 'required|numeric|min:0', // User wants auto-calc total. So input is unit price and qty.
-            'items.*.unit_price' => 'nullable|numeric|min:0',
+            'items.*.unit_price' => 'nullable|numeric|min:0|max:9999999',
             'items.*.unit' => 'required|string',
         ]);
 
@@ -173,25 +173,17 @@ class PurchaseController extends Controller
                     // Use provided unit_price or fetch from ingredient
                     $inputUnitPrice = isset($item['unit_price']) ? $item['unit_price'] : ($ingredient->price ?? 0);
 
-                    // Calculate Total Price (Input Qty * Input Unit Price)
+                    // Record raw values as provided (no unit conversion)
                     $totalPrice = $inputQty * $inputUnitPrice;
+                    $normalizedQty = $inputQty;
+                    $normalizedUnitPrice = $inputUnitPrice;
 
-                    try {
-                        $normalizedQty = $ingredient->convertToBaseUnit($inputQty, $inputUnit);
-                    } catch (\Exception $e) {
-                        // Log error and fallback
-                        throw new \Exception("Unit conversion failed for {$ingredient->name} to base unit: " . $e->getMessage());
-                    }
-
-                    // Calculate Normalized Unit Price (Total / Normalized Qty)
-                    $normalizedUnitPrice = $normalizedQty > 0 ? ($totalPrice / $normalizedQty) : 0;
-
-                    // Create Purchase Record - Stores NORMALIZED values
+                    // Create Purchase Record - Stores raw values
                     Purchase::create([
                         'ingredient_id' => $ingredient->id,
-                        'quantity' => $normalizedQty,
+                        'quantity' => $inputQty,
                         'unit' => $inputUnit,
-                        'unit_price' => $normalizedUnitPrice,
+                        'unit_price' => $inputUnitPrice,
                         'total_price' => $totalPrice, 
                         'purchase_date' => $request->purchase_date,
                         'vendor_id' => $request->vendor_id,
@@ -252,14 +244,14 @@ class PurchaseController extends Controller
                 $newAvgCost = $unitPrice;
             }
 
-            // Update basic configuration based on latest purchase
+            // Update basic configuration based on latest purchase (no conversion)
             $ingredient->purchase_price = $purchase->total_price;
-            $ingredient->purchase_quantity = $purchase->quantity / Ingredient::getConversionMultiplier($purchase->unit, $ingredient->base_unit);
+            $ingredient->purchase_quantity = $purchase->quantity;
             $ingredient->purchase_unit = $purchase->unit;
             
             $ingredient->current_stock = $newStock;
             $ingredient->avg_cost = $newAvgCost;
-            $ingredient->price = $unitPrice; // Update latest unit price in base unit
+            $ingredient->price = $unitPrice; // Update latest unit price
             $ingredient->save();
 
             // Log Inventory Change

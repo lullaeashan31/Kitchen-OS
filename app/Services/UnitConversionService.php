@@ -11,15 +11,7 @@ class UnitConversionService
      */
     public function convert(float $value, Unit|string $fromUnit, Unit|string $toUnit): float
     {
-        // Resolve enums if strings provided
-        $from = $fromUnit instanceof Unit ? $fromUnit : Unit::from($fromUnit);
-        $to = $toUnit instanceof Unit ? $toUnit : Unit::from($toUnit);
-
-        if (!$from->canConvertTo($to)) {
-            throw new \InvalidArgumentException("Cannot convert from {$from->label()} to {$to->label()}");
-        }
-
-        return $from->convertTo($value, $to);
+        return $value;
     }
 
     /**
