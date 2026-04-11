@@ -391,7 +391,7 @@
                                         class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
                                 </div>
                                 <input type="number" name="yield_portions" id="yield_portions" min="1" step="1"
-                                    value="{{ old('yield_portions', 10) }}"
+                                    value="{{ old('yield_portions', 10) }}" required
                                     class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all text-center font-bold text-gray-800"
                                     placeholder="10" oninput="updateScaling()">
                                 @error('yield_portions') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -1051,7 +1051,10 @@
     </style>
 
     <script>
-        let stageCount = {{ count(old('stages', [])) }};
+        @php
+            $realStageCount = collect(old('stages', []))->filter(fn($s, $k) => $k != 999 && ($s['name'] ?? '') !== 'Sub-Recipes')->count();
+        @endphp
+        let stageCount = {{ $realStageCount }};
         let ingredientOptionsHTML = '';
 
         window.addedSubRecipes = [];
