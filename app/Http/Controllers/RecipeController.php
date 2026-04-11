@@ -82,13 +82,8 @@ class RecipeController extends Controller
             $producedIngredientIds = $subRecipes->pluck('produces_ingredient_id')->filter()->toArray();
 
             $ingredients = \App\Models\Ingredient::approved()
-                ->whereNotIn('id', $producedIngredientIds)
                 ->orderBy('name')
-                ->get()
-                ->map(function ($ingredient) {
-                    // Use the centralized latest_price attribute
-                    return $ingredient;
-                });
+                ->get();
 
             return view('recipes.create', compact('categories', 'ingredientCategories', 'units', 'ingredients', 'subRecipes'));
 
@@ -165,7 +160,6 @@ class RecipeController extends Controller
 
             // Approved Ingredients: Only ingredients approved by admin and NOT produced by any sub-recipe
             $ingredients = \App\Models\Ingredient::approved()
-                ->whereNotIn('id', $producedIngredientIds)
                 ->orderBy('name')
                 ->get();
 

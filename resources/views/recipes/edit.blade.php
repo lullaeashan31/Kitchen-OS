@@ -38,7 +38,29 @@
 
         <!-- Left Column: Primary Details -->
         <div class="w-full xl:w-1/3 flex flex-col gap-4 md:gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 mb-4 md:mb-6">
+                <!-- Recipe Type Selection -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-3">Recipe Classification</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="radio" name="recipe_type_select" id="type_main" value="main" class="hidden" onchange="updateRecipeType('main')" {{ !$recipe->is_sub_recipe ? 'checked' : '' }}>
+                        <label for="type_main" class="flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-white hover:border-blue-200" id="mainTypeLabel">
+                            <div class="p-2 bg-blue-50 rounded-lg text-blue-600 group-hover:scale-110 transition-transform">
+                                <i data-lucide="utensils" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700">Main Recipe</span>
+                        </label>
+
+                        <input type="radio" name="recipe_type_select" id="type_sub" value="sub" class="hidden" onchange="updateRecipeType('sub')" {{ $recipe->is_sub_recipe ? 'checked' : '' }}>
+                        <label for="type_sub" class="flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-white hover:border-indigo-200" id="subTypeLabel">
+                            <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 group-hover:scale-110 transition-transform">
+                                <i data-lucide="component" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700">Sub-Recipe</span>
+                        </label>
+                    </div>
+                </div>
+
                 <h2 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2">
                     <i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5 text-blue-500"></i> Basic Info
                 </h2>
@@ -276,55 +298,46 @@
                             </div>
                     </div>
 
-                    <!-- Sub-Recipe Toggle [NEW] -->
-                    <div class="bg-indigo-50/50 rounded-xl p-5 border border-indigo-100">
-                        <div class="flex items-center justify-between mb-3 cursor-pointer" onclick="toggleSubRecipe()">
-                            <div>
-                                <h3 class="text-sm font-bold text-indigo-900">Sub-Recipe Mode</h3>
-                                <p class="text-xs text-indigo-600/80">Does this recipe produce an ingredient?</p>
-                            </div>
-                            <div class="relative inline-block w-10 h-6 transition-colors duration-200 ease-in-out border-2 border-transparent rounded-full cursor-pointer {{ $recipe->is_sub_recipe ? 'bg-indigo-500' : 'bg-gray-200' }}"
-                                id="subRecipeToggleBg">
-                                <span
-                                    class="{{ $recipe->is_sub_recipe ? 'translate-x-4' : 'translate-x-0' }} inline-block w-5 h-5 transition duration-200 ease-in-out transform bg-white rounded-full shadow pointer-events-none"
-                                    id="subRecipeToggleDot"></span>
-                            </div>
-                        </div>
+                    <!-- Sub-Recipe Mode (Hidden, controlled by radio buttons) -->
+                    <div id="subRecipeConfigSection" class="{{ $recipe->is_sub_recipe ? '' : 'hidden' }}">
+                        <div class="bg-indigo-50/50 rounded-xl p-5 border border-indigo-100">
+                            <h3 class="text-sm font-bold text-indigo-900 mb-1">Sub-Recipe Configuration</h3>
+                            <p class="text-xs text-indigo-600/80 mb-4">Link this recipe to an ingredient for use in other recipes.</p>
 
-                        <input type="hidden" name="is_sub_recipe" id="is_sub_recipe" value="{{ old('is_sub_recipe', $recipe->is_sub_recipe ? 1 : 0) }}">
+                            <input type="hidden" name="is_sub_recipe" id="is_sub_recipe" value="{{ old('is_sub_recipe', $recipe->is_sub_recipe ? 1 : 0) }}">
 
-                        <div id="subRecipeFields" class="{{ $recipe->is_sub_recipe ? '' : 'hidden' }} space-y-4 pt-4 border-t border-indigo-100 mt-2">
-                            <div>
-                                <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Produced Ingredient</label>
-                                <select name="produces_ingredient_id" id="produces_ingredient_id"
-                                    class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
-                                    <option value="">-- Select Ingredient This Recipe Produces --</option>
-                                    @foreach($ingredients as $ing)
-                                        <option value="{{ $ing->id }}" {{ old('produces_ingredient_id', $recipe->produces_ingredient_id) == $ing->id ? 'selected' : '' }}>
-                                            {{ $ing->name }} ({{ $ing->measurement_unit }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class="text-[10px] text-indigo-500 mt-1">Select the item that is created by this sub-recipe.</p>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
+                            <div id="subRecipeFields" class="space-y-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output Qty</label>
-                                    <input type="number" name="output_quantity" step="0.001" min="0"
-                                        value="{{ old('output_quantity', $recipe->output_quantity ?? 1) }}"
-                                        class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white placeholder-indigo-300">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output Unit</label>
-                                    <select name="output_unit"
+                                    <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Produced Ingredient</label>
+                                    <select name="produces_ingredient_id" id="produces_ingredient_id"
                                         class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
-                                        @foreach($units as $unit)
-                                            <option value="{{ $unit->value }}" {{ old('output_unit', $recipe->output_unit->value ?? '') == $unit->value ? 'selected' : '' }}>
-                                                {{ $unit->label() }}
+                                        <option value="">-- No Link (Recipe is enough) --</option>
+                                        @foreach($ingredients as $ing)
+                                            <option value="{{ $ing->id }}" {{ old('produces_ingredient_id', $recipe->produces_ingredient_id) == $ing->id ? 'selected' : '' }}>
+                                                Existing: {{ $ing->name }} ({{ $ing->measurement_unit }})
                                             </option>
                                         @endforeach
                                     </select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output Qty</label>
+                                        <input type="number" name="output_quantity" step="0.001" min="0"
+                                            value="{{ old('output_quantity', $recipe->output_quantity ?? 1) }}"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white placeholder-indigo-300">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output Unit</label>
+                                        <select name="output_unit"
+                                            class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
+                                            @foreach($units as $unit)
+                                                <option value="{{ $unit->value }}" {{ old('output_unit', $recipe->output_unit->value ?? '') == $unit->value ? 'selected' : '' }}>
+                                                    {{ $unit->label() }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -783,12 +796,32 @@
 
     <!-- Hidden Ingredient Options for New Rows -->
     <div id="ingredientOptions" style="display: none;">
-        @foreach(\App\Models\Ingredient::orderBy('name')->get() as $ing)
-            <option value="{{ $ing->id }}" data-price="{{ $ing->latest_price ?? $ing->price }}"
-                data-unit="{{ $ing->measurement_unit }}">
-                {{ $ing->name }} ({{ $ing->measurement_unit }})
-            </option>
-        @endforeach
+        @php
+            $producedIds = $subRecipes->pluck('produces_ingredient_id')->filter()->toArray();
+        @endphp
+        <optgroup label="Ingredients">
+            @foreach($ingredients as $ing)
+                @if(!in_array($ing->id, $producedIds))
+                    <option value="{{ $ing->id }}" data-price="{{ $ing->latest_price ?? $ing->price }}"
+                        data-unit="{{ $ing->measurement_unit }}">
+                        {{ $ing->name }} ({{ $ing->measurement_unit }})
+                    </option>
+                @endif
+            @endforeach
+        </optgroup>
+        @if(count($subRecipes) > 0)
+            <optgroup label="Sub-Recipes (Internal Components)">
+                @foreach($subRecipes as $sub)
+                    @if($sub->produces_ingredient_id)
+                        <option value="{{ $sub->produces_ingredient_id }}" 
+                            data-price="{{ $sub->cost_per_portion ?? 0 }}"
+                            data-unit="{{ $sub->output_unit ?? $sub->producesIngredient->measurement_unit ?? 'pcs' }}">
+                            {{ $sub->name }} (Recipe Component)
+                        </option>
+                    @endif
+                @endforeach
+            </optgroup>
+        @endif
     </div>
 
     <!-- Templates -->

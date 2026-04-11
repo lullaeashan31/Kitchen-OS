@@ -99,6 +99,7 @@ class Ingredient extends Model
      */
     public function getLatestPriceAttribute(): float
     {
+        // 1. Try to get price from latest approved purchase
         $latest = $this->purchases()
             ->approved()
             ->orderBy('purchase_date', 'desc')
@@ -109,6 +110,18 @@ class Ingredient extends Model
             return (float) $latest->unit_price;
         }
 
+        // 2. If no purchase, check if this ingredient is produced by a recipe
+        $producingRecipe = $this->producedByRecipes()
+            ->where('status', \App\Enums\RecipeStatus::Permanent->value) // Only from approved recipes
+            ->latest()
+            ->first();
+
+        if ($producingRecipe) {
+            // For sub-recipes, we usually use the cost per portion or output unit cost
+            return (float) ($producingRecipe->cost_per_portion ?? 0);
+        }
+
+        // 3. Fallback to base price
         return (float) ($this->price ?? 0);
     }
 
