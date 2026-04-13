@@ -135,9 +135,64 @@
 
         // Simple function to add ingredient row - available immediately
         // Simple function to add ingredient row - available immediately
+        // Initialize an ingredient row with event listeners and initial cost
+        function initIngredientRow(row) {
+            const select = row.querySelector('.ingredient-select');
+            const qtyInput = row.querySelector('.quantity-input');
+            
+            if (select) {
+                // Update unit and calculate cost when ingredient is changed
+                select.addEventListener('change', function () {
+                    const selectedValue = this.value;
+                    const selectedOption = this.options[this.selectedIndex];
+
+                    if (selectedOption && selectedValue) {
+                        const unitValue = selectedOption.getAttribute('data-unit') || (selectedOption.dataset ? selectedOption.dataset.unit : '');
+                        if (!unitValue && selectedOption.textContent) {
+                            const match = selectedOption.textContent.match(/\(([^)]+)\)/);
+                            if (match && match[1]) unitValue = match[1].trim();
+                        }
+
+                        if (unitValue) {
+                            const unitLabel = UNIT_LABELS_MAP[unitValue] || unitValue;
+                            const unitValueInput = row.querySelector('.unit-value-input');
+                            if (unitValueInput) unitValueInput.value = unitValue;
+                            const unitDisplay = row.querySelector('.unit-display');
+                            if (unitDisplay) {
+                                unitDisplay.value = unitLabel;
+                                unitDisplay.removeAttribute('placeholder');
+                            }
+                        }
+                    } else {
+                        const unitValueInput = row.querySelector('.unit-value-input');
+                        const unitDisplay = row.querySelector('.unit-display');
+                        if (unitValueInput) unitValueInput.value = '';
+                        if (unitDisplay) {
+                            unitDisplay.value = '';
+                            unitDisplay.setAttribute('placeholder', 'Select item first');
+                        }
+                        const costDisplay = row.querySelector('.cost-display');
+                        if (costDisplay) costDisplay.textContent = '0.00';
+                    }
+                    calculateRowCost(row);
+                });
+            }
+
+            if (qtyInput) {
+                // Re-calculate cost when quantity changes
+                qtyInput.addEventListener('input', function () {
+                    calculateRowCost(row);
+                });
+            }
+
+            // Perform initial calculation for existing rows
+            calculateRowCost(row);
+        }
+
+        // Simple function to add ingredient row - available immediately
         function addIngredientRow(btn) {
             try {
-                console.log('addIngredientRowNow called');
+                console.log('addIngredientRow called');
                 var stageBlock = btn.closest('.stage-block');
                 if (!stageBlock) {
                     alert('Error: Could not find stage block');
@@ -212,54 +267,8 @@
                         }
                     }
 
-                    // Add change event listener to update unit and cost when ingredient is selected
-                    select.addEventListener('change', function () {
-                        var selectedValue = this.value;
-                        var currentRow = this.closest('tr');
-                        if (!currentRow) return;
-
-                        var selectedOption = this.querySelector('option[value="' + selectedValue + '"]');
-
-                        if (selectedOption && selectedValue) {
-                            var unitValue = selectedOption.getAttribute('data-unit') || selectedOption.dataset.unit;
-                            if (!unitValue) {
-                                var match = selectedOption.textContent.match(/\(([^)]+)\)/);
-                                if (match && match[1]) unitValue = match[1].trim();
-                            }
-
-                            if (unitValue) {
-                                var unitLabel = UNIT_LABELS_MAP[unitValue] || unitValue;
-                                var unitValueInput = currentRow.querySelector('.unit-value-input');
-                                if (unitValueInput) unitValueInput.value = unitValue;
-                                var unitDisplay = currentRow.querySelector('.unit-display');
-                                if (unitDisplay) {
-                                    unitDisplay.value = unitLabel;
-                                    unitDisplay.removeAttribute('placeholder');
-                                }
-                            }
-
-                            calculateRowCost(currentRow);
-                        } else {
-                            var unitValueInput = currentRow.querySelector('.unit-value-input');
-                            var unitDisplay = currentRow.querySelector('.unit-display');
-                            if (unitValueInput) unitValueInput.value = '';
-                            if (unitDisplay) {
-                                unitDisplay.value = '';
-                                unitDisplay.setAttribute('placeholder', 'Select item first');
-                            }
-                            var costDisplay = currentRow.querySelector('.cost-display');
-                            if (costDisplay) costDisplay.textContent = '0.00';
-                        }
-                    });
-
-                    // Also add input listener for quantity changes
-                    var qtyInput = tr.querySelector('.quantity-input');
-                    if (qtyInput) {
-                        qtyInput.addEventListener('input', function () {
-                            var currentRow = this.closest('tr');
-                            calculateRowCost(currentRow);
-                        });
-                    }
+                    // Use common initialization for events and cost
+                    initIngredientRow(tr);
                 }
 
                 // Initialize icons
@@ -1173,6 +1182,11 @@
                 });
                 renderSubRecipeCards();
             }
+
+            // Re-initialize all existing rows (from old validation data)
+            document.querySelectorAll('.ingredient-row').forEach(row => {
+                initIngredientRow(row);
+            });
 
             if (stageCount === 0) addNewSet();
             calculateTotal();

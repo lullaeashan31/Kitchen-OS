@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Super Admin',
             'email' => 'superadmin@kitchen.com',
             'password' => Hash::make('admin123'),
-            'role' => UserRole::SuperAdmin,
+            'role' => UserRole::SuperAdmin, 
             'is_password_changed' => true,
         ]);
 
