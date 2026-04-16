@@ -147,13 +147,13 @@
                     <div class="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                         <div class="flex items-center gap-3">
                             <div
-                                class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
-                                {{ substr($log->recipe->name, 0, 2) }}
+                                class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
+                                {{ substr($log->recipe?->name ?? 'NA', 0, 2) }}
                             </div>
                             <div>
-                                <div class="font-bold text-gray-800">{{ $log->recipe->name }}</div>
+                                <div class="font-bold text-gray-800">{{ $log->recipe?->name ?? 'Deleted Recipe' }}</div>
                                 <div class="text-xs text-gray-400">{{ $log->created_at->diffForHumans() }} by
-                                    {{ $log->user->name }}
+                                    {{ $log->user?->name ?? 'Unknown' }}
                                 </div>
                             </div>
                         </div>

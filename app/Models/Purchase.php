@@ -35,6 +35,7 @@ class Purchase extends Model
         'purchase_date' => 'date',
         'approved_at' => 'datetime',
         'quantity' => 'decimal:3',
+        'unit' => \App\Enums\Unit::class,
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
         'goods_photo_path' => 'array',  // Multiple goods photos stored as JSON

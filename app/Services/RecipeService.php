@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Recipe;
 use App\Models\User;
 use App\Enums\RecipeStatus;
+use App\Enums\Unit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\DriveService;
@@ -334,9 +335,26 @@ class RecipeService
             }
 
             try {
-                // Simplified costing: quantity * latest purchase price (no conversion)
+                // Get latest purchase to determine the unit price and its associated unit
+                $latestPurchase = $ingredient->purchases()
+                    ->approved()
+                    ->orderBy('purchase_date', 'desc')
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+                $baseUnit = Unit::tryFrom($ingredient->measurement_unit);
                 $unitCost = $ingredient->latest_price;
-                $cost = (float)$item['quantity'] * $unitCost;
+                
+                $recipeUnit = Unit::tryFrom($item['unit']);
+
+                if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
+                    // Convert recipe quantity to ingredient's base unit for accurate costing
+                    $quantityInBaseUnit = $recipeUnit->convertTo((float)$item['quantity'], $baseUnit);
+                    $cost = $quantityInBaseUnit * $unitCost;
+                } else {
+                    // Fallback to simplified costing if conversion not possible
+                    $cost = (float)$item['quantity'] * $unitCost;
+                }
 
                 \App\Models\RecipeIngredient::create([
                     'recipe_id' => $recipe->id,
@@ -382,9 +400,24 @@ class RecipeService
                     continue;
                 }
 
-                // Simplified costing (no conversion)
+                // Calculate cost with unit conversion
+                $latestPurchase = $ingredient->purchases()
+                    ->approved()
+                    ->orderBy('purchase_date', 'desc')
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+                $baseUnit = Unit::tryFrom($ingredient->measurement_unit);
                 $unitCost = $ingredient->latest_price;
-                $cost = (float)$recipeIngredient->quantity * $unitCost;
+
+                $recipeUnit = Unit::tryFrom($recipeIngredient->unit);
+
+                if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
+                    $quantityInBaseUnit = $recipeUnit->convertTo((float)$recipeIngredient->quantity, $baseUnit);
+                    $cost = $quantityInBaseUnit * $unitCost;
+                } else {
+                    $cost = (float)$recipeIngredient->quantity * $unitCost;
+                }
 
                 // Update cost
                 $recipeIngredient->update(['cost' => $cost]);

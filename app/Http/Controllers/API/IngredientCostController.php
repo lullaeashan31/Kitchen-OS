@@ -32,8 +32,15 @@ class IngredientCostController extends Controller
         }
 
         try {
-            // Simplified: No unit conversion
-            $cost = (float)$request->quantity * (float)$ingredient->latest_price;
+            $inputUnit = \App\Enums\Unit::tryFrom($request->unit);
+            $baseUnit = \App\Enums\Unit::tryFrom($ingredient->measurement_unit);
+            
+            $normalizedQuantity = (float)$request->quantity;
+            if ($inputUnit && $baseUnit && $inputUnit->canConvertTo($baseUnit)) {
+                $normalizedQuantity = $inputUnit->convertTo($normalizedQuantity, $baseUnit);
+            }
+
+            $cost = $normalizedQuantity * (float)$ingredient->latest_price;
 
             return response()->json(['cost' => round($cost, 3)]);
 

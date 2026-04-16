@@ -22,7 +22,7 @@
             <span class="hidden sm:inline">Cancel</span>
             <span class="sm:hidden">✕</span>
         </button>
-        <button type="button" onclick="document.getElementById('recipeForm').submit()"
+        <button type="submit" form="recipeForm"
             class="px-4 md:px-6 py-2 md:py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-blue-600/40 transition-all flex items-center gap-2 text-sm md:text-base">
             <i data-lucide="save" class="w-4 h-4 md:w-5 md:h-5"></i>
             <span class="hidden sm:inline">Save Recipe</span>
@@ -784,7 +784,7 @@
                 @foreach($subRecipes as $sub)
                     @if($sub->produces_ingredient_id)
                         <option value="{{ $sub->produces_ingredient_id }}" 
-                            data-price="{{ $sub->cost_per_portion ?? 0 }}"
+                            data-price="{{ $sub->producesIngredient->latest_price ?? $sub->producesIngredient->price ?? 0 }}"
                             data-unit="{{ $sub->output_unit ?? $sub->producesIngredient->measurement_unit ?? 'pcs' }}">
                             {{ $sub->name }} (Recipe Component)
                         </option>
@@ -1429,6 +1429,10 @@
                         <i data-lucide="component" class="w-5 h-5"></i>
                     </div>
                     <div>
+                        <input type="hidden" name="stages[999][ingredients][${i}][ingredient_id]" value="${s.ingId}">
+                        <input type="hidden" name="stages[999][ingredients][${i}][quantity]" value="${s.qty}">
+                        <input type="hidden" name="stages[999][ingredients][${i}][unit]" value="${s.unit}">
+                        <input type="hidden" name="stages[999][ingredients][${i}][ingredient_group]" value="Sub-Recipe">
                         <h4 class="font-bold">${s.name}</h4>
                         <p class="text-xs text-gray-500">${s.qty} ${s.unit} • ₹${cost}</p>
                     </div>

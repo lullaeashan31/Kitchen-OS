@@ -174,10 +174,18 @@
                                     <span style="color: #94a3b8;">—</span>
                                 @else
                                     @foreach($vendorSummary as $v)
-                                        <div style="margin-bottom: 0.25rem;">
-                                            <span style="font-weight: 600; color: #1e293b;">{{ $v['name'] }}</span>
-                                            <span style="color: #64748b;"> · ₹{{ number_format($v['price'], 2) }}</span>
-                                            <span style="color: #16a34a; font-weight: 500;"> · {{ number_format($v['quantity'], 3) }} {{ $item->measurement_unit }}</span>
+                                        <div style="margin-bottom: 0.4rem; padding-bottom: 0.25rem; border-bottom: 1px dashed #f1f5f9; last-child: border-bottom: none;">
+                                            <div style="font-weight: 700; color: #1e293b; font-size: 0.85rem;">{{ $v['name'] }}</div>
+                                            <div class="flex items-center gap-1 mt-0.5">
+                                                <span style="color: #475569; font-weight: 500;">
+                                                    {{ number_format($v['purchase_quantity'], $v['purchase_quantity'] == (int)$v['purchase_quantity'] ? 0 : 1) }} {{ $v['purchase_unit'] }}
+                                                </span>
+                                                <span style="color: #94a3b8; font-size: 0.75rem;">(₹{{ number_format($v['unit_price'], 2) }}/{{ $v['purchase_unit'] }})</span>
+                                                <span style="color: #cbd5e1; font-size: 0.75rem;">→</span>
+                                                <span style="color: #16a34a; font-weight: 600; font-size: 0.75rem;">
+                                                    {{ number_format($v['normalized_quantity'], 0) }} {{ $v['base_unit'] }}
+                                                </span>
+                                            </div>
                                         </div>
                                     @endforeach
                                 @endif

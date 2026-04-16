@@ -90,10 +90,35 @@
                     </div>
                 @endif
 
+                @php
+                    $subRecipeStage = $recipe->stages->where('name', 'Sub-Recipes')->first();
+                @endphp
+
+                @if($subRecipeStage && $subRecipeStage->ingredients->isNotEmpty())
+                    <div style="background-color: #f5f3ff; border: 1px solid #ddd6fe; border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem;">
+                        <h3 style="color: #5b21b6; border: none; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="component" style="width: 20px;"></i> Sub-Recipes Used
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                            @foreach($subRecipeStage->ingredients as $ri)
+                                <div style="background: white; padding: 1rem; border-radius: var(--radius-sm); border: 1px solid #ede9fe; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                    <div>
+                                        <div style="font-weight: 600; color: #1f2937;">{{ $ri->ingredient->name }}</div>
+                                        <div style="font-size: 0.75rem; color: #6b7280;">{{ number_format($ri->quantity, 3) }} {{ $ri->unit }}</div>
+                                    </div>
+                                    @if(auth()->user()->isAdmin())
+                                        <div style="font-weight: 600; color: #7c3aed;">₹{{ number_format($ri->cost, 2) }}</div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
 
-                @if($recipe->stages->isNotEmpty())
-                    @foreach($recipe->stages as $stage)
+
+                @if($recipe->stages->where('name', '!=', 'Sub-Recipes')->isNotEmpty())
+                    @foreach($recipe->stages->where('name', '!=', 'Sub-Recipes') as $stage)
                         <div class="mb-8">
                             <h3 class="flex items-center gap-2">
                                 <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">{{ $loop->iteration }}</span>

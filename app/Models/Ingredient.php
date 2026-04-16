@@ -6,6 +6,7 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Enums\Unit;
 
 class Ingredient extends Model
 {
@@ -107,6 +108,15 @@ class Ingredient extends Model
             ->first();
 
         if ($latest instanceof Purchase) {
+            $purchaseUnit = $latest->unit;
+            $baseUnit = Unit::tryFrom($this->measurement_unit);
+
+            if ($purchaseUnit && $baseUnit && $purchaseUnit->canConvertTo($baseUnit)) {
+                $divisor = $purchaseUnit->convertTo(1, $baseUnit);
+                if ($divisor > 0) {
+                    return (float) ($latest->unit_price / $divisor);
+                }
+            }
             return (float) $latest->unit_price;
         }
 
@@ -117,7 +127,13 @@ class Ingredient extends Model
             ->first();
 
         if ($producingRecipe) {
-            // For sub-recipes, we usually use the cost per portion or output unit cost
+            // For sub-recipes that produce an ingredient, calculate cost per output unit
+            // Example: 1000g produced for ₹100 total -> ₹0.10 per gram
+            if ($producingRecipe->output_quantity > 0) {
+                return (float) ($producingRecipe->total_cost / $producingRecipe->output_quantity);
+            }
+            
+            // Fallback for simple portion-based sub-recipes
             return (float) ($producingRecipe->cost_per_portion ?? 0);
         }
 
@@ -133,19 +149,65 @@ class Ingredient extends Model
     {
         $purchases = $this->relationLoaded('purchases')
             ? $this->purchases
-            : $this->purchases()->where('status', 'approved')->with('vendor')->get();
+            : $this->purchases()->where('status', 'approved')->orderBy('purchase_date', 'desc')->with('vendor')->get();
 
         $byVendor = [];
+        $baseUnitEnum = Unit::tryFrom($this->measurement_unit);
+
         foreach ($purchases as $p) {
             $vid = $p->vendor_id ?? 'legacy';
             $vname = (is_object($p->vendor) && $p->vendor !== null) ? $p->vendor->name : (is_string($p->vendor) ? $p->vendor : 'N/A');
+            
             if (!isset($byVendor[$vid])) {
-                $byVendor[$vid] = ['name' => $vname, 'price' => $p->unit_price, 'quantity' => 0];
+                $byVendor[$vid] = [
+                    'name' => $vname,
+                    'unit_price' => (float) $p->unit_price,
+                    'purchase_unit' => $p->unit,
+                    'normalized_total' => 0,
+                ];
             }
-            $byVendor[$vid]['quantity'] += (float) $p->quantity; // No conversion
-            $byVendor[$vid]['price'] = $p->unit_price; // keep last price
+
+            $pUnit = $p->unit;
+            $qty = (float) $p->quantity;
+            
+            $normalized = $qty;
+            if ($pUnit instanceof Unit && $baseUnitEnum instanceof Unit && $pUnit->canConvertTo($baseUnitEnum)) {
+                $normalized = $pUnit->convertTo($qty, $baseUnitEnum);
+            }
+            
+            $byVendor[$vid]['normalized_total'] += $normalized;
+            
+            // Keep latest price/unit
+            if (!isset($byVendor[$vid]['last_date']) || $p->purchase_date >= $byVendor[$vid]['last_date']) {
+                $byVendor[$vid]['unit_price'] = (float) $p->unit_price;
+                $byVendor[$vid]['purchase_unit'] = $pUnit;
+                $byVendor[$vid]['last_date'] = $p->purchase_date;
+            }
         }
-        return collect(array_values($byVendor));
+
+        return collect(array_values($byVendor))->map(function($v) use ($baseUnitEnum) {
+            $normalizedTotal = $v['normalized_total'];
+            $pUnit = $v['purchase_unit'];
+            
+            $displayPurchaseQty = $normalizedTotal;
+            $displayPurchaseUnit = $this->measurement_unit;
+
+            if ($pUnit instanceof Unit && $baseUnitEnum instanceof Unit && $baseUnitEnum->canConvertTo($pUnit)) {
+                $displayPurchaseQty = $baseUnitEnum->convertTo($normalizedTotal, $pUnit);
+                $displayPurchaseUnit = $pUnit->value;
+            } else if ($pUnit) {
+                $displayPurchaseUnit = is_string($pUnit) ? $pUnit : $pUnit->value;
+            }
+
+            return [
+                'name' => $v['name'],
+                'unit_price' => $v['unit_price'],
+                'purchase_unit' => $displayPurchaseUnit,
+                'purchase_quantity' => $displayPurchaseQty,
+                'normalized_quantity' => $normalizedTotal,
+                'base_unit' => $this->measurement_unit
+            ];
+        });
     }
 
     public function getTotalPurchasedAttribute()

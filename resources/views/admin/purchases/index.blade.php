@@ -95,10 +95,11 @@
                                 </td>
                                 <td class="px-4 py-4 text-right whitespace-nowrap">
                                     <span class="text-sm font-bold text-slate-900">{{ number_format($purchase->quantity, 2) }}</span>
-                                    <span class="text-xs text-slate-400 font-medium ml-1">{{ $purchase->ingredient->measurement_unit ?? '' }}</span>
+                                    <span class="text-xs text-slate-400 font-medium ml-1">{{ $purchase->unit?->value ?? $purchase->ingredient->measurement_unit ?? '' }}</span>
                                 </td>
                                 <td class="px-4 py-4 text-right whitespace-nowrap">
                                     <span class="text-sm font-extrabold text-slate-900">₹{{ number_format($purchase->total_price, 2) }}</span>
+                                    <div class="text-[10px] text-slate-400">₹{{ number_format($purchase->unit_price, 2) }}/{{ $purchase->unit?->value ?? 'unit' }}</div>
                                 </td>
                                 <td class="px-4 py-4 text-center">
                                     <div class="flex justify-center gap-2">
@@ -253,9 +254,12 @@
                                         <td class="px-5 py-3 font-extrabold text-slate-700">{{ $item->ingredient->name ?? 'Unknown' }}</td>
                                         <td class="px-5 py-3 text-right text-slate-500 font-medium whitespace-nowrap">
                                             {{ number_format($item->quantity, 1) }}
-                                            <span class="text-[9px] text-slate-400 opacity-70">{{ $item->ingredient->measurement_unit }}</span>
+                                            <span class="text-[9px] text-slate-400 opacity-70">{{ $item->unit?->value ?? $item->ingredient->measurement_unit }}</span>
                                         </td>
-                                        <td class="px-5 py-3 text-right text-slate-500 font-medium">₹{{ number_format($item->unit_price, 2) }}</td>
+                                        <td class="px-5 py-3 text-right text-slate-500 font-medium">
+                                            ₹{{ number_format($item->unit_price, 2) }}
+                                            <div class="text-[9px] text-slate-400 opacity-60">per {{ $item->unit?->value }}</div>
+                                        </td>
                                         <td class="px-5 py-3 text-right font-black text-slate-800">₹{{ number_format($item->total_price, 2) }}</td>
                                         <td class="px-5 py-3 text-center">
                                             @if($item->status == 'approved')

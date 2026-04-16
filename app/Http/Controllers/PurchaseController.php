@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ingredient;
 use App\Models\Purchase;
 use App\Models\InventoryLog;
+use App\Enums\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -235,7 +236,16 @@ class PurchaseController extends Controller
             $totalPrice = $purchase->total_price;
             $unitPrice = $purchase->unit_price;
 
-            $newStock = $currentStock + $quantity;
+            // Normalize quantity to ingredient base unit if possible
+            $purchaseUnit = $purchase->unit;
+            $baseUnit = Unit::tryFrom($ingredient->base_unit);
+            $normalizedQuantity = $quantity;
+
+            if ($purchaseUnit && $baseUnit && $purchaseUnit->canConvertTo($baseUnit)) {
+                $normalizedQuantity = $purchaseUnit->convertTo($quantity, $baseUnit);
+            }
+
+            $newStock = $currentStock + $normalizedQuantity;
 
             if ($newStock > 0) {
                 // Weighted Average - ensure units are consistent
@@ -244,14 +254,17 @@ class PurchaseController extends Controller
                 $newAvgCost = $unitPrice;
             }
 
-            // Update basic configuration based on latest purchase (no conversion)
+            // Update basic configuration based on latest purchase (normalized to base unit)
             $ingredient->purchase_price = $purchase->total_price;
-            $ingredient->purchase_quantity = $purchase->quantity;
-            $ingredient->purchase_unit = $purchase->unit;
+            $ingredient->purchase_quantity = $normalizedQuantity;
+            $ingredient->purchase_unit = $ingredient->base_unit;
             
             $ingredient->current_stock = $newStock;
             $ingredient->avg_cost = $newAvgCost;
-            $ingredient->price = $unitPrice; // Update latest unit price
+            
+            // Update latest unit price - normalize to base unit to ensure recipe costing is correct
+            $ingredient->price = $normalizedQuantity > 0 ? ($totalPrice / $normalizedQuantity) : $unitPrice;
+            
             $ingredient->save();
 
             // Log Inventory Change
@@ -259,7 +272,7 @@ class PurchaseController extends Controller
                 'kitchen_id' => $ingredient->kitchen_id,
                 'ingredient_id' => $ingredient->id,
                 'user_id' => Auth::id(), // Admin who approved
-                'quantity_change' => $quantity,
+                'quantity_change' => $normalizedQuantity,
                 'action' => 'purchase_approved',
                 'stock_before' => $currentStock,
                 'stock_after' => $newStock,

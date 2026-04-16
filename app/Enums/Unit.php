@@ -28,11 +28,44 @@ enum Unit: string
     }
 
     /**
-     * Conversion disabled - returns input value (simplified system)
+     * Convert value from this unit to another unit
      */
     public function convertTo(float $value, Unit $toUnit): float
     {
-        return $value;
+        if ($this === $toUnit) {
+            return $value;
+        }
+
+        if (!$this->canConvertTo($toUnit)) {
+            return $value; // Cannot convert, return original value
+        }
+
+        // Conversion factors to base units (g for weight, ml for volume)
+        $toBase = match ($this) {
+            self::Gram => 1,
+            self::Kilogram => 1000,
+            self::Milliliter => 1,
+            self::Liter => 1000,
+            self::Tablespoon => 15,
+            self::Teaspoon => 5,
+            self::Cup => 240,
+            self::Piece => 1,
+        };
+
+        $valueInBase = $value * $toBase;
+
+        $fromBase = match ($toUnit) {
+            self::Gram => 1,
+            self::Kilogram => 1000,
+            self::Milliliter => 1,
+            self::Liter => 1000,
+            self::Tablespoon => 15,
+            self::Teaspoon => 5,
+            self::Cup => 240,
+            self::Piece => 1,
+        };
+
+        return $valueInBase / $fromBase;
     }
 
     /**

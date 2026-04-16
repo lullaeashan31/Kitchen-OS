@@ -6,6 +6,7 @@ use App\Models\Recipe;
 use App\Models\Ingredient;
 use App\Models\ProductionLog;
 use App\Models\InventoryLog;
+use App\Enums\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -88,10 +89,16 @@ class ProductionController extends Controller
         // Check Stock Availability First
         $missingStock = [];
         foreach ($recipe->ingredients as $ingredient) {
-            $requiredQtyRaw = $ingredient->pivot->quantity * $portions;
-            // Normalize recipe yield 
-            // Simplified: No unit conversion
-            $requiredQty = $requiredQtyRaw / $yieldValue;
+            $requiredQtyInRecipeUnit = ($ingredient->pivot->quantity * $portions) / $yieldValue;
+            
+            $recipeUnit = Unit::tryFrom($ingredient->pivot->unit);
+            $stockUnit = Unit::tryFrom($ingredient->measurement_unit);
+
+            if ($recipeUnit && $stockUnit && $recipeUnit->canConvertTo($stockUnit)) {
+                $requiredQty = $recipeUnit->convertTo($requiredQtyInRecipeUnit, $stockUnit);
+            } else {
+                $requiredQty = $requiredQtyInRecipeUnit;
+            }
 
             if ($ingredient->current_stock < $requiredQty) {
                 $missingStock[] = $ingredient->name . " (Need: " . number_format($requiredQty, 3) . " " . $ingredient->measurement_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
@@ -134,24 +141,17 @@ class ProductionController extends Controller
                 // CRITICAL: Raw ingredients must be DEDUCTED (decreased)
                 // quantity_change must be NEGATIVE for raw ingredients
                 // Calculate quantity per portion
-                // pivot->quantity is the total quantity for the recipe's base yield
-                $qtyPerPortion = $ingredient->pivot->quantity / $yieldValue;
-                $requiredQty = $qtyPerPortion * $portions; // Total required for this batch
+                // Calculate required quantity with unit conversion
+                $requiredQtyInRecipeUnit = ($ingredient->pivot->quantity / $yieldValue) * $portions;
+                
+                $recipeUnit = Unit::tryFrom($ingredient->pivot->unit);
+                $stockUnit = Unit::tryFrom($ingredient->measurement_unit);
 
-                \Log::info("Ingredient Calculation", [
-                    'ingredient_id' => $ingredient->id,
-                    'ingredient_name' => $ingredient->name,
-                    'pivot_quantity' => $ingredient->pivot->quantity,
-                    'pivot_unit' => $ingredient->pivot->unit,
-                    'yieldValue' => $yieldValue,
-                    'qtyPerPortion' => $qtyPerPortion,
-                    'portions' => $portions,
-                    'requiredQty' => $requiredQty,
-                ]);
-
-
-                // Simplified: No conversion
-                $deductAmount = $requiredQty;
+                if ($recipeUnit && $stockUnit && $recipeUnit->canConvertTo($stockUnit)) {
+                    $deductAmount = $recipeUnit->convertTo($requiredQtyInRecipeUnit, $stockUnit);
+                } else {
+                    $deductAmount = $requiredQtyInRecipeUnit;
+                }
 
                 // Refresh ingredient to get latest stock from database
                 $ingredient->refresh();
@@ -459,14 +459,19 @@ class ProductionController extends Controller
             // Check Stock Availability First
             $missingStock = [];
             foreach ($recipe->ingredients as $ingredient) {
-                $requiredQtyRaw = $ingredient->pivot->quantity * $portions;
-                $requiredQty = $requiredQtyRaw / $yieldValue;
+                $requiredQtyInRecipeUnit = ($ingredient->pivot->quantity * $portions) / $yieldValue;
+                
+                $recipeUnit = Unit::tryFrom($ingredient->pivot->unit);
+                $stockUnit = Unit::tryFrom($ingredient->measurement_unit);
 
-                // No unit conversion
-                $convertedQty = $requiredQty;
+                if ($recipeUnit && $stockUnit && $recipeUnit->canConvertTo($stockUnit)) {
+                    $requiredQty = $recipeUnit->convertTo($requiredQtyInRecipeUnit, $stockUnit);
+                } else {
+                    $requiredQty = $requiredQtyInRecipeUnit;
+                }
 
-                if ($ingredient->current_stock < $convertedQty) {
-                    $missingStock[] = $ingredient->name . " (Need: " . number_format($convertedQty, 3) . " " . $ingredient->measurement_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
+                if ($ingredient->current_stock < $requiredQty) {
+                    $missingStock[] = $ingredient->name . " (Need: " . number_format($requiredQty, 3) . " " . $ingredient->measurement_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
                 }
             }
 
@@ -493,11 +498,16 @@ class ProductionController extends Controller
                 // 2. Deduct Stock & Create Inventory Logs
                 $yieldValue = $recipe->yield_portions ?? $recipe->yields ?? 1;
                 foreach ($recipe->ingredients as $ingredient) {
-                    $qtyPerPortion = $ingredient->pivot->quantity / $yieldValue;
-                    $requiredQty = $qtyPerPortion * $portions;
+                    $requiredQtyInRecipeUnit = ($ingredient->pivot->quantity / $yieldValue) * $portions;
+                    
+                    $recipeUnit = Unit::tryFrom($ingredient->pivot->unit);
+                    $stockUnit = Unit::tryFrom($ingredient->measurement_unit);
 
-                    // No unit conversion
-                    $deductAmount = $requiredQty;
+                    if ($recipeUnit && $stockUnit && $recipeUnit->canConvertTo($stockUnit)) {
+                        $deductAmount = $recipeUnit->convertTo($requiredQtyInRecipeUnit, $stockUnit);
+                    } else {
+                        $deductAmount = $requiredQtyInRecipeUnit;
+                    }
 
                     // Refresh ingredient to get latest stock from database
                     $ingredient->refresh();
