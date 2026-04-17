@@ -38,7 +38,8 @@
         </div>
 
         <!-- Attendance Card -->
-        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group">
+        <a href="{{ route('employee.attendance.index') }}"
+            class="block bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group hover:shadow-2xl hover:border-green-200 transition-all">
             <div
                 class="absolute -right-4 -top-4 w-24 h-24 bg-green-50 rounded-full opacity-50 transition-transform group-hover:scale-125">
             </div>
@@ -51,7 +52,7 @@
                 <div class="text-xl font-black text-gray-900">{{ $monthDaysWorked }} Days</div>
                 <div class="text-xs text-gray-400 mt-1">Present this month</div>
             </div>
-        </div>
+        </a>
 
         <!-- Leave Card -->
         <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group">

@@ -32,9 +32,9 @@ class SchedulingService
 
             if ($staff->isEmpty()) return;
 
-            // Sort staff by current assignment count to ensure even distribution
-            // (We'll track this in a local array for the range)
-            $staffAssignedCounts = $staff->pluck('id')->fill(0)->toArray();
+            // Keep a local assignment counter map for this run.
+            // (Collection::fill does not exist on Support\Collection.)
+            $staffAssignedCounts = array_fill_keys($staff->pluck('id')->toArray(), 0);
             $staffIds = $staff->pluck('id')->toArray();
             shuffle($staffIds); // Randomize initial order for fairness over weeks
 
@@ -67,6 +67,7 @@ class SchedulingService
                             ['user_id' => $user->id, 'date' => $currentDate->toDateString()],
                             ['shift_id' => $shift->id]
                         );
+                        $staffAssignedCounts[$user->id] = ($staffAssignedCounts[$user->id] ?? 0) + 1;
                         $results['total_assigned']++;
                     }
 

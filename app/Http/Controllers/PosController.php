@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Recipe;
 use App\Models\InventoryLog;
 use Illuminate\Support\Facades\DB;
-use App\Services\ExcelImportService; // Reuse or create new? Let's keep logic here for now or distinct service.
 
 class PosController extends Controller
 {
@@ -37,21 +36,24 @@ class PosController extends Controller
         $unmappedItems = [];
         $errors = [];
 
+        $permanentRecipes = Recipe::where('status', 'permanent')
+            ->get(['id', 'name']);
+
         foreach ($rows as $index => $row) {
             // Flexible Column Matching
-            $name = $row['item_name'] ?? $row['product'] ?? $row['description'] ?? $row['name'] ?? null;
+            $name = $row['item_name']
+                ?? $row['item']
+                ?? $row['product']
+                ?? $row['description']
+                ?? $row['name']
+                ?? null;
             $qty = $row['quantity'] ?? $row['qty'] ?? $row['count'] ?? $row['sold'] ?? 0;
 
             if (!$name) {
                 continue; // Skip empty rows
             }
 
-            // Find Recipe
-            // Try exact match first
-            $recipe = Recipe::where('name', 'LIKE', $name)->where('status', 'permanent')->first();
-
-            // If no match, maybe try soundex or just fail? User wants "Map POS items".
-            // Implementation: "Show unmapped items warning".
+            $recipe = $this->findRecipeMatch($name, $permanentRecipes);
 
             if ($recipe) {
                 $mappedItems[] = [
@@ -123,10 +125,15 @@ class PosController extends Controller
 
     private function fileToArray($file)
     {
-        // quick helper for task
+        // Parse CSV and normalize headers (e.g. "Item Name" => "item_name").
         $path = $file->getRealPath();
         $data = array_map('str_getcsv', file($path));
-        $header = array_map('strtolower', array_map('trim', array_shift($data)));
+        $header = array_map(function ($column) {
+            $column = preg_replace('/^\xEF\xBB\xBF/', '', (string) $column); // Strip UTF-8 BOM if present.
+            $column = strtolower(trim($column));
+            $column = preg_replace('/[\s\-]+/', '_', $column);
+            return $column;
+        }, array_shift($data));
 
         $result = [];
         foreach ($data as $row) {
@@ -135,5 +142,38 @@ class PosController extends Controller
             }
         }
         return $result;
+    }
+
+    private function normalizeRecipeName(string $name): string
+    {
+        $name = strtolower(trim($name));
+        $name = str_replace(['/', '-', '_'], ' ', $name);
+        $name = preg_replace('/\s+/', ' ', $name);
+        return $name;
+    }
+
+    private function findRecipeMatch(string $name, $recipes): ?Recipe
+    {
+        $normalizedInput = $this->normalizeRecipeName($name);
+
+        // 1) Exact normalized match first.
+        foreach ($recipes as $recipe) {
+            if ($this->normalizeRecipeName($recipe->name) === $normalizedInput) {
+                return $recipe;
+            }
+        }
+
+        // 2) Fuzzy fallback to handle minor POS spelling variations.
+        $bestMatch = null;
+        $bestScore = 0;
+        foreach ($recipes as $recipe) {
+            similar_text($normalizedInput, $this->normalizeRecipeName($recipe->name), $score);
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestMatch = $recipe;
+            }
+        }
+
+        return $bestScore >= 80 ? $bestMatch : null;
     }
 }
