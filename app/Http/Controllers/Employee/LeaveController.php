@@ -36,7 +36,7 @@ class LeaveController extends Controller
 
         // 2-week advance rule (except for sick leave)
         if ($request->type !== 'sick') {
-            if ($startDate->diffInDays(now()) < 14) {
+            if ($startDate->lt(today()->addDays(14))) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Non-emergency leave requests must be made at least 2 weeks in advance.');

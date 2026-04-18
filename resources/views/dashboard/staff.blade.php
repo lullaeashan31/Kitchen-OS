@@ -18,7 +18,8 @@
     <!-- Dashboard Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         <!-- Today's Shift Card -->
-        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group">
+        <a href="{{ route('employee.shifts.index') }}"
+            class="block bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group hover:shadow-2xl hover:border-blue-200 transition-all">
             <div
                 class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 transition-transform group-hover:scale-125">
             </div>
@@ -35,7 +36,7 @@
                     {{ $todayShift ? Carbon\Carbon::parse($todayShift->shift->start_time)->format('g:i A') . ' - ' . Carbon\Carbon::parse($todayShift->shift->end_time)->format('g:i A') : 'Weekly Off / Unscheduled' }}
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- Attendance Card -->
         <a href="{{ route('employee.attendance.index') }}"
@@ -55,7 +56,8 @@
         </a>
 
         <!-- Leave Card -->
-        <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group">
+        <a href="{{ route('employee.leave.index') }}"
+            class="block bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group hover:shadow-2xl hover:border-orange-200 transition-all">
             <div
                 class="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full opacity-50 transition-transform group-hover:scale-125">
             </div>
@@ -68,7 +70,7 @@
                 <div class="text-xl font-black text-gray-900">{{ $pendingLeavesCount }} Pending</div>
                 <div class="text-xs text-gray-400 mt-1">Awaiting approval</div>
             </div>
-        </div>
+        </a>
 
         <!-- SOP / Checklists Card -->
         <a href="{{ route('sop.index') }}" class="block bg-white p-6 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden group hover:shadow-2xl hover:border-indigo-200 transition-all">
