@@ -26,8 +26,8 @@ class IngredientController extends Controller
     {
         $query = Ingredient::query()->withCount('recipes');
 
-        // Filter based on role: Staff see only their own ingredients (including pending), Admins see all
-        if ($request->user()->isStaff()) {
+        // Filter based on role: Staff see only their own ingredients unless they have module access
+        if ($request->user()->isStaff() && !$request->user()->hasPermissionTo('module_inventory')) {
             $query->where('created_by', $request->user()->id);
         }
 

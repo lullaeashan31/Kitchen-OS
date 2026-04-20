@@ -15,7 +15,7 @@ class DashboardController extends Controller
 
         if ($user->isAdmin()) {
             return $this->adminDashboard();
-        } elseif ($user->isManager()) {
+        } elseif ($user->isManager() || $user->hasPermissionTo('module_recipes') || $user->hasPermissionTo('module_inventory')) {
             return $this->managerDashboard();
         } else {
             return $this->staffDashboard();

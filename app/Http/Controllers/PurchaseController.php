@@ -44,7 +44,7 @@ class PurchaseController extends Controller
             $query->whereDate('purchase_date', $request->date);
         }
 
-        if (Auth::user()->isStaff()) {
+        if (Auth::user()->isStaff() && !Auth::user()->hasPermissionTo('module_inventory')) {
             $query->where('created_by', Auth::id());
         }
 
@@ -355,7 +355,7 @@ class PurchaseController extends Controller
         $query = Purchase::where('purchase_date', '>=', $startDate)
             ->whereNotNull('invoice_photo_path');
 
-        if (Auth::user()->isStaff()) {
+        if (Auth::user()->isStaff() && !Auth::user()->hasPermissionTo('module_inventory')) {
             $query->where('created_by', Auth::id());
         }
 

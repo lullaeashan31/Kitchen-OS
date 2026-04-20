@@ -31,8 +31,8 @@ class RecipeController extends Controller
     {
         $query = Recipe::with(['category', 'creator']);
 
-        // RESTRICTION: Staff can only see their own recipes
-        if ($request->user()->isStaff()) {
+        // RESTRICTION: Staff can only see their own recipes unless they have explicit module access
+        if ($request->user()->isStaff() && !$request->user()->hasPermissionTo('module_recipes')) {
             $query->where('created_by', $request->user()->id);
         }
 
@@ -245,8 +245,8 @@ class RecipeController extends Controller
         // Get filtered recipes based on current filters
         $query = Recipe::with(['category', 'creator', 'stages.ingredients.ingredient', 'recipeIngredients.ingredient']);
 
-        // RESTRICTION: Staff can only see their own recipes
-        if ($request->user()->isStaff()) {
+        // RESTRICTION: Staff can only see their own recipes unless they have explicit module access
+        if ($request->user()->isStaff() && !$request->user()->hasPermissionTo('module_recipes')) {
             $query->where('created_by', $request->user()->id);
         }
 
