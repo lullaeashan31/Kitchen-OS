@@ -161,6 +161,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
         // Purchases
         Route::resource('purchases', \App\Http\Controllers\PurchaseController::class)->only(['index', 'create', 'store']);
         Route::get('purchases/download/90days', [\App\Http\Controllers\PurchaseController::class , 'downloadInvoices90Days'])->name('purchases.download.90days');
+        Route::get('purchases/{purchase}/invoice', [\App\Http\Controllers\PurchaseController::class , 'viewInvoice'])->name('purchases.view.invoice');
         Route::get('purchases/{purchase}/download-invoice', [\App\Http\Controllers\PurchaseController::class , 'downloadInvoice'])->name('purchases.download.invoice');
         Route::post('vendors', [VendorController::class , 'store'])->name('vendors.store');
         // Admin only actions

@@ -317,20 +317,52 @@ class PurchaseController extends Controller
     }
 
     /**
+     * Open invoice in the browser (same origin as the app — avoids stale APP_URL / ngrok links).
+     */
+    public function viewInvoice(string $kitchen_slug, Purchase $purchase)
+    {
+        $this->authorize('view', $purchase);
+
+        $response = $this->invoiceBinaryResponse($purchase, true);
+        if ($response === null) {
+            abort(404, 'Invoice not found.');
+        }
+
+        return $response;
+    }
+
+    /**
      * Download single invoice (image/PDF)
      */
     public function downloadInvoice(string $kitchen_slug, Purchase $purchase)
     {
         $this->authorize('view', $purchase);
 
+        $response = $this->invoiceBinaryResponse($purchase, false);
+        if ($response === null) {
+            if (!$purchase->invoice_photo_path) {
+                return back()->with('error', 'Invoice not found.');
+            }
+
+            return back()->with('error', 'Invoice file not found.');
+        }
+
+        return $response;
+    }
+
+    /**
+     * @return \Illuminate\Http\Response|null null if missing path or file
+     */
+    protected function invoiceBinaryResponse(Purchase $purchase, bool $inline): ?\Illuminate\Http\Response
+    {
         if (!$purchase->invoice_photo_path) {
-            return back()->with('error', 'Invoice not found.');
+            return null;
         }
 
         $disk = config('filesystems.default');
 
         if (!Storage::disk($disk)->exists($purchase->invoice_photo_path)) {
-            return back()->with('error', 'Invoice file not found.');
+            return null;
         }
 
         $file = Storage::disk($disk)->get($purchase->invoice_photo_path);
@@ -338,9 +370,13 @@ class PurchaseController extends Controller
         $extension = pathinfo($purchase->invoice_photo_path, PATHINFO_EXTENSION) ?: 'jpg';
         $filename = 'invoice_' . $purchase->id . '_' . $purchase->purchase_date->format('Y-m-d') . '.' . $extension;
 
+        $disposition = $inline
+            ? 'inline; filename="' . $filename . '"'
+            : 'attachment; filename="' . $filename . '"';
+
         return response($file, 200)
             ->header('Content-Type', $mimeType)
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            ->header('Content-Disposition', $disposition);
     }
 
     /**

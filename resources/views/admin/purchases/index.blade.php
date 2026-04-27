@@ -104,7 +104,7 @@
                                 <td class="px-4 py-4 text-center">
                                     <div class="flex justify-center gap-2">
                                         @if($purchase->invoice_url)
-                                            <a href="{{ $purchase->invoice_url }}" target="_blank" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="View">
+                                            <a href="{{ route('purchases.view.invoice', $purchase) }}" target="_blank" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="View">
                                                 <i data-lucide="eye" class="w-4 h-4"></i>
                                             </a>
                                             <a href="{{ route('purchases.download.invoice', $purchase) }}" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100" title="Download">
@@ -226,7 +226,7 @@
 
                             <div class="flex gap-1">
                                 @if($bill->invoice_url)
-                                    <a href="{{ $bill->invoice_url }}" target="_blank" class="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all" title="View Full Invoice">
+                                    <a href="{{ route('purchases.view.invoice', $bill->id) }}" target="_blank" class="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all" title="View Full Invoice">
                                         <i data-lucide="external-link" class="w-5 h-5"></i>
                                     </a>
                                 @endif
