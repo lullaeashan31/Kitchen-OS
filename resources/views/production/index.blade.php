@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
 @section('header')
-    <h1>Daily Production</h1>
+    <div>
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Daily Production</h1>
+        <p class="text-xs md:text-sm text-muted font-medium mt-1 uppercase tracking-widest">Managing <span class="text-accent">Kitchen Throughput</span></p>
+    </div>
 @endsection
 
 @section('actions')
@@ -11,58 +14,63 @@
 @endsection
 
 @section('content')
-    <div class="card">
+    <div class="card p-0 overflow-hidden">
         <div class="table-container">
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Tasks</th>
-                        <th>Recipes</th>
-                        <th>Status</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
+                        <th class="px-6 py-4">Date</th>
+                        <th class="px-6 py-4">Tasks</th>
+                        <th class="px-6 py-4 text-center">Recipes</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Notes</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-subtle">
                     @forelse($productionDays as $day)
-                        <tr>
-                            <td>
-                                <div style="font-weight: 500;">{{ $day->date->format('M d, Y') }}</div>
-                                <div class="text-muted text-sm">{{ $day->date->format('l') }}</div>
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-primary">{{ $day->date->format('M d, Y') }}</div>
+                                <div class="text-[10px] font-bold text-muted uppercase tracking-widest">{{ $day->date->format('l') }}</div>
                             </td>
-                            <td>
-                                {{ $day->completed_tasks_count }} / {{ $day->total_tasks_count }}
-                                <div
-                                    style="width: 100px; height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 4px;">
-                                    <div
-                                        style="width: {{ $day->progress_percentage }}%; height: 100%; background: var(--primary-color); border-radius: 2px;">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="text-[10px] font-bold text-muted uppercase tracking-widest whitespace-nowrap">
+                                        {{ $day->completed_tasks_count }} / {{ $day->total_tasks_count }}
+                                    </div>
+                                    <div class="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div class="h-full bg-accent transition-all duration-500" style="width: {{ $day->progress_percentage }}%"></div>
                                     </div>
                                 </div>
                             </td>
-                            <td>{{ $day->items->count() }} Items</td>
-                            <td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-3 py-1 bg-primary/40 rounded-full text-[10px] font-bold text-accent uppercase tracking-widest border border-accent/20">
+                                    {{ $day->items->count() }} Items
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
                                 @if($day->progress_percentage == 100 && $day->total_tasks_count > 0)
                                     <span class="badge badge-success">Completed</span>
                                 @elseif($day->date->isToday())
                                     <span class="badge badge-warning">Active</span>
                                 @elseif($day->date->isPast())
-                                    <span class="badge badge-gray">Past</span>
+                                    <span class="badge badge-secondary">Past</span>
                                 @else
-                                    <span class="badge badge-gray">Scheduled</span>
+                                    <span class="badge badge-secondary">Scheduled</span>
                                 @endif
                             </td>
-                            <td class="text-muted text-sm">{{ Str::limit($day->notes, 30) }}</td>
-                            <td>
-                                <div class="flex gap-2">
-                                    <a href="{{ route('production.show', $day) }}" class="btn btn-sm btn-secondary">Manage</a>
+                            <td class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">{{ Str::limit($day->notes, 30) ?: '—' }}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex justify-end gap-2">
+                                    <a href="{{ route('production.show', $day) }}" class="btn btn-secondary btn-sm px-4">Manage</a>
                                     @can('delete', $day)
                                         <form action="{{ route('production.destroy', $day) }}" method="POST"
                                             onsubmit="return confirm('Delete this production day?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm" style="color: var(--danger-color);">
-                                                <i data-lucide="trash-2" style="width: 14px;"></i>
+                                            <button type="submit" class="btn btn-secondary btn-sm p-2 text-red-400 hover:text-red-300">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         </form>
                                     @endcan
@@ -71,8 +79,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                                No production days planned.
+                            <td colspan="6" class="px-6 py-16 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <i data-lucide="calendar-x" class="w-12 h-12 text-muted opacity-20"></i>
+                                    <p class="text-[10px] font-bold text-muted uppercase tracking-widest">No production days planned</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
@@ -80,8 +91,10 @@
             </table>
         </div>
 
-        <div style="margin-top: 1.5rem;">
-            {{ $productionDays->links() }}
-        </div>
+        @if($productionDays->hasPages())
+            <div class="p-6 border-t border-subtle">
+                {{ $productionDays->links() }}
+            </div>
+        @endif
     </div>
 @endsection

@@ -11,14 +11,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ProductionTemplateExport;
+use App\Services\FIFOInventoryService;
 
 class ProductionController extends Controller
 {
-    protected $unitService;
+    protected $fifoService;
 
-    public function __construct()
+    public function __construct(FIFOInventoryService $fifoService)
     {
-        // No conversion service needed
+        $this->fifoService = $fifoService;
     }
 
     /**
@@ -110,17 +111,14 @@ class ProductionController extends Controller
         }
 
         DB::transaction(function () use ($recipe, $portions, $request) {
-            // 1. Create Production Log
-            // Use Approved Standard Cost from Recipe
-            $costPerPortion = $recipe->cost_per_portion;
-            $totalProductionCost = $costPerPortion * $portions;
-
+            // 1. Initialize costs and create placeholder log
+            $totalProductionCost = 0;
             $log = ProductionLog::create([
                 'recipe_id' => $recipe->id,
                 'user_id' => auth()->id(),
                 'portions' => $portions,
-                'cost_per_portion' => $costPerPortion,
-                'total_cost' => $totalProductionCost,
+                'cost_per_portion' => 0,
+                'total_cost' => 0,
             ]);
 
             // 2. Deduct Stock & Create Inventory Logs
@@ -157,33 +155,30 @@ class ProductionController extends Controller
                 $ingredient->refresh();
                 $before = $ingredient->current_stock;
 
-                // CRITICAL: Ensure deductAmount is positive (absolute value)
-                // This ensures we're always deducting, never adding
-                $deductAmount = abs($deductAmount);
-
-                // Calculate new stock: subtract the deduction amount (STOCK DECREASES)
-                $after = $before - $deductAmount;
-
-                // Ensure stock doesn't go negative
-                if ($after < 0) {
-                    $after = 0;
-                }
-
-                // Update database current_stock (DECREASING)
-                $ingredient->update(['current_stock' => $after]);
-
-                // Verify the update was correct - stock must decrease
-                $ingredient->refresh();
-                if (abs($ingredient->current_stock - $after) > 0.001) {
-                    \Log::error("Stock update mismatch", [
-                        'expected' => $after,
-                        'actual' => $ingredient->current_stock,
-                        'ingredient_id' => $ingredient->id
+                // CRITICAL: FIFO Stock Deduction
+                // This replaces the simple current_stock update
+                try {
+                    $batchCost = $this->fifoService->deductStock(
+                        $ingredient, 
+                        $deductAmount, 
+                        'Production', 
+                        $log->id
+                    );
+                    $totalProductionCost += $batchCost;
+                } catch (\Exception $e) {
+                    \Log::error("FIFO Deduction Failed", [
+                        'ingredient_id' => $ingredient->id,
+                        'error' => $e->getMessage()
                     ]);
+                    throw $e;
                 }
+
+                // Update database current_stock (DECREASING) for display/search consistency
+                $ingredient->refresh();
+                $after = $ingredient->current_stock;
 
                 // Verify stock actually decreased
-                if ($after >= $before && $before > 0) {
+                if ($after >= $before && $before > 0 && $deductAmount > 0) {
                     \Log::error("CRITICAL: Stock did not decrease!", [
                         'ingredient_id' => $ingredient->id,
                         'ingredient_name' => $ingredient->name,
@@ -245,7 +240,13 @@ class ProductionController extends Controller
                 ]);
             }
 
-            // 3. Add Output Stock (if this is a sub-recipe that produces an ingredient)
+            // 3. Finalize Production Log with Actual FIFO Cost
+            $log->update([
+                'cost_per_portion' => $portions > 0 ? ($totalProductionCost / $portions) : 0,
+                'total_cost' => $totalProductionCost,
+            ]);
+
+            // 4. Add Output Stock (if this is a sub-recipe that produces an ingredient)
             // IMPORTANT: This section ADDS stock to PRODUCED ingredient (STOCK IN)
             // This is ONLY for finished items produced by sub-recipes
             // Raw ingredients are already deducted above
@@ -483,16 +484,14 @@ class ProductionController extends Controller
             }
 
             DB::transaction(function () use ($recipe, $portions) {
-                // 1. Create Production Log
-                $costPerPortion = $recipe->cost_per_portion;
-                $totalProductionCost = $costPerPortion * $portions;
-
+                // 1. Create Production Log placeholder
+                $totalProductionCost = 0;
                 $log = ProductionLog::create([
                     'recipe_id' => $recipe->id,
                     'user_id' => auth()->id(),
                     'portions' => $portions,
-                    'cost_per_portion' => $costPerPortion,
-                    'total_cost' => $totalProductionCost,
+                    'cost_per_portion' => 0,
+                    'total_cost' => 0,
                 ]);
 
                 // 2. Deduct Stock & Create Inventory Logs
@@ -513,20 +512,26 @@ class ProductionController extends Controller
                     $ingredient->refresh();
                     $before = $ingredient->current_stock;
 
-                    // CRITICAL: Ensure deductAmount is positive (absolute value)
-                    // This ensures we're always deducting, never adding
-                    $deductAmount = abs($deductAmount);
-
-                    // Calculate new stock: subtract the deduction amount (STOCK DECREASES)
-                    $after = $before - $deductAmount;
-
-                    // Ensure stock doesn't go negative
-                    if ($after < 0) {
-                        $after = 0;
+                    // CRITICAL: FIFO Stock Deduction
+                    try {
+                        $batchCost = $this->fifoService->deductStock(
+                            $ingredient, 
+                            $deductAmount, 
+                            'Production', 
+                            $log->id
+                        );
+                        $totalProductionCost += $batchCost;
+                    } catch (\Exception $e) {
+                        \Log::error("FIFO Deduction Failed (Excel)", [
+                            'ingredient_id' => $ingredient->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        throw $e;
                     }
 
                     // Update database current_stock (DECREASING)
-                    $ingredient->update(['current_stock' => $after]);
+                    $ingredient->refresh();
+                    $after = $ingredient->current_stock;
 
                     // Verify the update was correct - stock must decrease
                     $ingredient->refresh();
@@ -601,7 +606,13 @@ class ProductionController extends Controller
                     ]);
                 }
 
-                // 3. Add Output Stock (if this is a sub-recipe that produces an ingredient)
+                // 3. Finalize Production Log with Actual FIFO Cost
+                $log->update([
+                    'cost_per_portion' => $portions > 0 ? ($totalProductionCost / $portions) : 0,
+                    'total_cost' => $totalProductionCost,
+                ]);
+
+                // 4. Add Output Stock (if this is a sub-recipe that produces an ingredient)
                 if ($recipe->isSubRecipe()) {
                     $producedIngredient = $recipe->producesIngredient;
 

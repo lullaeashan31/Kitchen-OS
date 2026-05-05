@@ -2,40 +2,48 @@
 
 @section('header')
     <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Recipe Book</h1>
-        <p class="text-xs md:text-sm text-gray-500">Manage kitchen recipes and approvals</p>
+        <h1>Recipe Book</h1>
+        <p class="text-muted text-sm">Manage kitchen recipes and approvals</p>
     </div>
 @endsection
 
 @section('actions')
     <div class="flex flex-wrap items-center gap-2 md:gap-3">
-        <button onclick="openExportModal()" class="bg-green-600 hover:bg-green-700 text-white shadow-lg flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 rounded-xl transition-colors text-sm md:text-base">
-            <i data-lucide="download" class="w-4 h-4 md:w-5 md:h-5"></i> <span class="hidden sm:inline">Export</span>
+        <button onclick="openExportModal()" class="btn btn-secondary">
+            <i data-lucide="download"></i> <span class="hidden sm:inline">Export</span>
         </button>
-        <a href="{{ route('recipes.create') }}" class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 rounded-xl text-sm md:text-base">
-            <i data-lucide="plus-circle" class="w-4 h-4 md:w-5 md:h-5"></i> <span class="hidden sm:inline">Create Recipe</span>
+        @if(auth()->user()->isAdmin())
+        <form action="{{ route('recipes.backup_all') }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="btn btn-secondary" title="Backup to Drive">
+                <i data-lucide="cloud-upload"></i> <span class="hidden sm:inline">Backup Now</span>
+            </button>
+        </form>
+        @endif
+        <a href="{{ route('recipes.create') }}" class="btn btn-primary">
+            <i data-lucide="plus-circle"></i> <span class="hidden sm:inline">Create Recipe</span>
         </a>
     </div>
 @endsection
 
 @section('content')
-    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+    <div class="card p-0 overflow-hidden">
         
         <!-- Filters -->
-        <div class="p-4 md:p-5 lg:p-6 border-b border-gray-100 bg-gray-50/50">
-            <form method="GET" action="{{ route('recipes.index') }}" class="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 sm:items-end">
+        <div class="p-4 md:p-6 border-b border-subtle bg-white/5">
+            <form method="GET" action="{{ route('recipes.index') }}" class="flex flex-col sm:flex-row flex-wrap gap-4 sm:items-end">
                 <div class="flex-1 min-w-full sm:min-w-[200px]">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Search</label>
+                    <label class="form-label">Search</label>
                     <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-                        <input type="text" name="search" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm md:text-base" 
-                               placeholder="Search by name..." value="{{ request('search') }}">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"></i>
+                        <input type="text" name="search" class="form-control pl-10" 
+                               placeholder="Search recipes..." value="{{ request('search') }}">
                     </div>
                 </div>
                 
                 <div class="w-full sm:w-48">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
-                    <select name="category_id" id="category-filter" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white text-sm md:text-base">
+                    <label class="form-label">Category</label>
+                    <select name="category_id" id="category-filter" class="form-control">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
@@ -63,8 +71,8 @@
                 @endpush
 
                 <div class="w-full sm:w-48">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                    <select name="status" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none bg-white text-sm md:text-base">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control">
                         <option value="">All Statuses</option>
                         <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Pending (Draft)</option>
                         <option value="permanent" {{ request('status') == 'permanent' ? 'selected' : '' }}>Approved</option>
@@ -73,12 +81,12 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <button type="submit" class="px-3 md:px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium text-sm flex items-center gap-2">
-                        <i data-lucide="filter" class="w-4 h-4"></i> <span class="hidden sm:inline">Filter</span>
+                    <button type="submit" class="btn btn-primary h-[38px] px-4">
+                        <i data-lucide="filter"></i> Filter
                     </button>
                     @if(request()->hasAny(['search', 'category_id', 'status']))
-                        <a href="{{ route('recipes.index') }}" class="px-3 md:px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium text-sm flex items-center gap-2">
-                            <i data-lucide="x" class="w-4 h-4"></i> <span class="hidden sm:inline">Clear</span>
+                        <a href="{{ route('recipes.index') }}" class="btn btn-secondary h-[38px] px-4">
+                            <i data-lucide="x"></i> Clear
                         </a>
                     @endif
                 </div>
@@ -86,94 +94,82 @@
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto -mx-2 sm:-mx-4 md:mx-0">
-            <table class="w-full text-left border-collapse min-w-[700px] md:min-w-[800px]">
+        <div class="overflow-x-auto">
+            <table class="table">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
-                        <th class="p-3 md:p-4 lg:p-5 font-semibold">Recipe Details</th>
-                        <th class="p-3 md:p-4 lg:p-5 font-semibold hidden sm:table-cell">Category</th>
-                        <th class="p-3 md:p-4 lg:p-5 font-semibold">Status</th>
+                    <tr>
+                        <th>Recipe Details</th>
+                        <th class="hidden sm:table-cell">Category</th>
+                        <th>Status</th>
                         @if(auth()->user()->isAdmin())
-                            <th class="p-3 md:p-4 lg:p-5 font-semibold hidden md:table-cell">Costing</th>
+                            <th class="hidden md:table-cell">Costing</th>
                         @endif
-                        <th class="p-3 md:p-4 lg:p-5 font-semibold hidden lg:table-cell">Created By</th>
-                        <th class="p-3 md:p-4 lg:p-5 font-semibold text-right">Actions</th>
+                        <th class="hidden lg:table-cell">Created By</th>
+                        <th class="text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-50">
+                <tbody>
                     @forelse($recipes as $recipe)
-                        <tr class="group hover:bg-blue-50/20 transition-colors">
+                        <tr class="hover:bg-white/5 transition-colors">
                             <td class="p-3 md:p-4 lg:p-5">
-                                <div class="font-bold text-gray-800 text-base md:text-lg">{{ $recipe->name }}</div>
-                                <div class="text-xs text-gray-400 font-mono">v{{ $recipe->version }} • {{ $recipe->yields }} Portions</div>
-                                <div class="sm:hidden mt-1">
-                                    <span class="px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                        {{ $recipe->category?->name ?? 'Uncategorized' }}
-                                    </span>
-                                </div>
+                                <div class="font-bold text-primary text-base md:text-lg">{{ $recipe->name }}</div>
+                                <div class="text-xs text-muted font-mono uppercase tracking-widest mt-0.5">v{{ $recipe->version }} • {{ $recipe->yields }} Portions</div>
                             </td>
                             <td class="p-3 md:p-4 lg:p-5 hidden sm:table-cell">
-                                <span class="px-2 md:px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                <span class="badge badge-secondary">
                                     {{ $recipe->category?->name ?? 'Uncategorized' }}
                                 </span>
                             </td>
                             <td class="p-3 md:p-4 lg:p-5">
                                 @if($recipe->status->value === 'permanent')
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
-                                        <i data-lucide="check-circle" class="w-3 h-3"></i> Approved
-                                    </span>
+                                    <span class="badge badge-success">Approved</span>
                                 @elseif($recipe->status->value === 'draft')
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
-                                        <i data-lucide="clock" class="w-3 h-3"></i> Pending
-                                    </span>
+                                    <span class="badge badge-warning">Pending</span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
-                                        <i data-lucide="x-circle" class="w-3 h-3"></i> Rejected
-                                    </span>
+                                    <span class="badge badge-danger">Rejected</span>
                                 @endif
                             </td>
                             @if(auth()->user()->isAdmin())
                                 <td class="p-3 md:p-4 lg:p-5 hidden md:table-cell">
-                                    <div class="font-mono font-bold text-gray-700 text-sm md:text-base">₹{{ number_format($recipe->total_cost, 2) }}</div>
+                                    <div class="font-mono font-bold text-accent text-sm md:text-base">₹{{ number_format($recipe->total_cost, 2) }}</div>
                                 </td>
                             @endif
                             <td class="p-3 md:p-4 lg:p-5 hidden lg:table-cell">
-                                <div class="text-sm font-medium text-gray-700">{{ $recipe->creator?->name ?? 'Unknown' }}</div>
-                                <div class="text-xs text-gray-400">{{ $recipe->updated_at->diffForHumans() }}</div>
+                                <div class="text-sm font-medium text-primary">{{ $recipe->creator?->name ?? 'Unknown' }}</div>
+                                <div class="text-[10px] uppercase font-bold text-muted">{{ $recipe->updated_at->diffForHumans() }}</div>
                             </td>
                             <td class="p-3 md:p-4 lg:p-5 text-right">
-                                <div class="flex items-center justify-end gap-1 md:gap-2">
+                                <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('recipes.show', $recipe) }}" 
-                                       class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
-                                        <i data-lucide="eye" class="w-5 h-5"></i>
+                                       class="p-2 text-muted hover:text-accent transition-colors" title="View">
+                                        <i data-lucide="eye"></i>
                                     </a>
                                     
                                     @if($recipe->isDraft() && auth()->user()->isAdmin())
-                                        <!-- Admin Actions for Drafts -->
                                         <form action="{{ route('recipes.approve', $recipe) }}" method="POST" class="inline" onsubmit="return confirm('Approve this recipe?');">
                                             @csrf
-                                            <button type="submit" class="p-2 text-green-500 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors" title="Approve">
-                                                <i data-lucide="check" class="w-5 h-5"></i>
+                                            <button type="submit" class="p-2 text-accent hover:text-white transition-colors" title="Approve">
+                                                <i data-lucide="check"></i>
                                             </button>
                                         </form>
                                         
                                         <form action="{{ route('recipes.reject', $recipe) }}" method="POST" class="inline" onsubmit="return confirm('Reject this recipe?');">
                                             @csrf
-                                            <button type="submit" class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Reject">
-                                                <i data-lucide="x" class="w-5 h-5"></i>
+                                            <button type="submit" class="p-2 text-red-500 hover:text-red-400 transition-colors" title="Reject">
+                                                <i data-lucide="x"></i>
                                             </button>
                                         </form>
                                     @endif
 
                                     @if(auth()->user()->can('update', $recipe) && $recipe->status->value !== 'rejected')
                                         <a href="{{ route('recipes.edit', $recipe) }}" 
-                                           class="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                                            <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                           class="p-2 text-muted hover:text-accent transition-colors" title="Edit">
+                                            <i data-lucide="edit-3"></i>
                                         </a>
                                         
                                         <button onclick="openScaleModal({{ $recipe->id }}, '{{ $recipe->name }}', {{ $recipe->yield_portions ?? $recipe->yields }})" 
-                                            class="p-2 text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors" title="Scale Recipe">
-                                            <i data-lucide="copy" class="w-5 h-5"></i>
+                                            class="p-2 text-muted hover:text-accent transition-colors" title="Scale Recipe">
+                                            <i data-lucide="copy"></i>
                                         </button>
                                     @endif
                                 </div>
@@ -181,11 +177,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="p-16 text-center text-gray-500">
+                            <td colspan="6" class="p-16 text-center text-muted">
                                 <div class="flex flex-col items-center justify-center">
-                                    <i data-lucide="book-open" class="w-12 h-12 mb-4 text-gray-300"></i>
-                                    <p class="text-lg font-medium">No recipes found matching your filters.</p>
-                                    <a href="{{ route('recipes.create') }}" class="mt-4 text-blue-600 hover:underline">Create your first recipe</a>
+                                    <i data-lucide="book-open" class="w-12 h-12 mb-4 opacity-20"></i>
+                                    <p class="text-lg">No recipes found.</p>
+                                    <a href="{{ route('recipes.create') }}" class="mt-4 text-accent hover:underline">Create your first recipe</a>
                                 </div>
                             </td>
                         </tr>
@@ -194,123 +190,104 @@
             </table>
         </div>
         
-        <div class="p-6 border-t border-gray-100">
+        <div class="p-6 border-t border-subtle">
             {{ $recipes->withQueryString()->links() }}
         </div>
     </div>
     
     <!-- Export Modal -->
-    <div id="exportModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="export-modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeExportModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <div class="bg-white px-6 pt-6 pb-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="p-3 bg-green-100 rounded-xl">
-                                <i data-lucide="download" class="w-6 h-6 text-green-600"></i>
-                            </div>
-                            <h3 class="text-2xl font-bold text-gray-900" id="export-modal-title">Export Recipes</h3>
+    <div id="exportModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/70">
+        <div class="card w-full max-w-2xl shadow-2xl overflow-hidden p-0">
+            <div class="p-6 border-b border-subtle flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="download" class="text-accent"></i>
+                    <h3 class="text-xl">Export Recipes</h3>
+                </div>
+                <button onclick="closeExportModal()" class="text-muted hover:text-accent transition-colors">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-muted">Choose an export format to download recipe data</p>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Full Recipe Cards -->
+                    <a href="{{ route('recipes.export', ['type' => 'full-cards']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
+                       class="flex items-center gap-4 p-4 border border-subtle rounded-xl hover:border-accent hover:bg-white/5 transition-all group">
+                        <div class="p-3 bg-primary rounded-lg group-hover:bg-accent/20 transition-colors">
+                            <i data-lucide="file-text" class="text-accent"></i>
                         </div>
-                        <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
-                            <i data-lucide="x" class="w-6 h-6"></i>
-                        </button>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-6">Choose an export format to download recipe data</p>
+                        <div class="flex-1">
+                            <h4 class="text-primary mb-1">Full Recipe Cards</h4>
+                            <p class="text-xs text-muted">Separate sheets with ingredients, method, and allergens</p>
+                        </div>
+                        <i data-lucide="chevron-right" class="text-muted group-hover:text-accent"></i>
+                    </a>
                     
-                    <div class="grid grid-cols-1 gap-4">
-                        <!-- Full Recipe Cards -->
-                        <a href="{{ route('recipes.export', ['type' => 'full-cards']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
-                           class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group">
-                            <div class="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                                <i data-lucide="file-text" class="w-6 h-6 text-blue-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-900 mb-1">Full Recipe Cards</h4>
-                                <p class="text-sm text-gray-600">Each recipe in separate Excel sheet with ingredients, sub-recipes, method, and allergens</p>
-                            </div>
-                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-blue-600"></i>
-                        </a>
-                        
-                        <!-- Procurement List -->
-                        <a href="{{ route('recipes.export', ['type' => 'procurement']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
-                           class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group">
-                            <div class="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                                <i data-lucide="shopping-cart" class="w-6 h-6 text-green-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-900 mb-1">Procurement List</h4>
-                                <p class="text-sm text-gray-600">Consolidated list of ingredients grouped by name with summed quantities and recipes</p>
-                            </div>
-                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-green-600"></i>
-                        </a>
-                        
-                        <!-- Cost Breakdown -->
-                        <a href="{{ route('recipes.export', ['type' => 'cost-breakdown']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
-                           class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all group">
-                            <div class="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                                <i data-lucide="dollar-sign" class="w-6 h-6 text-purple-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-900 mb-1">Cost Breakdown</h4>
-                                <p class="text-sm text-gray-600">Summary sheet and per-recipe costing with margin calculations</p>
-                            </div>
-                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-purple-600"></i>
-                        </a>
-                    </div>
+                    <!-- Procurement List -->
+                    <a href="{{ route('recipes.export', ['type' => 'procurement']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
+                       class="flex items-center gap-4 p-4 border border-subtle rounded-xl hover:border-accent hover:bg-white/5 transition-all group">
+                        <div class="p-3 bg-primary rounded-lg group-hover:bg-accent/20 transition-colors">
+                            <i data-lucide="shopping-cart" class="text-accent"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-primary mb-1">Procurement List</h4>
+                            <p class="text-xs text-muted">Consolidated list of ingredients for ordering</p>
+                        </div>
+                        <i data-lucide="chevron-right" class="text-muted group-hover:text-accent"></i>
+                    </a>
+                    
+                    <!-- Cost Breakdown -->
+                    <a href="{{ route('recipes.export', ['type' => 'cost-breakdown']) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" 
+                       class="flex items-center gap-4 p-4 border border-subtle rounded-xl hover:border-accent hover:bg-white/5 transition-all group">
+                        <div class="p-3 bg-primary rounded-lg group-hover:bg-accent/20 transition-colors">
+                            <i data-lucide="dollar-sign" class="text-accent"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-primary mb-1">Cost Breakdown</h4>
+                            <p class="text-xs text-muted">Summary sheet with margin calculations</p>
+                        </div>
+                        <i data-lucide="chevron-right" class="text-muted group-hover:text-accent"></i>
+                    </a>
                 </div>
-                <div class="bg-gray-50 px-6 py-4 flex justify-end">
-                    <button onclick="closeExportModal()" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium">
-                        Cancel
-                    </button>
-                </div>
+            </div>
+            
+            <div class="p-4 bg-white/5 border-t border-subtle flex justify-end">
+                <button onclick="closeExportModal()" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
     
     <!-- Scale Recipe Modal -->
-    <div id="scaleRecipeModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeScaleModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form id="scaleRecipeForm" method="POST" action="">
-                    @csrf
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <i data-lucide="calculator" class="w-6 h-6 text-purple-600"></i>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Scale Recipe</h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500 mb-4">
-                                        Create a new version of <strong id="scaleRecipeName"></strong> with a different yield.
-                                    </p>
-                                    <div class="mb-4">
-                                        <label for="new_yield" class="block text-sm font-medium text-gray-700">New Target Yield (Portions)</label>
-                                        <div class="mt-1 flex rounded-md shadow-sm">
-                                            <input type="number" name="new_yield" id="new_yield" step="0.01" min="0.01" required
-                                                class="focus:ring-purple-500 focus:border-purple-500 flex-1 block w-full rounded-md sm:text-sm border-gray-300 p-2 border">
-                                        </div>
-                                        <p class="mt-1 text-xs text-gray-500">Current Base: <span id="currentYield"></span> Portions</p>
-                                    </div>
-                                    <input type="hidden" name="yield_type" value="portions">
-                                </div>
-                            </div>
+    <div id="scaleRecipeModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/70">
+        <div class="card w-full max-w-lg shadow-2xl p-0 overflow-hidden">
+            <form id="scaleRecipeForm" method="POST" action="">
+                @csrf
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="calculator" class="text-accent"></i>
+                        <h3>Scale Recipe</h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <p class="text-sm text-muted">
+                            Create a new version of <strong id="scaleRecipeName" class="text-primary"></strong> with a different yield.
+                        </p>
+                        <div>
+                            <label class="form-label">New Target Yield (Portions)</label>
+                            <input type="number" name="new_yield" id="new_yield" step="0.01" min="0.01" required class="form-control">
+                            <p class="mt-1 text-[10px] text-muted font-bold uppercase">Current Base: <span id="currentYield"></span> Portions</p>
                         </div>
+                        <input type="hidden" name="yield_type" value="portions">
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Create Scaled Version
-                        </button>
-                        <button type="button" onclick="closeScaleModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                
+                <div class="p-4 bg-white/5 border-t border-subtle flex justify-end gap-3">
+                    <button type="button" onclick="closeScaleModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Scaled Version</button>
+                </div>
+            </form>
         </div>
     </div>
 

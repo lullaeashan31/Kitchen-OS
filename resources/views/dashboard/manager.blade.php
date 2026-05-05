@@ -1,240 +1,196 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="mb-6">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Manager Dashboard</h1>
-        <p class="text-sm text-gray-500 mt-1">Operational Overview</p>
+    <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Manager Dashboard</h1>
+        <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Kitchen OS <span class="text-accent">Operational Overview</span></p>
     </div>
 @endsection
 
 @section('content')
-    <!-- Overview Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Active Staff -->
-        <a href="{{ route('ingredients.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-green-100 text-green-600 rounded-lg">
-                            <i data-lucide="users" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Kitchen Team</h3>
+    {{-- Overview Stats Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {{-- Kitchen Team --}}
+        <a href="{{ route('ingredients.index') }}" class="card p-0 overflow-hidden group">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-accent text-primary rounded-xl transition-all group-hover:scale-110">
+                        <i data-lucide="users" class="w-5 h-5"></i>
                     </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['active_staff'] }}</div>
-                    <p class="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
-                        <span class="relative flex h-2 w-2">
-                            <span
-                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                        Active on Shift
-                    </p>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Kitchen Team</h3>
                 </div>
+                <div class="flex items-baseline gap-3">
+                    <div class="text-4xl font-black text-primary">{{ $stats['active_staff'] }}</div>
+                    <div class="flex h-2 w-2 mb-2">
+                        <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-accent opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                    </div>
+                </div>
+                <p class="text-[9px] font-bold text-accent uppercase tracking-tight mt-1">Active on Shift</p>
             </div>
         </a>
 
-        <!-- Today's Check-ins -->
-        <a href="{{ route('admin.attendance.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                            <i data-lucide="clock" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Check-ins</h3>
+        {{-- Today's Check-ins --}}
+        <a href="{{ route('admin.attendance.index') }}" class="card p-0 overflow-hidden group">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-white/5 text-muted rounded-xl border border-subtle">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
                     </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['today_attendance'] }}</div>
-                    <p class="text-xs text-gray-500 mt-1">Staff present today</p>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Personnel</h3>
                 </div>
+                <div class="text-4xl font-black text-primary">{{ $stats['today_attendance'] }}</div>
+                <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Check-ins Recorded</p>
             </div>
         </a>
 
-        <!-- Total Recipes -->
-        <a href="{{ route('recipes.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-purple-100 text-purple-600 rounded-lg">
-                            <i data-lucide="book-open" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Recipe Book</h3>
+        {{-- Recipe Book --}}
+        <a href="{{ route('recipes.index') }}" class="card p-0 overflow-hidden group">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-white/5 text-muted rounded-xl border border-subtle">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
                     </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['total_recipes'] }}</div>
-                    <p class="text-xs text-gray-500 mt-1">Approved dishes</p>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">R&D</h3>
                 </div>
+                <div class="text-4xl font-black text-primary">{{ $stats['total_recipes'] }}</div>
+                <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Approved Formulations</p>
             </div>
         </a>
 
-        <!-- Pending Items -->
-        <a href="{{ route('ingredients.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-amber-100 text-amber-600 rounded-lg">
-                            <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Needs Review</h3>
+        {{-- Needs Review --}}
+        <a href="{{ route('ingredients.index') }}" class="card p-0 overflow-hidden group border-accent/20">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-accent/10 text-accent rounded-xl border border-accent/20">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
                     </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['pending_ingredients'] }}</div>
-                    <p class="text-xs text-amber-600 font-medium mt-1">Ingredients Pending</p>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Review</h3>
                 </div>
+                <div class="text-4xl font-black text-accent">{{ $stats['pending_ingredients'] }}</div>
+                <p class="text-[9px] font-bold text-accent uppercase tracking-tight mt-1">Pending Validation</p>
             </div>
         </a>
     </div>
 
-    <!-- Command Centre Section -->
-    <div class="mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <i data-lucide="layout-dashboard" class="w-6 h-6 text-indigo-600"></i>
+    {{-- Command Centre --}}
+    <div class="mb-10">
+        <h2 class="text-[11px] font-black text-accent uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
             Command Centre
         </h2>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <!-- SOP Progress -->
-            <a href="{{ route('admin.sop.reviews.index') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                        <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            {{-- SOP Status --}}
+            <a href="{{ route('admin.sop.reviews.index') }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-white/5 text-accent rounded-lg border border-subtle">
+                        <i data-lucide="clipboard-check" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">SOP Status</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">SOP Status</span>
                 </div>
                 <div class="flex items-end justify-between">
                     <div>
-                        <div class="text-2xl font-black text-gray-800">
+                        <div class="text-2xl font-black text-primary">
                             {{ $stats['completed_checklists'] }}/{{ $stats['total_checklists'] }}
                         </div>
-                        <p class="text-xs text-gray-500">Checklists done</p>
+                        <p class="text-[9px] font-bold text-muted uppercase">Execution</p>
                     </div>
-                    @php 
-                        $sopPercent = $stats['total_checklists'] > 0 ? ($stats['completed_checklists'] / $stats['total_checklists']) * 100 : 0;
-                    @endphp
-                    <div class="w-12 h-12 relative flex items-center justify-center">
+                    @php $sopPercent = $stats['total_checklists'] > 0 ? ($stats['completed_checklists'] / $stats['total_checklists']) * 100 : 0; @endphp
+                    <div class="w-10 h-10 relative flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
-                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-100" />
-                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="{{ 125.6 * (1 - $sopPercent / 100) }}" class="text-blue-500 transition-all duration-500" />
+                            <circle cx="20" cy="20" r="16" stroke="rgba(242,237,230,0.05)" stroke-width="3" fill="transparent" />
+                            <circle cx="20" cy="20" r="16" stroke="var(--brass)" stroke-width="3" fill="transparent" stroke-dasharray="100.5" stroke-dashoffset="{{ 100.5 * (1 - $sopPercent / 100) }}" class="transition-all duration-700" />
                         </svg>
-                        <span class="absolute text-[10px] font-bold text-blue-600">{{ round($sopPercent) }}%</span>
+                        <span class="absolute text-[8px] font-black text-accent">{{ round($sopPercent) }}%</span>
                     </div>
                 </div>
             </a>
 
-            <!-- Overdue Count -->
-            <a href="{{ route('admin.sop.reviews.index') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 {{ $stats['overdue_sop_count'] > 0 ? 'ring-2 ring-red-500 ring-inset hover:bg-red-50' : 'hover:bg-gray-50' }} transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['overdue_sop_count'] > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
-                        <i data-lucide="clock-alert" class="w-5 h-5"></i>
+            {{-- Overdue --}}
+            <a href="{{ route('admin.sop.reviews.index') }}" class="card p-6 border-red-500/20 bg-red-500/5 hover:border-red-500/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-red-500/10 text-red-500 rounded-lg">
+                        <i data-lucide="clock-alert" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Overdue</span>
+                    <span class="text-[9px] font-black text-red-500/60 uppercase tracking-widest">Risk</span>
                 </div>
-                <div>
-                    <div class="text-2xl font-black {{ $stats['overdue_sop_count'] > 0 ? 'text-red-600' : 'text-gray-800' }}">
-                        {{ $stats['overdue_sop_count'] }}
-                    </div>
-                    <p class="text-xs text-gray-500">Checklists missed</p>
-                </div>
+                <div class="text-2xl font-black text-red-500">{{ $stats['overdue_sop_count'] }}</div>
+                <p class="text-[9px] font-bold text-red-500/40 uppercase">Overdue</p>
             </a>
 
-            <!-- Inventory Alerts -->
-            <a href="{{ route('ingredients.index') }}" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['low_stock_count'] > 0 ? 'bg-amber-100 text-amber-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
-                        <i data-lucide="package-search" class="w-5 h-5"></i>
+            {{-- Inventory --}}
+            <a href="{{ route('ingredients.index') }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-white/5 text-muted rounded-lg border border-subtle">
+                        <i data-lucide="package-search" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Inventory</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">Inventory</span>
                 </div>
-                <div>
-                    <div class="text-2xl font-black {{ $stats['low_stock_count'] > 0 ? 'text-amber-600' : 'text-gray-800' }}">
-                        {{ $stats['low_stock_count'] }}
-                    </div>
-                    <p class="text-xs text-gray-500">Low stock alerts</p>
+                <div class="text-2xl font-black {{ $stats['low_stock_count'] > 0 ? 'text-accent' : 'text-primary' }}">
+                    {{ $stats['low_stock_count'] }}
                 </div>
+                <p class="text-[9px] font-bold text-muted uppercase">Stock Alerts</p>
             </a>
 
-            <!-- Purchase Pending -->
-            <a href="{{ route('purchases.index') }}" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['pending_purchases_count'] > 0 ? 'bg-purple-100 text-purple-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
-                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            {{-- Purchases --}}
+            <a href="{{ route('purchases.index') }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-white/5 text-muted rounded-lg border border-subtle">
+                        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Purchases</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">Procurement</span>
                 </div>
-                <div>
-                    <div class="text-2xl font-black {{ $stats['pending_purchases_count'] > 0 ? 'text-purple-600' : 'text-gray-800' }}">
-                        {{ $stats['pending_purchases_count'] }}
-                    </div>
-                    <p class="text-xs text-gray-500">Pending approval</p>
-                </div>
+                <div class="text-2xl font-black text-primary">{{ $stats['pending_purchases_count'] }}</div>
+                <p class="text-[9px] font-bold text-muted uppercase">Pending</p>
             </a>
 
-            <!-- POS Sync -->
-            <a href="{{ route('pos.upload') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['pos_synced_today'] ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600' }} rounded-lg">
-                        <i data-lucide="{{ $stats['pos_synced_today'] ? 'refresh-cw' : 'alert-circle' }}" class="w-5 h-5"></i>
+            {{-- POS Sync --}}
+            <a href="{{ route('pos.upload') }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 {{ $stats['pos_synced_today'] ? 'bg-accent/10 text-accent' : 'bg-red-500/10 text-red-500' }} rounded-lg">
+                        <i data-lucide="{{ $stats['pos_synced_today'] ? 'refresh-cw' : 'alert-circle' }}" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">POS Sync</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">Sales Sync</span>
                 </div>
-                <div>
-                    <div class="text-lg font-black {{ $stats['pos_synced_today'] ? 'text-emerald-600' : 'text-rose-600' }}">
-                        {{ $stats['pos_synced_today'] ? 'Synced' : 'Required' }}
-                    </div>
-                    <p class="text-xs text-gray-500">{{ $stats['pos_synced_today'] ? 'Sales data up to date' : 'Upload daily sales CSV' }}</p>
+                <div class="text-lg font-black {{ $stats['pos_synced_today'] ? 'text-accent' : 'text-red-500' }} uppercase">
+                    {{ $stats['pos_synced_today'] ? 'Synced' : 'Required' }}
                 </div>
+                <p class="text-[9px] font-bold text-muted uppercase">{{ $stats['pos_synced_today'] ? 'Data Up-to-date' : 'Sync Required' }}</p>
             </a>
         </div>
     </div>
 
-    <!-- Manager Actions -->
-    <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-        <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <i data-lucide="briefcase" class="w-5 h-5 text-gray-600"></i> Management Tools
+    {{-- Management Tools --}}
+    <div class="card p-8">
+        <h2 class="text-[11px] font-black text-accent uppercase tracking-widest mb-8 flex items-center gap-3">
+            <i data-lucide="briefcase" class="w-4 h-4"></i>
+            Operational Toolkit
         </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <a href="{{ route('admin.attendance.index') }}"
-                class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all group text-center">
-                <div
-                    class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i data-lucide="users" class="w-6 h-6"></i>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <a href="{{ route('admin.attendance.index') }}" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-subtle hover:border-accent/40 hover:bg-white/5 transition-all group text-center">
+                <div class="w-16 h-16 bg-primary text-accent rounded-full border border-subtle flex items-center justify-center mb-6 group-hover:bg-accent group-hover:text-primary transition-all">
+                    <i data-lucide="users" class="w-8 h-8"></i>
                 </div>
-                <h4 class="font-bold text-gray-800">View Staff Attendance</h4>
-                <p class="text-xs text-gray-500 mt-1">Monitor shift logs (Read Only)</p>
+                <h4 class="font-black text-primary uppercase text-xs tracking-widest">Staff Attendance</h4>
+                <p class="text-[9px] font-bold text-muted uppercase mt-2">Monitor shift logs (View Only)</p>
             </a>
 
-            <a href="{{ route('recipes.create') }}"
-                class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-all group text-center">
-                <div
-                    class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
+            <a href="{{ route('recipes.create') }}" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-subtle hover:border-accent/40 hover:bg-white/5 transition-all group text-center">
+                <div class="w-16 h-16 bg-primary text-accent rounded-full border border-subtle flex items-center justify-center mb-6 group-hover:bg-accent group-hover:text-primary transition-all">
+                    <i data-lucide="plus-circle" class="w-8 h-8"></i>
                 </div>
-                <h4 class="font-bold text-gray-800">Add New Recipe</h4>
-                <p class="text-xs text-gray-500 mt-1">Create standard operating procedures</p>
+                <h4 class="font-black text-primary uppercase text-xs tracking-widest">Protocol Build</h4>
+                <p class="text-[9px] font-bold text-muted uppercase mt-2">Create new recipe SOPs</p>
             </a>
 
-            <a href="{{ route('ingredients.index') }}"
-                class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-gray-200 hover:border-amber-400 hover:bg-amber-50 transition-all group text-center">
-                <div
-                    class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i data-lucide="database" class="w-6 h-6"></i>
+            <a href="{{ route('ingredients.index') }}" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-subtle hover:border-accent/40 hover:bg-white/5 transition-all group text-center">
+                <div class="w-16 h-16 bg-primary text-accent rounded-full border border-subtle flex items-center justify-center mb-6 group-hover:bg-accent group-hover:text-primary transition-all">
+                    <i data-lucide="database" class="w-8 h-8"></i>
                 </div>
-                <h4 class="font-bold text-gray-800">Master Ingredients</h4>
-                <p class="text-xs text-gray-500 mt-1">Review & approve database items</p>
+                <h4 class="font-black text-primary uppercase text-xs tracking-widest">Master Library</h4>
+                <p class="text-[9px] font-bold text-muted uppercase mt-2">Review database items</p>
             </a>
         </div>
     </div>

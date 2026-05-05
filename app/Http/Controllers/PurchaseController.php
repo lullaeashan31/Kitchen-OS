@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Ingredient;
 use App\Models\Purchase;
 use App\Models\InventoryLog;
+use App\Models\PurchaseBatch;
+use App\Models\Vendor;
 use App\Enums\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +20,13 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class PurchaseController extends Controller
 {
     use AuthorizesRequests;
+    protected $fifoService;
+    
+    public function __construct(\App\Services\FIFOInventoryService $fifoService)
+    {
+        $this->fifoService = $fifoService;
+    }
+
     public function index(Request $request, string $kitchen_slug)
     {
         $view = $request->query('view', 'bill'); // Default to bill-wise
@@ -53,7 +62,8 @@ class PurchaseController extends Controller
             // We use vendor_id, purchase_date, created_by, and invoice_photo_path as the grouping key
             $purchases = $query->latest('purchase_date')->get()
                 ->groupBy(function ($item) {
-                    return $item->vendor_id . '-' . $item->purchase_date->format('Y-m-d') . '-' . $item->invoice_photo_path;
+                    $dateStr = $item->purchase_date ? $item->purchase_date->format('Y-m-d') : 'unknown';
+                    return $item->vendor_id . '-' . $dateStr . '-' . $item->invoice_photo_path;
                 })
                 ->map(function ($group) {
                     $first = $group->first();
@@ -161,26 +171,41 @@ class PurchaseController extends Controller
                     $uploadedFiles[] = $path;
                 }
             }
+            $vendor = Vendor::find($request->vendor_id);
+            $vendorName = $vendor ? $vendor->name : 'Unknown';
 
-            // Unit Service
-            $unitService = app(\App\Services\UnitConversionService::class);
-
-            DB::transaction(function () use ($request, $invoicePath, $goodsPaths, $unitService) {
+            DB::transaction(function () use ($request, $invoicePath, $goodsPaths, $vendorName) {
                 foreach ($request->items as $item) {
                     $ingredient = Ingredient::findOrFail($item['ingredient_id']);
                     $inputQty = $item['quantity'];
                     $inputUnit = $item['unit'];
-
-                    // Use provided unit_price or fetch from ingredient
-                    $inputUnitPrice = isset($item['unit_price']) ? $item['unit_price'] : ($ingredient->price ?? 0);
-
-                    // Record raw values as provided (no unit conversion)
+                    $inputUnitPrice = isset($item['unit_price']) ? (float)$item['unit_price'] : (float)($ingredient->price ?? 0);
                     $totalPrice = $inputQty * $inputUnitPrice;
-                    $normalizedQty = $inputQty;
-                    $normalizedUnitPrice = $inputUnitPrice;
 
-                    // Create Purchase Record - Stores raw values
-                    Purchase::create([
+                    // Check for auto-approval (within ±5% of average cost)
+                    $status = 'pending';
+                    if ($ingredient->avg_cost > 0) {
+                        $purchaseUnit = $this->fifoService->resolveUnit($inputUnit);
+                        $baseUnit = $this->fifoService->resolveUnit($ingredient->base_unit);
+                        $normalizedUnitPrice = $inputUnitPrice;
+
+                        if ($purchaseUnit && $baseUnit && $purchaseUnit->canConvertTo($baseUnit)) {
+                            $factor = $purchaseUnit->convertTo(1, $baseUnit);
+                            if ($factor > 0) {
+                                $normalizedUnitPrice = $inputUnitPrice / $factor;
+                            }
+                        }
+
+                        $diff = abs($normalizedUnitPrice - (float)$ingredient->avg_cost);
+                        $percentDiff = ($diff / (float)$ingredient->avg_cost) * 100;
+
+                        if ($percentDiff <= 5) {
+                            $status = 'approved';
+                        }
+                    }
+
+                    // Create Purchase Record
+                    $purchase = Purchase::create([
                         'ingredient_id' => $ingredient->id,
                         'quantity' => $inputQty,
                         'unit' => $inputUnit,
@@ -188,12 +213,16 @@ class PurchaseController extends Controller
                         'total_price' => $totalPrice, 
                         'purchase_date' => $request->purchase_date,
                         'vendor_id' => $request->vendor_id,
-                        'vendor' => \App\Models\Vendor::find($request->vendor_id)->name, // Keep for legacy/display compatibility if views use it
+                        'vendor' => $vendorName,
                         'created_by' => Auth::id(),
                         'invoice_photo_path' => $invoicePath,
                         'goods_photo_path' => $goodsPaths,
-                        'status' => 'pending',
+                        'status' => $status,
                     ]);
+
+                    if ($status === 'approved') {
+                        $this->executeApproval($purchase);
+                    }
                 }
             });
 
@@ -211,76 +240,91 @@ class PurchaseController extends Controller
 
     public function approve(string $kitchen_slug, Purchase $purchase)
     {
-        $this->authorize('approve', $purchase); // Need policy? Or just check role.
+        $this->authorize('approve', $purchase);
 
         if (!$purchase->isPending()) {
             return back()->with('error', 'Purchase is not pending.');
         }
 
+        $this->executeApproval($purchase);
+
+        return back()->with('success', 'Purchase approved and inventory updated.');
+    }
+
+    /**
+     * Common logic to execute approval and update inventory/batches
+     */
+    protected function executeApproval(Purchase $purchase)
+    {
         DB::transaction(function () use ($purchase) {
             /** @var Purchase $purchase */
             /** @var Ingredient|null $ingredient */
             $ingredient = $purchase->ingredient()->lockForUpdate()->first();
             if (!($ingredient instanceof Ingredient)) return;
 
-            $purchase->update([
-                'status' => 'approved',
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-            ]);
-
-            // Update Ingredient Stock & Avg Price
-            $currentStock = $ingredient->current_stock;
-            $currentAvgCost = $ingredient->avg_cost ?? 0;
-            $quantity = $purchase->quantity;
-            $totalPrice = $purchase->total_price;
-            $unitPrice = $purchase->unit_price;
-
-            // Normalize quantity to ingredient base unit if possible
-            $purchaseUnit = $purchase->unit;
-            $baseUnit = Unit::tryFrom($ingredient->base_unit);
+            // Normalize quantity to ingredient base unit
+            $quantity = (float)$purchase->quantity;
+            $purchaseUnit = $this->fifoService->resolveUnit($purchase->unit);
+            $baseUnit = $this->fifoService->resolveUnit($ingredient->base_unit);
             $normalizedQuantity = $quantity;
 
             if ($purchaseUnit && $baseUnit && $purchaseUnit->canConvertTo($baseUnit)) {
                 $normalizedQuantity = $purchaseUnit->convertTo($quantity, $baseUnit);
             }
 
+            // Update Purchase Status
+            $purchase->update([
+                'status' => 'approved',
+                'remaining_quantity' => $normalizedQuantity,
+                'approved_by' => Auth::id() ?? $purchase->created_by,
+                'approved_at' => now(),
+            ]);
+
+            $totalPrice = (float) $purchase->total_price;
+            $unitPrice = (float) $purchase->unit_price;
+
+            // Create FIFO Batch
+            PurchaseBatch::create([
+                'kitchen_id' => $ingredient->kitchen_id,
+                'purchase_id' => $purchase->id,
+                'ingredient_id' => $ingredient->id,
+                'quantity_initial' => $normalizedQuantity,
+                'quantity_remaining' => $normalizedQuantity,
+                'price_per_unit' => $normalizedQuantity > 0 ? ($totalPrice / $normalizedQuantity) : $unitPrice,
+            ]);
+
+            // Update Ingredient Stock & Avg Price
+            $currentStock = (float) $ingredient->current_stock;
+            $currentAvgCost = (float) ($ingredient->avg_cost ?? 0);
             $newStock = $currentStock + $normalizedQuantity;
 
             if ($newStock > 0) {
-                // Weighted Average - ensure units are consistent
                 $newAvgCost = (($currentStock * $currentAvgCost) + $totalPrice) / $newStock;
             } else {
                 $newAvgCost = $unitPrice;
             }
 
-            // Update basic configuration based on latest purchase (normalized to base unit)
+            // Update basic configuration based on latest purchase
             $ingredient->purchase_price = $purchase->total_price;
             $ingredient->purchase_quantity = $normalizedQuantity;
-            $ingredient->purchase_unit = $ingredient->base_unit;
-            
+            $ingredient->purchase_unit = $ingredient->measurement_unit;
             $ingredient->current_stock = $newStock;
             $ingredient->avg_cost = $newAvgCost;
-            
-            // Update latest unit price - normalize to base unit to ensure recipe costing is correct
             $ingredient->price = $normalizedQuantity > 0 ? ($totalPrice / $normalizedQuantity) : $unitPrice;
-            
             $ingredient->save();
 
             // Log Inventory Change
             InventoryLog::create([
                 'kitchen_id' => $ingredient->kitchen_id,
                 'ingredient_id' => $ingredient->id,
-                'user_id' => Auth::id(), // Admin who approved
+                'user_id' => Auth::id() ?? $purchase->created_by,
                 'quantity_change' => $normalizedQuantity,
                 'action' => 'purchase_approved',
                 'stock_before' => $currentStock,
                 'stock_after' => $newStock,
-                'reason' => 'Purchase Approved. Vendor: ' . $purchase->vendor . '. Invoice: ' . $purchase->id,
+                'reason' => 'Purchase Approved (Auto/Manual). Vendor: ' . ($purchase->vendor->name ?? $purchase->vendor_name ?? 'Unknown') . '. Invoice: ' . $purchase->id,
             ]);
         });
-
-        return back()->with('success', 'Purchase approved and inventory updated.');
     }
 
     public function bulkApprove(Request $request, string $kitchen_slug)
@@ -329,6 +373,31 @@ class PurchaseController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * View a specific goods photo by index
+     */
+    public function viewGoodsPhoto(string $kitchen_slug, Purchase $purchase, int $index)
+    {
+        $this->authorize('view', $purchase);
+
+        $paths = $purchase->goods_photo_path;
+        if (!is_array($paths) || !isset($paths[$index])) {
+            abort(404, 'Photo not found.');
+        }
+
+        $path = $paths[$index];
+        $disk = config('filesystems.default');
+
+        if (!Storage::disk($disk)->exists($path)) {
+            abort(404, 'Photo file not found.');
+        }
+
+        $file = Storage::disk($disk)->get($path);
+        $mimeType = Storage::disk($disk)->mimeType($path);
+        
+        return response($file, 200)->header('Content-Type', $mimeType);
     }
 
     /**

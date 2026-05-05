@@ -31,9 +31,26 @@
                                 {{ $run->completions->count() }} / {{ $run->checklist->items->count() }}
                             </td>
                             <td class="px-6 py-4">
-                                <span
-                                    class="px-2 py-1 rounded-full text-xs font-bold {{ $run->status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                                    {{ ucfirst($run->status) }}
+                                @php
+                                    $hasRejections = $run->completions->where('status', 'rejected')->count() > 0;
+                                    $isSubmitted = $run->status === 'pending' && $run->completed_at;
+                                    
+                                    $statusClass = 'bg-gray-100 text-gray-700';
+                                    $statusLabel = 'In Progress';
+
+                                    if ($run->status === 'approved') {
+                                        $statusClass = 'bg-green-100 text-green-700';
+                                        $statusLabel = 'Approved';
+                                    } elseif ($hasRejections) {
+                                        $statusClass = 'bg-red-100 text-red-700';
+                                        $statusLabel = 'Rejected';
+                                    } elseif ($isSubmitted) {
+                                        $statusClass = 'bg-amber-100 text-amber-700';
+                                        $statusLabel = 'Submitted';
+                                    }
+                                @endphp
+                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ $statusClass }}">
+                                    {{ $statusLabel }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right">

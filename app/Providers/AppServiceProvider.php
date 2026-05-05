@@ -36,5 +36,15 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\ProductionDay::observe(\App\Observers\AuditObserver::class);
         \App\Models\Task::observe(\App\Observers\AuditObserver::class);
         \App\Models\DriveFile::observe(\App\Observers\AuditObserver::class);
+
+        // Auto-run migrations for FIFO system once
+        if (!file_exists(storage_path('fifo_migrated.lock'))) {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                file_put_contents(storage_path('fifo_migrated.lock'), 'done');
+            } catch (\Exception $e) {
+                // Silently fail to not break the app
+            }
+        }
     }
 }

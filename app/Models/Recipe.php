@@ -31,6 +31,7 @@ class Recipe extends Model
         'output_unit',
         'yield_portions',
         'yield_weight',
+        'yield_weight_grams',
         'yield_weight_unit',
         'yield_volume',
         'yield_volume_unit',
@@ -144,9 +145,9 @@ class Recipe extends Model
 
     public function canBeEditedBy(User $user): bool
     {
-        // Locked: Permanent recipes cannot be edited.
+        // Permanent recipes are editable by admin only.
         if ($this->isPermanent()) {
-            return false;
+            return $user->isAdmin();
         }
 
         if ($user->isAdmin()) {

@@ -9,16 +9,19 @@ use App\Enums\Unit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\DriveService;
+use App\Services\FIFOInventoryService;
 
 class RecipeService
 {
     protected $driveService;
     protected $googleDriveService;
+    protected $fifoService;
 
-    public function __construct(DriveService $driveService, GoogleDriveService $googleDriveService)
+    public function __construct(DriveService $driveService, GoogleDriveService $googleDriveService, FIFOInventoryService $fifoService)
     {
         $this->driveService = $driveService;
         $this->googleDriveService = $googleDriveService;
+        $this->fifoService = $fifoService;
     }
 
     /**
@@ -42,6 +45,7 @@ class RecipeService
                     'yields' => $data['yield_portions'] ?? $data['yield_batches'] ?? 1,
                     'yield_portions' => $data['yield_portions'] ?? null,
                     'yield_weight' => $data['yield_weight'] ?? null,
+                    'yield_weight_grams' => $data['yield_weight_grams'] ?? null,
                     'yield_weight_unit' => $data['yield_weight_unit'] ?? null,
                     'yield_volume' => $data['yield_volume'] ?? null,
                     'yield_volume_unit' => $data['yield_volume_unit'] ?? null,
@@ -92,24 +96,13 @@ class RecipeService
 
             // Calculate and save costs immediately
             try {
-                $totalCost = $recipe->recipeIngredients()->sum('cost');
-                $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
-
-                $recipe->update([
-                    'total_cost' => $totalCost,
-                    'cost_per_portion' => $costPerPortion
-                ]);
-                Log::info('Costs calculated', [
-                    'recipe_id' => $recipe->id,
-                    'total_cost' => $totalCost,
-                    'cost_per_portion' => $costPerPortion,
-                ]);
+                $this->recalculateRecipeCosts($recipe);
+                Log::info('Costs calculated during creation', ['recipe_id' => $recipe->id]);
             } catch (\Exception $e) {
-                Log::warning('Failed to calculate costs', [
+                Log::warning('Failed to calculate costs during creation', [
                     'recipe_id' => $recipe->id,
                     'error' => $e->getMessage(),
                 ]);
-                // Don't fail recipe creation if cost calculation fails
             }
 
             try {
@@ -153,6 +146,7 @@ class RecipeService
                 'yields' => $data['yield_portions'] ?? $data['yield_batches'] ?? $recipe->yields,
                 'yield_portions' => $data['yield_portions'] ?? $recipe->yield_portions,
                 'yield_weight' => $data['yield_weight'] ?? $recipe->yield_weight,
+                'yield_weight_grams' => $data['yield_weight_grams'] ?? $recipe->yield_weight_grams,
                 'yield_weight_unit' => $data['yield_weight_unit'] ?? $recipe->yield_weight_unit,
                 'yield_volume' => $data['yield_volume'] ?? $recipe->yield_volume,
                 'yield_volume_unit' => $data['yield_volume_unit'] ?? $recipe->yield_volume_unit,
@@ -180,15 +174,8 @@ class RecipeService
 
             $this->syncStages($recipe, $data['stages'] ?? []);
 
-            // Recalculate costs
-            $recipe->refresh();
-            $totalCost = $recipe->recipeIngredients()->sum('cost');
-            $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
-
-            $recipe->update([
-                'total_cost' => $totalCost,
-                'cost_per_portion' => $costPerPortion
-            ]);
+            // Recalculate costs using fresh FIFO data
+            $this->recalculateRecipeCosts($recipe);
 
             \App\Models\AuditLog::log('Updated Recipe', $recipe, $oldData, $recipe->toArray());
 
@@ -335,25 +322,18 @@ class RecipeService
             }
 
             try {
-                // Get latest purchase to determine the unit price and its associated unit
-                $latestPurchase = $ingredient->purchases()
-                    ->approved()
-                    ->orderBy('purchase_date', 'desc')
-                    ->orderBy('id', 'desc')
-                    ->first();
-
-                $baseUnit = Unit::tryFrom($ingredient->measurement_unit);
-                $unitCost = $ingredient->latest_price;
-                
-                $recipeUnit = Unit::tryFrom($item['unit']);
+                $baseUnit = $this->fifoService->resolveUnit($ingredient->measurement_unit);
+                $recipeUnit = $this->fifoService->resolveUnit($item['unit']);
+                $quantityToCost = (float)$item['quantity'];
 
                 if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
                     // Convert recipe quantity to ingredient's base unit for accurate costing
-                    $quantityInBaseUnit = $recipeUnit->convertTo((float)$item['quantity'], $baseUnit);
-                    $cost = $quantityInBaseUnit * $unitCost;
+                    $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
+                    // Use FIFO for costing estimate
+                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
                 } else {
                     // Fallback to simplified costing if conversion not possible
-                    $cost = (float)$item['quantity'] * $unitCost;
+                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
                 }
 
                 \App\Models\RecipeIngredient::create([
@@ -400,23 +380,15 @@ class RecipeService
                     continue;
                 }
 
-                // Calculate cost with unit conversion
-                $latestPurchase = $ingredient->purchases()
-                    ->approved()
-                    ->orderBy('purchase_date', 'desc')
-                    ->orderBy('id', 'desc')
-                    ->first();
-
-                $baseUnit = Unit::tryFrom($ingredient->measurement_unit);
-                $unitCost = $ingredient->latest_price;
-
-                $recipeUnit = Unit::tryFrom($recipeIngredient->unit);
+                $baseUnit = $this->fifoService->resolveUnit($ingredient->measurement_unit);
+                $recipeUnit = $this->fifoService->resolveUnit($recipeIngredient->unit);
+                $quantityToCost = (float)$recipeIngredient->quantity;
 
                 if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
-                    $quantityInBaseUnit = $recipeUnit->convertTo((float)$recipeIngredient->quantity, $baseUnit);
-                    $cost = $quantityInBaseUnit * $unitCost;
+                    $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
+                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
                 } else {
-                    $cost = (float)$recipeIngredient->quantity * $unitCost;
+                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
                 }
 
                 // Update cost
@@ -563,5 +535,43 @@ class RecipeService
 
             return $newRecipe;
         });
+    }
+
+    /**
+     * Recalculate and update the costs for a recipe using current FIFO data.
+     */
+    public function recalculateRecipeCosts(Recipe $recipe): void
+    {
+        // Ensure stages and ingredients are fresh
+        $recipe->load(['stages.ingredients.ingredient', 'recipeIngredients']);
+        
+        foreach ($recipe->stages as $stage) {
+            foreach ($stage->ingredients as $recipeIngredient) {
+                $ingredient = $recipeIngredient->ingredient;
+                if (!$ingredient) continue;
+
+                $baseUnit = $this->fifoService->resolveUnit($ingredient->measurement_unit);
+                $recipeUnit = $this->fifoService->resolveUnit($recipeIngredient->unit);
+                $quantityToCost = (float)$recipeIngredient->quantity;
+
+                if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
+                    $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
+                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
+                } else {
+                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                }
+
+                $recipeIngredient->update(['cost' => $cost]);
+            }
+        }
+
+        // Refresh to get updated ingredient costs before summing
+        $totalCost = $recipe->recipeIngredients()->sum('cost');
+        $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
+
+        $recipe->update([
+            'total_cost' => $totalCost,
+            'cost_per_portion' => $costPerPortion
+        ]);
     }
 }

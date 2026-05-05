@@ -16,10 +16,12 @@ class IngredientController extends Controller
     use AuthorizesRequests;
 
     protected $ingredientService;
+    protected $fifoService;
 
-    public function __construct(IngredientService $ingredientService)
+    public function __construct(IngredientService $ingredientService, \App\Services\FIFOInventoryService $fifoService)
     {
         $this->ingredientService = $ingredientService;
+        $this->fifoService = $fifoService;
     }
 
     public function index(Request $request, string $kitchen_slug)
@@ -39,6 +41,15 @@ class IngredientController extends Controller
         $ingredients = $query->orderBy('name')->paginate(15);
 
         return view('ingredients.index', compact('ingredients'));
+    }
+
+    public function show(string $kitchen_slug, Ingredient $ingredient)
+    {
+        if (!auth()->user()->isStaff() || auth()->user()->hasPermissionTo('module_inventory')) {
+            return redirect()->route('admin.inventory.show', [$kitchen_slug, $ingredient->id]);
+        }
+        
+        return view('ingredients.show', compact('ingredient'));
     }
 
     public function create(string $kitchen_slug)
@@ -123,9 +134,16 @@ class IngredientController extends Controller
     public function search(Request $request, string $kitchen_slug)
     {
         $query = $request->get('q');
-        return response()->json(
-            $this->ingredientService->search($query)
-        );
+        $ingredients = $this->ingredientService->search($query);
+        
+        return response()->json($ingredients->map(function($ing) {
+            return [
+                'id' => $ing->id,
+                'name' => $ing->name,
+                'unit' => $ing->measurement_unit,
+                'price' => $ing->latest_price ?? $ing->price,
+            ];
+        }));
     }
     public function storeQuick(QuickCreateIngredientRequest $request, string $kitchen_slug)
     {
@@ -184,5 +202,31 @@ class IngredientController extends Controller
                 : 'Ingredient submitted for admin approval.'
         ]);
 
+    }
+
+    public function getFIFOCost(Request $request, string $kitchen_slug, Ingredient $ingredient)
+    {
+        $quantity = (float) $request->get('quantity', 0);
+        $unitParam = $request->get('unit');
+        
+        if ($quantity <= 0) {
+            return response()->json(['cost' => 0]);
+        }
+
+        try {
+            // Use the service's resolveUnit for consistency
+            $baseUnit = $this->fifoService->resolveUnit($ingredient->measurement_unit);
+            $inputUnit = $this->fifoService->resolveUnit($unitParam);
+            
+            $quantityInBaseUnit = $quantity;
+            if ($inputUnit && $baseUnit && $inputUnit->canConvertTo($baseUnit)) {
+                $quantityInBaseUnit = $inputUnit->convertTo($quantity, $baseUnit);
+            }
+
+            $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
+            return response()->json(['cost' => $cost]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 }

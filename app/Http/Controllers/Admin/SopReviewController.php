@@ -42,11 +42,33 @@ class SopReviewController extends Controller
         return back()->with('success', 'SOP Run approved successfully.');
     }
 
-    public function approveItem(string $kitchen_slug, SopDailyRun $run, SopItemCompletion $completion)
+    public function approveItem(Request $request, string $kitchen_slug, SopDailyRun $run, $id)
     {
+        // Try finding by completion ID first
+        $completion = SopItemCompletion::where('run_id', $run->id)->find($id);
+
+        if (!$completion) {
+            // If not found, check if it's an item ID (for force approving missing items)
+            // We pass item_id in the request if we are force approving
+            $itemId = $request->get('item_id', $id);
+            
+            $completion = SopItemCompletion::updateOrCreate(
+                ['run_id' => $run->id, 'item_id' => $itemId],
+                [
+                    'user_id' => auth()->id(),
+                    'is_completed' => true,
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]
+            );
+
+            return back()->with('success', 'Item force-approved.');
+        }
+
         $completion->update([
             'status' => 'completed',
             'rejection_reason' => null,
+            'completed_at' => $completion->completed_at ?? now(),
         ]);
 
         return back()->with('success', 'Item approved.');

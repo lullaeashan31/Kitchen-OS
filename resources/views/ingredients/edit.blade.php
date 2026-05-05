@@ -1,45 +1,45 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="flex items-center gap-2">
-        <a href="{{ route('ingredients.index') }}" class="text-muted"><i data-lucide="arrow-left"></i></a>
-        <h1>Edit Ingredient</h1>
+    <div class="flex items-center gap-4">
+        <a href="{{ route('ingredients.index') }}" class="btn btn-secondary p-3">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </a>
+        <div>
+            <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Edit Ingredient</h1>
+            <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Master <span class="text-accent">Inventory Data</span></p>
+        </div>
     </div>
 @endsection
 
 @section('content')
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
         <form action="{{ route('ingredients.update', $ingredient) }}" method="POST">
             @csrf
             @method('PUT')
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Left Column: General & Usage -->
-                <div class="space-y-6">
-                    <div class="card bg-white shadow-sm border border-slate-200">
-                        <div class="flex items-center justify-between mb-6 pb-2 border-b border-slate-100">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="info" class="text-primary w-5 h-5"></i>
-                                <h3 class="text-lg font-semibold text-slate-800">General Information</h3>
-                            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {{-- Left Column: General & Usage --}}
+                <div class="space-y-8">
+                    <div class="card p-0 overflow-hidden">
+                        <div class="p-8 border-b border-subtle bg-white/5 flex items-center justify-between">
+                            <h2 class="flex items-center gap-3">
+                                <i data-lucide="info" class="text-accent"></i>
+                                General Information
+                            </h2>
                             <span class="badge {{ $ingredient->status === 'approved' ? 'badge-success' : 'badge-warning' }}">
                                 {{ ucfirst($ingredient->status) }}
                             </span>
                         </div>
                         
-                        <div class="space-y-4">
+                        <div class="p-8 space-y-6">
                             <div class="form-group">
-                                <label class="form-label flex items-center gap-2">
-                                    Ingredient Name <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" name="name" class="form-control" required value="{{ old('name', $ingredient->name) }}"
-                                    placeholder="e.g. Extra Virgin Olive Oil">
+                                <label class="form-label text-[10px] uppercase">Ingredient Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="name" class="form-control" required value="{{ old('name', $ingredient->name) }}" placeholder="e.g. Extra Virgin Olive Oil">
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label flex items-center gap-2">
-                                    Category <span class="text-danger">*</span>
-                                </label>
+                                <label class="form-label text-[10px] uppercase">Category <span class="text-red-500">*</span></label>
                                 <select name="category_id" id="category-select" class="form-control" required>
                                     <option value="">Select Category</option>
                                     @foreach($categories as $category)
@@ -51,83 +51,83 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label flex items-center gap-2">
-                                    Usage Unit (Recipe Unit) <span class="text-danger">*</span>
-                                </label>
+                                <label class="form-label text-[10px] uppercase">Usage Unit (Recipe Unit) <span class="text-red-500">*</span></label>
                                 <select name="measurement_unit" id="usage_unit_select" class="form-control" required>
                                     <option value="">Select Unit</option>
                                     @foreach($units as $unit)
                                         <option value="{{ $unit->value }}" {{ old('measurement_unit', $ingredient->measurement_unit) == $unit->value ? 'selected' : '' }}>{{ $unit->label() }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-xs text-slate-500 mt-1">This is how you measure it in recipes (e.g. grams, ml).</p>
+                                <p class="text-[10px] font-bold text-muted mt-2 uppercase tracking-tight opacity-60 italic">Measurement used in recipe specifications (e.g. grams, ml)</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card bg-white shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-2 mb-6 pb-2 border-b border-slate-100">
-                            <i data-lucide="alert-triangle" class="text-warning w-5 h-5"></i>
-                            <h3 class="text-lg font-semibold text-slate-800">Storage & Alerts</h3>
+                    <div class="card p-0 overflow-hidden">
+                        <div class="p-8 border-b border-subtle bg-white/5">
+                            <h2 class="flex items-center gap-3">
+                                <i data-lucide="package" class="text-accent"></i>
+                                Storage & Operations
+                            </h2>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="p-8 space-y-6">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="form-group">
+                                    <label class="form-label text-[10px] uppercase">Storage Location</label>
+                                    <select name="storage_location" class="form-control">
+                                        <option value="">Select Location</option>
+                                        @foreach(['Fridge', 'Freezer', 'Dry Store', 'Bar', 'Other'] as $loc)
+                                            <option value="{{ $loc }}" {{ old('storage_location', $ingredient->storage_location) == $loc ? 'selected' : '' }}>{{ $loc }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label text-[10px] uppercase">Low Stock Threshold</label>
+                                    <input type="number" name="alert_threshold" class="form-control font-bold" step="0.01" min="0" value="{{ old('alert_threshold', $ingredient->alert_threshold) }}" placeholder="0.00">
+                                </div>
+                            </div>
                             <div class="form-group">
-                                <label class="form-label text-slate-600">Storage Location</label>
-                                <select name="storage_location" class="form-control">
-                                    <option value="">Select Location</option>
-                                    @foreach(['Fridge', 'Freezer', 'Dry Store', 'Bar', 'Other'] as $loc)
-                                        <option value="{{ $loc }}" {{ old('storage_location', $ingredient->storage_location) == $loc ? 'selected' : '' }}>{{ $loc }}</option>
-                                    @endforeach
+                                <label class="form-label text-[10px] uppercase">Primary Vendor (Optional)</label>
+                                <input type="text" name="vendor" class="form-control" value="{{ old('vendor', $ingredient->vendor) }}" placeholder="Primary Supplier Name">
+                            </div>
+
+                            <div class="form-group pt-4 border-t border-subtle">
+                                <label class="form-label text-[10px] uppercase">Operational Status</label>
+                                <select name="status" class="form-control">
+                                    <option value="approved" {{ old('status', $ingredient->status) == 'approved' ? 'selected' : '' }}>Approved / Active</option>
+                                    <option value="pending" {{ old('status', $ingredient->status) == 'pending' ? 'selected' : '' }}>Pending Review</option>
+                                    <option value="rejected" {{ old('status', $ingredient->status) == 'rejected' ? 'selected' : '' }}>Rejected / Inactive</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label text-slate-600">Alert Threshold</label>
-                                <input type="number" name="alert_threshold" class="form-control" step="0.01" min="0" value="{{ old('alert_threshold', $ingredient->alert_threshold) }}"
-                                    placeholder="Qty for low stock alert">
-                            </div>
-                        </div>
-                        <div class="form-group mt-2">
-                            <label class="form-label text-slate-600">Primary Vendor (Optional)</label>
-                            <input type="text" name="vendor" class="form-control" value="{{ old('vendor', $ingredient->vendor) }}" placeholder="Primary Supplier Name">
-                        </div>
-
-                        <div class="form-group mt-4 pt-4 border-t border-slate-50">
-                            <label class="form-label text-slate-600">Status</label>
-                            <select name="status" class="form-control">
-                                <option value="approved" {{ old('status', $ingredient->status) == 'approved' ? 'selected' : '' }}>Approved</option>
-                                <option value="pending" {{ old('status', $ingredient->status) == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="rejected" {{ old('status', $ingredient->status) == 'rejected' ? 'selected' : '' }}>Rejected</option>
-                            </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Purchase & Allergens -->
-                <div class="space-y-6">
-                    <!-- Purchase Configuration Card -->
-                    <div class="card shadow-sm border border-indigo-100" style="background: linear-gradient(to bottom right, #f8faff, #ffffff);">
-                        <div class="flex items-center justify-between mb-6 pb-2 border-b border-indigo-50">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="shopping-cart" class="text-indigo-600 w-5 h-5"></i>
-                                <h3 class="text-lg font-semibold text-indigo-900">Purchase Configuration</h3>
-                            </div>
+                {{-- Right Column: Purchase & Safety --}}
+                <div class="space-y-8">
+                    <div class="card p-0 overflow-hidden border-accent/20 bg-accent/5">
+                        <div class="p-8 border-b border-subtle flex items-center justify-between">
+                            <h2 class="flex items-center gap-3">
+                                <i data-lucide="shopping-cart" class="text-accent"></i>
+                                Purchase Logic
+                            </h2>
                             @if($ingredient->price_per_base_unit > 0)
-                                <div class="badge badge-primary bg-indigo-100 text-indigo-700 border border-indigo-200">
-                                    Cost: ${{ number_format($ingredient->price_per_base_unit, 4) }} / {{ $ingredient->base_unit }}
+                                <div class="text-[10px] font-black bg-primary text-accent px-3 py-1.5 rounded-full border border-accent/20">
+                                    LATEST: ₹{{ number_format($ingredient->price_per_base_unit, 4) }} / {{ $ingredient->base_unit }}
                                 </div>
                             @endif
                         </div>
                         
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
+                        <div class="p-8 space-y-6">
+                            <div class="grid grid-cols-2 gap-6">
                                 <div class="form-group">
-                                    <label class="form-label text-indigo-700">Purchase Qty</label>
-                                    <input type="number" name="purchase_quantity" class="form-control border-indigo-200" step="0.001" min="0" value="{{ old('purchase_quantity', $ingredient->purchase_quantity) }}" required>
+                                    <label class="form-label text-[10px] uppercase text-accent">Purchase Qty</label>
+                                    <input type="number" name="purchase_quantity" class="form-control font-black border-accent/20" step="0.001" min="0" value="{{ old('purchase_quantity', $ingredient->purchase_quantity) }}" required>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label text-indigo-700">Purchase Unit</label>
-                                    <select name="purchase_unit" id="purchase_unit_select" class="form-control border-indigo-200" required>
+                                    <label class="form-label text-[10px] uppercase text-accent">Purchase Unit</label>
+                                    <select name="purchase_unit" id="purchase_unit_select" class="form-control border-accent/20" required>
                                         <option value="">Select Unit</option>
                                         @foreach($units as $unit)
                                             <option value="{{ $unit->value }}" {{ old('purchase_unit', $ingredient->purchase_unit) == $unit->value ? 'selected' : '' }}>{{ $unit->label() }}</option>
@@ -135,107 +135,118 @@
                                     </select>
                                 </div>
                             </div>
-
-
                         </div>
                     </div>
 
-                    <!-- Allergens Section -->
-                    <div class="card bg-white shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-2 mb-6 pb-2 border-b border-slate-100">
-                            <i data-lucide="shield-alert" class="text-red-500 w-5 h-5"></i>
-                            <h3 class="text-lg font-semibold text-slate-800">Allergen Safety</h3>
+                    <div class="card p-0 overflow-hidden">
+                        <div class="p-8 border-b border-subtle bg-white/5">
+                            <h2 class="flex items-center gap-3">
+                                <i data-lucide="shield-alert" class="text-red-500"></i>
+                                Allergen Safety
+                            </h2>
                         </div>
-                        
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <div class="p-8 grid grid-cols-2 gap-x-6 gap-y-3">
                             @php $currentAllergens = old('allergen_tags', $ingredient->allergen_tags ?? []) @endphp
                             @foreach(App\Enums\Allergen::cases() as $allergen)
-                                <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                                    <div class="relative flex items-center">
-                                        <input type="checkbox" name="allergen_tags[]" value="{{ $allergen->value }}" 
-                                            class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary transition-all cursor-pointer"
-                                            {{ in_array($allergen->value, $currentAllergens) ? 'checked' : '' }}>
-                                    </div>
-                                    <span class="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{{ $allergen->label() }}</span>
+                                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-subtle group">
+                                    <input type="checkbox" name="allergen_tags[]" value="{{ $allergen->value }}" 
+                                        class="w-5 h-5 rounded border-subtle bg-primary text-accent focus:ring-accent transition-all cursor-pointer"
+                                        {{ in_array($allergen->value, $currentAllergens) ? 'checked' : '' }}>
+                                    <span class="text-[10px] font-bold text-muted uppercase tracking-widest group-hover:text-primary">{{ $allergen->label() }}</span>
                                 </label>
                             @endforeach
                         </div>
                     </div>
 
-                    <!-- Files Section -->
-                    <div class="card bg-white shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-2 mb-6 pb-2 border-b border-slate-100">
-                            <i data-lucide="paperclip" class="text-slate-500 w-5 h-5"></i>
-                            <h3 class="text-lg font-semibold text-slate-800">Attached Files</h3>
+                    <div class="card p-0 overflow-hidden">
+                        <div class="p-8 border-b border-subtle bg-white/5 flex items-center justify-between">
+                            <h2 class="flex items-center gap-3">
+                                <i data-lucide="paperclip" class="text-accent"></i>
+                                Digital Artifacts
+                            </h2>
                         </div>
                         
-                        @if($ingredient->driveFiles->isEmpty())
-                            <p class="text-muted text-sm italic">No files attached yet.</p>
-                        @else
-                            <div class="space-y-2">
-                                @foreach($ingredient->driveFiles as $file)
-                                    <div class="flex justify-between items-center p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                                        <a href="javascript:void(0)" onclick="openPreview('{{ $file->drive_url }}', '{{ $file->name }}')" class="flex items-center gap-2 text-sm text-blue-600 font-medium hover:underline">
-                                            <i data-lucide="file-text" class="w-4 h-4"></i> {{ $file->name }}
-                                        </a>
-                                        <form action="{{ route('drive_files.destroy', $file) }}" method="POST" onsubmit="return confirm('Permanently remove this file?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="text-red-400 hover:text-red-600 transition-colors">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
+                        <div class="p-8 space-y-4">
+                            @forelse($ingredient->driveFiles as $file)
+                                <div class="flex justify-between items-center p-4 rounded-xl border border-subtle bg-white/5 group">
+                                    <a href="javascript:void(0)" onclick="openPreview('{{ $file->drive_url }}', '{{ $file->name }}')" class="flex items-center gap-3 text-[10px] font-black text-primary hover:text-accent uppercase tracking-widest transition-all">
+                                        <i data-lucide="file-text" class="w-4 h-4 text-accent"></i> {{ $file->name }}
+                                    </a>
+                                    <form action="{{ route('drive_files.destroy', $file) }}" method="POST" onsubmit="return confirm('Permanently remove this file?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            @empty
+                                <div class="py-8 text-center bg-white/5 rounded-xl border border-dashed border-subtle">
+                                    <p class="text-[10px] font-bold text-muted uppercase tracking-widest opacity-40">No artifacts attached</p>
+                                </div>
+                            @endforelse
+
+                            @can('create', App\Models\DriveFile::class)
+                                <div class="mt-6 pt-6 border-t border-subtle">
+                                    <button type="button" onclick="document.getElementById('attach-form').classList.toggle('hidden')" class="btn btn-secondary w-full py-2 text-[10px] uppercase">
+                                        + Attach New File
+                                    </button>
+                                    <div id="attach-form" class="hidden mt-4 space-y-3 p-4 bg-primary/20 rounded-xl border border-subtle border-dashed">
+                                        <form action="{{ route('drive_files.store') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="linked_type" value="ingredient">
+                                            <input type="hidden" name="linked_id" value="{{ $ingredient->id }}">
+                                            <div class="space-y-3">
+                                                <input type="text" name="name" class="form-control text-[10px] py-2" placeholder="File Title" required>
+                                                <input type="url" name="drive_url" class="form-control text-[10px] py-2" placeholder="Link (Drive/URL)" required>
+                                                <button type="submit" class="btn btn-primary w-full py-2 text-[10px] uppercase">Attach</button>
+                                            </div>
                                         </form>
                                     </div>
-                                @endforeach
-                            </div>
-                        @endif
+                                </div>
+                            @endcan
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 flex items-center justify-end gap-4 border-t border-slate-200 pt-6">
-                <a href="{{ route('ingredients.index') }}" class="btn btn-secondary px-8">Discard Changes</a>
-                <button type="submit" class="btn btn-primary px-12 py-3 shadow-lg shadow-blue-500/20">
-                    <i data-lucide="save" class="w-5 h-5"></i> Update Ingredient
+            <div class="mt-12 flex items-center justify-end gap-4 border-t border-subtle pt-8">
+                <a href="{{ route('ingredients.index') }}" class="btn btn-secondary px-8 py-3 text-[10px] uppercase">Cancel changes</a>
+                <button type="submit" class="btn btn-primary px-12 py-3 text-[10px] uppercase tracking-widest">
+                    <i data-lucide="save"></i> Sync Ingredient
                 </button>
             </div>
         </form>
-
-        <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-            <h3>Attach File</h3>
-            <form action="{{ route('drive_files.store') }}" method="POST" style="margin-top: 1rem;">
-                @csrf
-                <input type="hidden" name="linked_type" value="ingredient">
-                <input type="hidden" name="linked_id" value="{{ $ingredient->id }}">
-                <div class="form-group">
-                    <input type="text" name="name" class="form-control" placeholder="File Name" required>
-                </div>
-                <div class="form-group">
-                    <input type="url" name="drive_url" class="form-control" placeholder="Google Drive Link" required>
-                </div>
-                <button type="submit" class="btn btn-secondary w-full">Attach File</button>
-            </form>
-        </div>
     </div>
 
     @push('styles')
     <style>
-        /* Force Tom Select dropdown behavior and visibility */
         .ts-dropdown {
             z-index: 1000 !important;
-            background: white !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-            border-radius: 0.5rem !important;
+            background: var(--navy-primary) !important;
+            border: 1px solid var(--navy-mid) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+            border-radius: 12px !important;
             margin-top: 4px !important;
+            color: var(--ivory) !important;
         }
-        .ts-dropdown.hidden {
-            display: none !important;
+        .ts-dropdown .active {
+            background: var(--navy-mid) !important;
+            color: var(--brass) !important;
+        }
+        .ts-dropdown .option {
+            padding: 10px 16px !important;
+            font-size: 13px !important;
         }
         .ts-control {
-            border-radius: 0.5rem !important;
-            min-height: 42px !important;
-            display: flex !important;
-            align-items: center !important;
+            background: var(--navy-primary) !important;
+            border: 1px solid var(--navy-mid) !important;
+            border-radius: 12px !important;
+            min-height: 48px !important;
+            color: var(--ivory) !important;
+            padding: 8px 16px !important;
+        }
+        .ts-control input {
+            color: var(--ivory) !important;
         }
     </style>
     @endpush
@@ -245,82 +256,45 @@
         (function() {
             function initializeTomSelect() {
                 try {
-                    // Helper to initialize TomSelect with standard best-practices for closing
                     const initTS = (id, options = {}) => {
                         const el = document.getElementById(id);
                         if (!el) return;
 
                         const config = {
                             closeAfterSelect: true,
-                            onItemAdd: function() {
-                                this.close();
-                                this.blur();
-                            },
-                            onChange: function() {
-                                this.close();
-                                this.blur();
-                            },
-                            render: {
-                                option_create: function(data, escape) {
-                                    return '<div class="create">Add <strong>' + escape(data.input) + '</strong>...</div>';
-                                }
-                            },
+                            onItemAdd: function() { this.close(); this.blur(); },
+                            onChange: function() { this.close(); this.blur(); },
                             ...options
                         };
                         return new TomSelect(el, config);
                     };
 
-                    // Category Select with Create function
                     initTS('category-select', { 
                         create: function(input, callback) {
-                            if (!confirm('Add "' + input + '" as a new Ingredient Category?')) {
-                                return callback(false);
-                            }
-                            
+                            if (!confirm('Add "' + input + '" as a new Category?')) return callback(false);
                             fetch('{{ route('categories.storeQuick') }}', {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                },
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                                 body: JSON.stringify({ name: input, type: 'ingredient' })
                             })
                             .then(r => r.json())
                             .then(res => {
-                                if (res.success) {
-                                    callback({ value: res.id, text: res.name });
-                                } else {
-                                    alert(res.message || 'Failed to create category');
-                                    callback(false);
-                                }
+                                if (res.success) callback({ value: res.id, text: res.name });
+                                else { alert(res.message || 'Failed to create category'); callback(false); }
                             })
-                            .catch(err => {
-                                console.error('Error creating category:', err);
-                                callback(false);
-                            });
+                            .catch(() => callback(false));
                         },
                         placeholder: 'Select or type to create...',
                         sortField: { field: "text", direction: "asc" }
                     });
 
-                    // Other selects
                     ['usage_unit_select', 'purchase_unit_select'].forEach(id => {
-                        initTS(id, {
-                            create: false,
-                            sortField: { field: "text", direction: "asc" }
-                        });
+                        initTS(id, { create: false, sortField: { field: "text", direction: "asc" } });
                     });
-                } catch (e) {
-                    console.error('TomSelect Initialization Error:', e);
-                }
+                } catch (e) { console.error('TomSelect Error:', e); }
             }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initializeTomSelect);
-            } else {
-                initializeTomSelect();
-            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeTomSelect);
+            else initializeTomSelect();
         })();
     </script>
     @endpush

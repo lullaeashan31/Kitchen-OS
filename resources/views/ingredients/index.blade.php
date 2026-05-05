@@ -39,13 +39,13 @@
                             <td>
                                 <div class="font-semibold">{{ $ingredient->name }}</div>
                                 @if($ingredient->status === 'pending')
-                                    <span style="font-size:0.7rem; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; padding:1px 6px; border-radius:9999px; font-weight:700; display:inline-block; margin-top:2px;">Pending Approval</span>
+                                    <span class="badge-warning">Pending Approval</span>
                                 @endif
                             </td>
                             <td>
                                 <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
                                     @foreach($ingredient->allergen_tags ?? [] as $tag)
-                                        <span class="badge badge-gray" style="font-size: 0.7rem;">
+                                        <span class="badge-gray">
                                             {{ App\Enums\Allergen::tryFrom($tag)?->label() ?? $tag }}
                                         </span>
                                     @endforeach
@@ -53,11 +53,11 @@
                             </td>
                             <td>
                                 @if($ingredient->status === 'approved')
-                                    <span style="font-size:0.7rem; background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:1px 8px; border-radius:9999px; font-weight:700;">✔ Approved</span>
+                                    <span class="badge-success">✔ Approved</span>
                                 @elseif($ingredient->status === 'pending')
-                                    <span style="font-size:0.7rem; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; padding:1px 8px; border-radius:9999px; font-weight:700;">⏳ Pending</span>
+                                    <span class="badge-warning">⏳ Pending</span>
                                 @else
-                                    <span style="font-size:0.7rem; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:1px 8px; border-radius:9999px; font-weight:700;">✕ Rejected</span>
+                                    <span class="badge-danger">✕ Rejected</span>
                                 @endif
                             </td>
                             <td>{{ $ingredient->recipes_count ?? 0 }} Recipes</td>

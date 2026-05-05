@@ -1,135 +1,225 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Production Sheet - {{ $productionDay->date->format('Y-m-d') }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --navy: #06101E;
+            --brass: #B5975A;
+            --ivory: #F2EDE6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+        }
+
         body {
-            font-family: sans-serif;
-            padding: 20px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--navy);
+            background: white;
+            margin: 0;
+            padding: 40px;
+            line-height: 1.5;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
+            border-bottom: 2px solid var(--navy);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'EB Garamond', serif;
+            font-size: 32px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+        }
+
+        h2 {
+            font-family: 'EB Garamond', serif;
+            font-size: 18px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--brass);
+            margin: 0;
+        }
+
+        .section-title {
+            font-family: 'EB Garamond', serif;
+            font-size: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin: 30px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #eee;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+            margin-bottom: 30px;
         }
 
         th {
-            background-color: #f2f2f2;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            text-align: left;
+            padding: 12px 8px;
+            border-bottom: 2px solid var(--navy);
         }
 
-        .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            background: #eee;
-            padding: 5px;
+        td {
+            font-size: 13px;
+            padding: 12px 8px;
+            border-bottom: 1px solid #eee;
         }
+
+        .font-bold { font-weight: 700; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
 
         .checkbox {
-            width: 20px;
-            height: 20px;
-            border: 1px solid #000;
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--navy);
             display: inline-block;
+            vertical-align: middle;
+        }
+
+        .notes-box {
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+            font-size: 16px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-left: 4px solid var(--brass);
+            margin-bottom: 30px;
         }
 
         @media print {
-            .no-print {
-                display: none;
-            }
+            .no-print { display: none; }
+            body { padding: 0; }
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: var(--navy);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
         }
     </style>
 </head>
-
 <body onload="window.print()">
 
-    <div class="no-print" style="margin-bottom: 20px;">
-        <button onclick="window.print()">Print Sheet</button>
-        <button onclick="window.close()">Close</button>
+    <div class="no-print controls">
+        <button class="btn" onclick="window.print()">Print</button>
+        <button class="btn" style="background:#666" onclick="window.close()">Close</button>
     </div>
 
     <div class="header">
-        <h1>Kitchen Production Sheet</h1>
-        <h3>{{ $productionDay->date->format('l, F d, Y') }}</h3>
-        @if($productionDay->notes)
-            <p><strong>Notes:</strong> {{ $productionDay->notes }}</p>
-        @endif
+        <h1>Kitchen Production</h1>
+        <h2>{{ $productionDay->date->format('l, F d, Y') }}</h2>
     </div>
+
+    @if($productionDay->notes)
+        <div class="notes-box">
+            "{{ $productionDay->notes }}"
+        </div>
+    @endif
 
     <div class="section-title">Production Items</div>
     <table>
         <thead>
             <tr>
-                <th>Recipe</th>
-                <th>Portions</th>
+                <th style="width: 30%;">Recipe</th>
+                <th class="text-center" style="width: 15%;">Portions</th>
                 <th>Method Reference</th>
-                <th>Check</th>
+                <th class="text-right" style="width: 50px;">Check</th>
             </tr>
         </thead>
         <tbody>
             @foreach($productionDay->items as $item)
                 <tr>
-                    <td><strong>{{ $item->recipe->name }}</strong></td>
-                    <td>{{ $item->portions }}</td>
-                    <td>{{ Str::limit($item->recipe->method, 100) }}</td>
-                    <td>
-                        <div class="checkbox"></div>
-                    </td>
+                    <td class="font-bold">{{ $item->recipe->name }}</td>
+                    <td class="text-center">{{ $item->portions }}</td>
+                    <td style="color: #666; font-size: 11px;">{{ Str::limit($item->recipe->method, 150) }}</td>
+                    <td class="text-right"><div class="checkbox"></div></td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    <div class="section-title">Preparation Checklist (Total Ingredients)</div>
+    <div class="section-title">Consolidated Ingredients</div>
     <table>
         <thead>
             <tr>
-                <th>Ingredient</th>
-                <th>Total Quantity</th>
-                <th>Unit</th>
-                <th>Check</th>
+                <th style="width: 50%;">Ingredient</th>
+                <th class="text-center" style="width: 25%;">Total Quantity</th>
+                <th class="text-center" style="width: 15%;">Unit</th>
+                <th class="text-right" style="width: 50px;">Check</th>
             </tr>
         </thead>
         <tbody>
             @foreach($totalIngredients as $ing)
                 <tr>
-                    <td>{{ $ing['name'] }}</td>
-                    <td>{{ Number::format($ing['total_quantity']) }}</td>
-                    <td>{{ $ing['unit'] }}</td>
-                    <td>
-                        <div class="checkbox"></div>
-                    </td>
+                    <td class="font-bold">{{ $ing['name'] }}</td>
+                    <td class="text-center font-bold">{{ number_format($ing['total_quantity'], 2) }}</td>
+                    <td class="text-center uppercase" style="font-size: 11px;">{{ $ing['unit'] }}</td>
+                    <td class="text-right"><div class="checkbox"></div></td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    <div class="section-title">Tasks</div>
-    <ul>
+    <div class="section-title">Tasks Checklist</div>
+    <div style="columns: 2; gap: 40px;">
         @foreach($productionDay->tasks as $task)
-            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                <div class="checkbox"></div> {{ $task->title }} @if($task->assignedUser)
-                <em>({{ $task->assignedUser->name }})</em> @endif
-            </li>
+            <div style="margin-bottom: 15px; break-inside: avoid; display: flex; align-items: flex-start; gap: 12px; font-size: 13px;">
+                <div class="checkbox" style="margin-top: 2px;"></div>
+                <div>
+                    <div class="font-bold">{{ $task->title }}</div>
+                    @if($task->assignedUser)
+                        <div style="font-size: 10px; text-transform: uppercase; color: #888;">{{ $task->assignedUser->name }}</div>
+                    @endif
+                </div>
+            </div>
         @endforeach
-    </ul>
+    </div>
 
 </body>
-
 </html>

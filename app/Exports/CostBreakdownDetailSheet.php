@@ -54,8 +54,20 @@ class CostBreakdownDetailSheet implements FromArray, WithTitle, WithHeadings, Wi
             // Add ingredients
             foreach ($recipe->recipeIngredients as $recipeIngredient) {
                 $ingredient = $recipeIngredient->ingredient;
-                $unitCost = $ingredient->latest_price ?? $ingredient->price ?? 0;
-                $totalCost = $recipeIngredient->cost ?? ($recipeIngredient->quantity * $unitCost);
+                $fifoService = app(\App\Services\FIFOInventoryService::class);
+                
+                $baseUnit = \App\Enums\Unit::tryFrom($ingredient->measurement_unit);
+                $recipeUnit = \App\Enums\Unit::tryFrom($recipeIngredient->unit);
+                $quantityToCost = (float)$recipeIngredient->quantity;
+                
+                if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
+                    $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
+                    $totalCost = $fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
+                } else {
+                    $totalCost = $fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                }
+
+                $unitCost = $quantityToCost > 0 ? ($totalCost / $quantityToCost) : 0;
 
                 $data[] = [
                     '', // Empty recipe name column

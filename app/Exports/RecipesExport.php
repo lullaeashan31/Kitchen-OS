@@ -19,12 +19,15 @@ class RecipesExport implements FromCollection, WithHeadings
                     'recipe_name' => $recipe->name,
                     'category' => $recipe->category->name ?? '',
                     'method' => $recipe->method,
-                    'yields' => $recipe->yields,
+                    'yield_portions' => $recipe->yield_portions ?? $recipe->yields,
+                    'yield_weight_grams' => $recipe->yield_weight_grams,
                     'status' => $recipe->status->value,
                     'ingredient_name' => '',
                     'quantity' => '',
                     'unit' => '',
                     'cost' => '',
+                    'purchase_quantity' => '',
+                    'usage_quantity' => '',
                 ]);
             } else {
                 foreach ($recipe->recipeIngredients as $ri) {
@@ -32,12 +35,15 @@ class RecipesExport implements FromCollection, WithHeadings
                         'recipe_name' => $recipe->name,
                         'category' => $recipe->category->name ?? '',
                         'method' => $recipe->method,
-                        'yields' => $recipe->yields,
+                        'yield_portions' => $recipe->yield_portions ?? $recipe->yields,
+                        'yield_weight_grams' => $recipe->yield_weight_grams,
                         'status' => $recipe->status->value,
                         'ingredient_name' => $ri->ingredient->name,
                         'quantity' => $ri->quantity,
                         'unit' => $ri->unit,
                         'cost' => $ri->cost,
+                        'purchase_quantity' => $ri->ingredient->purchase_quantity,
+                        'usage_quantity' => $ri->ingredient->usage_quantity,
                     ]);
                 }
             }
@@ -52,12 +58,15 @@ class RecipesExport implements FromCollection, WithHeadings
             'Recipe Name',
             'Category',
             'Method',
-            'Yields',
+            'Yield (Portions)',
+            'Yield (Weight in Grams)',
             'Status',
             'Ingredient Name',
             'Quantity',
             'Unit',
-            'Cost'
+            'Cost',
+            'Purchase Quantity',
+            'Usage Quantity'
         ];
     }
 }

@@ -69,9 +69,11 @@ class DashboardController extends Controller
             ->count();
 
         $overdueSopCount = \App\Models\SopChecklist::active()
+            ->whereNotNull('deadline_time')
             ->where('deadline_time', '<', now()->toTimeString())
             ->whereDoesntHave('runs', function ($query) {
-                $query->where('date', today()->toDateString())->where('status', 'approved');
+                $query->where('date', today()->toDateString())
+                    ->whereNotNull('completed_at');
             })
             ->count();
 

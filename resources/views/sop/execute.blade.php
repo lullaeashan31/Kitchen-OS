@@ -29,7 +29,7 @@
             @foreach($checklist->items as $item)
                 @php
                     $completion = $completions->get($item->id);
-                    $isDone = $completion && ($completion->is_completed || $completion->status === 'resubmitted');
+                    $isDone = $completion && in_array($completion->status, ['completed', 'resubmitted']);
                     $isRejected = $completion && $completion->status === 'rejected';
                 @endphp
                 <div class="item-card bg-white p-5 rounded-xl border {{ $isDone ? 'border-green-200 bg-green-50/30' : ($isRejected ? 'border-red-200 bg-red-50/30' : 'border-gray-200') }} shadow-sm transition-all"
@@ -80,11 +80,11 @@
                                         </div>
 
                                         @if(!$isDone || $isRejected)
-                                            <label
-                                                class="cursor-pointer bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50">
-                                                <span>{{ $isRejected ? 'Retake Photo' : 'Take/Upload Photo' }}</span>
-                                                <input type="file" class="photo-input hidden" accept="image/*" capture="environment">
-                                            </label>
+                                            <button type="button" onclick="startCamera('{{ $item->id }}')"
+                                                class="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 flex items-center gap-2">
+                                                <i data-lucide="camera" class="w-4 h-4"></i>
+                                                <span>{{ $isRejected ? 'Retake Live Photo' : 'Take Live Photo' }}</span>
+                                            </button>
                                         @endif
                                     </div>
                                 </div>
@@ -119,8 +119,113 @@
         </div>
     </div>
 
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="fixed inset-0 bg-black z-[100] hidden flex-col">
+        <div class="flex justify-between items-center p-4 text-white">
+            <h3 class="text-lg font-bold">Live Camera</h3>
+            <button onclick="stopCamera()" class="p-2 hover:bg-white/10 rounded-full">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <div class="flex-1 relative flex items-center justify-center overflow-hidden">
+            <video id="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+            <canvas id="cameraCanvas" class="hidden"></canvas>
+            
+            <!-- Guidelines Overlay -->
+            <div class="absolute inset-0 border-[20px] border-black/20 pointer-events-none flex items-center justify-center">
+                <div class="w-64 h-64 border-2 border-white/30 border-dashed rounded-2xl"></div>
+            </div>
+        </div>
+
+        <div class="p-8 flex flex-col items-center gap-6 bg-gradient-to-t from-black to-transparent">
+            <p class="text-white/70 text-sm font-medium">Position the task clearly in the frame</p>
+            <div class="flex items-center gap-12">
+                <button onclick="stopCamera()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+                <button onclick="captureImage()" class="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl active:scale-95 transition-transform">
+                    <div class="w-full h-full rounded-full border-4 border-black/5 flex items-center justify-center">
+                        <div class="w-12 h-12 bg-red-500 rounded-full shadow-inner"></div>
+                    </div>
+                </button>
+                <div class="w-12 h-12"></div> <!-- Spacer -->
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
+            let cameraStream = null;
+            let currentItemId = null;
+
+            async function startCamera(itemId) {
+                currentItemId = itemId;
+                const video = document.getElementById('cameraVideo');
+                const modal = document.getElementById('cameraModal');
+
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    });
+                    video.srcObject = cameraStream;
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    if (window.lucide) window.lucide.createIcons();
+                } catch (err) {
+                    console.error("Camera error:", err);
+                    alert("Unable to access camera. Please check permissions.");
+                }
+            }
+
+            function stopCamera() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                    cameraStream = null;
+                }
+                const modal = document.getElementById('cameraModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            async function captureImage() {
+                const video = document.getElementById('cameraVideo');
+                const canvas = document.getElementById('cameraCanvas');
+                const context = canvas.getContext('2d');
+
+                // Set canvas size to video size
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Draw frame
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert to blob
+                canvas.toBlob(async (blob) => {
+                    if (blob) {
+                        const file = new File([blob], `sop_${currentItemId}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                        
+                        // Show preview locally
+                        const card = document.querySelector(`.item-card[data-item-id="${currentItemId}"]`);
+                        const preview = card.querySelector('.photo-preview');
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                        };
+                        reader.readAsDataURL(file);
+
+                        // Upload
+                        await toggleItem(currentItemId, file);
+                        stopCamera();
+                    }
+                }, 'image/jpeg', 0.8);
+            }
+
             function updateProgress() {
                 const total = {{ $checklist->items->count() }};
                 const done = document.querySelectorAll('.item-card[data-completed="true"]').length;
@@ -182,10 +287,10 @@
                         card.querySelector('h4').classList.add('line-through', 'text-gray-500');
 
                         // Remove buttons/inputs
-                        const btn = card.querySelector('button');
+                        const btn = card.querySelector('button[onclick^="startCamera"]');
                         if (btn) btn.remove();
-                        const label = card.querySelector('label.cursor-pointer');
-                        if (label) label.remove();
+                        const regularBtn = card.querySelector('button[onclick^="toggleItem"]');
+                        if (regularBtn) regularBtn.remove();
 
                         // Hide rejection reason if present
                         const rejectionBox = card.querySelector('.bg-red-100\\/50');
@@ -210,25 +315,6 @@
                     alert('Failed to update item. Please try again.');
                 }
             }
-
-            // Handle Photo Uploads
-            document.querySelectorAll('.photo-input').forEach(input => {
-                input.addEventListener('change', function (e) {
-                    if (this.files && this.files[0]) {
-                        const itemId = this.closest('.item-card').dataset.itemId;
-                        const preview = this.closest('.item-card').querySelector('.photo-preview');
-
-                        // Show local preview immediately for weightless feel
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
-                        };
-                        reader.readAsDataURL(this.files[0]);
-
-                        toggleItem(itemId, this.files[0]);
-                    }
-                });
-            });
 
             // Initial check
             updateProgress();

@@ -11,9 +11,8 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Styles -->
     <!-- Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -21,11 +20,25 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#3b82f6',
-                        secondary: '#64748b',
+                        navy: {
+                            deep: '#06101E',
+                            primary: '#0A1628',
+                            mid: '#1C2E4A',
+                        },
+                        brass: {
+                            DEFAULT: '#B5975A',
+                            hover: '#D4B06A',
+                        },
+                        ivory: '#F2EDE6',
+                        primary: '#B5975A',
+                        secondary: '#1C2E4A',
                         success: '#22c55e',
                         warning: '#eab308',
                         danger: '#ef4444',
+                    },
+                    fontFamily: {
+                        heading: ['EB Garamond', 'serif'],
+                        sans: ['DM Sans', 'sans-serif'],
                     }
                 }
             }
@@ -35,49 +48,63 @@
     <!-- Tom Select CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <style>
-        /* Custom Overrides */
+        /* Traverse Brand System - STRICT ADHERENCE */
+        :root {
+            --bg-primary: #06101E;
+            --bg-card: #0A1628;
+            --border-subtle: rgba(242, 237, 230, 0.08);
+            --border-header: rgba(242, 237, 230, 0.1);
+            --text-primary: #F2EDE6;
+            --text-muted: rgba(242, 237, 230, 0.6);
+            --accent: #B5975A;
+            --accent-hover: #D4B06A;
+            --radius: 4px;
+            --padding: 24px;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'EB Garamond', serif;
+            color: var(--text-primary);
+            margin-top: 0;
+            line-height: 1.2;
+        }
+
         .app-container {
             display: flex;
             min-height: 100vh;
-            background-color: #f8fafc;
+            background-color: var(--bg-primary);
         }
 
         .sidebar {
-            width: 310px;
-            background-color: white;
-            border-right: 1px solid #e2e8f0;
+            width: 280px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border-subtle);
             position: fixed;
             height: 100vh;
             top: 0;
             left: 0;
             overflow-y: auto;
-            padding: 1.5rem;
+            padding: var(--padding);
             z-index: 40;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 35;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .main-content {
-            margin-left: 310px;
+            margin-left: 280px;
             flex: 1;
             min-height: 100vh;
-            padding: 2rem;
+            padding: var(--padding);
             display: flex;
             flex-direction: column;
             transition: margin-left 0.3s ease;
@@ -87,188 +114,248 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 0 0 2rem 0 !important;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid #e2e8f0;
-            background-color: white;
+            margin: 0 0 var(--padding) 0 !important;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-subtle);
             position: sticky;
             top: 0;
             z-index: 30;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            cursor: pointer;
-            color: #64748b;
-            font-size: 1.5rem;
-        }
-
-        /* Tablet & Mobile Responsive */
-        /* Tablet: 768px - 1024px */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .sidebar {
-                width: 260px;
-                padding: 1rem;
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 1.5rem;
-                width: 100%;
-            }
-
-            .top-header {
-                padding: 1rem 1.5rem;
-                margin: 0 0 1.5rem 0 !important;
-                flex-wrap: wrap;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-            }
-
-            .nav-link {
-                padding: 0.65rem 0.75rem;
-                font-size: 0.8rem;
-            }
-
-            /* Tablet: Better table spacing */
-            table {
-                font-size: 0.875rem;
-            }
-
-            /* Tablet: Form inputs */
-            input[type="text"],
-            input[type="number"],
-            select,
-            textarea {
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Mobile: < 768px */
-        @media (max-width: 1024px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 1rem;
-            }
-
-            .top-header {
-                padding: 0.75rem 1rem;
-                margin: 0 0 1rem 0 !important;
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-
-            .sidebar {
-                width: 280px;
-                padding: 1rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .main-content {
-                padding: 0.75rem;
-            }
-
-            .top-header {
-                padding: 0.5rem 0.75rem;
-            }
-        }
-
-        .nav-link.active {
-            background-color: #eff6ff;
-            color: #3b82f6;
-            border-right: 3px solid #3b82f6;
-            font-weight: 600;
+            background-color: var(--bg-primary);
         }
 
         .nav-link {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
-            color: #64748b;
+            padding: 12px 16px;
+            color: var(--text-primary);
             transition: all 0.2s;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
             text-decoration: none;
-            border-radius: 0.375rem;
-            margin-bottom: 0.25rem;
+            border-radius: var(--radius);
+            margin-bottom: 4px;
+            opacity: 0.5;
         }
 
         .nav-link:hover {
-            background-color: #f8fafc;
-            color: #1e293b;
+            background-color: rgba(181, 151, 90, 0.05);
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        .nav-link.active {
+            background-color: rgba(181, 151, 90, 0.1);
+            color: var(--accent);
+            opacity: 1;
         }
 
         .nav-icon {
-            margin-right: 0.75rem;
-            width: 1.15rem;
-            height: 1.15rem;
+            margin-right: 12px;
+            width: 1rem;
+            height: 1rem;
         }
 
-        /* GLOBAL Tom Select Safety Fix - Less aggressive */
-        .ts-dropdown {
-            display: none;
-            opacity: 0;
-            visibility: hidden;
-            z-index: 1000 !important;
-        }
-        .ts-dropdown.active, .ts-wrapper.focus .ts-dropdown {
-            display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        }
-        .ts-wrapper.focus .ts-control {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-        }
-
-        body {
-            font-size: 0.9rem;
+        /* GLOBAL OVERRIDES - AGGRESSIVE PURGING OF NON-BRAND COLORS */
+        .card, 
+        .bg-white,
+        .bg-gray-50, .bg-gray-100, .bg-gray-200, .bg-gray-300, .bg-gray-400, .bg-gray-500,
+        [class*="bg-white"], 
+        [class*="bg-gray-"], 
+        [class*="bg-slate-"], 
+        [class*="bg-zinc-"], 
+        [class*="bg-neutral-"],
+        .modal-content, .dropdown-menu, .popover, .tooltip-inner { 
+            background-color: var(--bg-card) !important; 
+            border: 1px solid var(--border-subtle) !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            color: var(--text-primary) !important;
         }
 
-        /* Global slight reduction */
+        .card-header, .card-footer, .modal-header, .modal-footer {
+            background-color: rgba(242, 237, 230, 0.02) !important;
+            border-color: var(--border-subtle) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* HOVER OVERRIDES */
+        [class*="hover:bg-white"]:hover, 
+        [class*="hover:bg-gray-"]:hover, 
+        [class*="hover:bg-slate-"]:hover, 
+        [class*="hover:bg-zinc-"]:hover, 
+        [class*="hover:bg-neutral-"]:hover,
+        .dropdown-item:hover {
+            background-color: rgba(181, 151, 90, 0.1) !important;
+            color: var(--accent) !important;
+        }
+
+        /* TEXT COLOR OVERRIDES */
+        .text-black, .text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600,
+        [class*="text-gray-"], 
+        [class*="text-slate-"], 
+        [class*="text-zinc-"], 
+        [class*="text-neutral-"],
+        [class*="text-black"] {
+            color: var(--text-primary) !important;
+        }
+
+        .text-muted, .text-gray-500, .text-gray-400 {
+            color: var(--text-muted) !important;
+        }
+
+        .table-container {
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            overflow: hidden;
+            background-color: var(--bg-card) !important;
+        }
+
+        .table { 
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--bg-card) !important;
+        }
+        .table thead tr { 
+            background-color: rgba(242, 237, 230, 0.02) !important; 
+            border-bottom: 1px solid var(--border-subtle) !important;
+        }
+        .table th { 
+            color: var(--accent) !important; 
+            font-family: 'DM Sans', sans-serif !important; 
+            text-transform: uppercase !important; 
+            letter-spacing: 0.1em !important; 
+            font-size: 0.65rem !important;
+            font-weight: 900 !important;
+            padding: 16px 24px !important;
+            text-align: left;
+        }
+        .table td { 
+            padding: 16px 24px !important;
+            border-bottom: 1px solid var(--border-subtle) !important;
+            color: var(--text-primary) !important;
+            font-size: 0.8rem;
+        }
+        .table tr:last-child td { border-bottom: none !important; }
+
+        /* FORM CONTROLS */
+        .form-control, input, select, textarea { 
+            background-color: var(--bg-primary) !important; 
+            border: 1px solid var(--border-subtle) !important; 
+            color: var(--text-primary) !important; 
+            border-radius: var(--radius) !important;
+            padding: 14px 16px !important;
+            font-size: 0.85rem !important;
+        }
+        .form-control:focus, input:focus, select:focus, textarea:focus { 
+            border-color: var(--accent) !important; 
+            box-shadow: 0 0 0 2px rgba(181, 151, 90, 0.1) !important;
+            outline: none !important;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            border-radius: var(--radius);
+        }
+
+        .btn-primary, button[type="submit"]:not(.nav-link button) { 
+            background-color: var(--accent) !important; 
+            color: var(--bg-primary) !important; 
+            padding: 14px 28px !important;
+            border: none !important;
+        }
+        .btn-primary:hover, button[type="submit"]:not(.nav-link button):hover { background-color: var(--accent-hover) !important; }
+
+        .btn-secondary {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-subtle) !important;
+            color: var(--text-primary) !important;
+            padding: 12px 24px !important;
+        }
+        .btn-secondary:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+
+        /* BADGES */
+        .badge {
+            display: inline-flex;
+            padding: 4px 10px;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 2px;
+        }
+        .badge-success { background: rgba(34, 197, 94, 0.1) !important; color: #22c55e !important; border: 1px solid rgba(34, 197, 94, 0.2) !important; }
+        .badge-warning { background: rgba(181, 151, 90, 0.1) !important; color: var(--accent) !important; border: 1px solid rgba(181, 151, 90, 0.2) !important; }
+        .badge-danger { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-card); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* ALERTS */
+        .alert {
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .alert-success { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        /* MOBILE OVERRIDES */
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 16px; }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35; }
+            .sidebar-overlay.active { display: block; }
+        }
     </style>
-    <script src="https://unpkg.com/lucide@latest"></script> <!-- Icons -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script> <!-- Alpine Collapse -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> <!-- AlpineJS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body>
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
-                <i data-lucide="chef-hat" style="color: var(--primary-color);"></i>
-                <h2 style="font-size: 1.25rem;">Kitchen OS</h2>
+            <div class="mb-12 flex items-center gap-4">
+                <div class="p-2 bg-accent text-primary rounded-lg">
+                    <i data-lucide="chef-hat" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-heading font-black text-ivory tracking-tight leading-none">KITCHEN OS</h2>
+                    <p class="text-[8px] font-black text-accent uppercase tracking-[0.3em] mt-1">Traverse Inc.</p>
+                </div>
             </div>
 
-            <nav>
+            <nav class="flex-1">
                 @if(auth()->user()->isSuperAdmin() && !app()->has('current_kitchen'))
                     <a href="{{ route('superadmin.dashboard') }}"
                         class="nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
@@ -276,19 +363,19 @@
                     </a>
                     <a href="{{ route('superadmin.kitchens.index') }}"
                         class="nav-link {{ request()->routeIs('superadmin.kitchens.*') ? 'active' : '' }}">
-                        <i data-lucide="layout" class="nav-icon text-orange-500"></i> Manage Kitchens
+                        <i data-lucide="layout" class="nav-icon"></i> Manage Kitchens
                     </a>
                 @endif
 
                 @if(app()->has('current_kitchen'))
-                    <!-- Unified Navigation -->
                     <a href="{{ route('dashboard') }}"
                         class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
+                        <i data-lucide="grid" class="nav-icon"></i> Dashboard
                     </a>
 
+                    {{-- Time Clock --}}
                     @if(!auth()->user()->isStaff() || auth()->user()->hasPermissionTo('manage_attendance')) 
-                        <div style="margin: 1rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                        <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
                             Time Clock
                         </div>
                         <a href="{{ route('attendance.tablet') }}" class="nav-link">
@@ -301,67 +388,70 @@
                         @endif
                     @endif
 
+                    {{-- My Workspace --}}
                     @if(auth()->user()->isStaff())
-                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; tracking-widest: 1px;">
+                        <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
                             My Workspace
                         </div>
                         <a href="{{ route('employee.shifts.index') }}" class="nav-link {{ request()->routeIs('employee.shifts.*') ? 'active' : '' }}">
                             <i data-lucide="user" class="nav-icon"></i> My Schedule
                         </a>
                         <a href="{{ route('employee.payroll.index') }}" class="nav-link {{ request()->routeIs('employee.payroll.*') ? 'active' : '' }}">
-                            <i data-lucide="file-text" class="nav-icon text-green-500"></i> My Payslips
+                            <i data-lucide="credit-card" class="nav-icon"></i> My Payslips
                         </a>
                         <a href="{{ route('employee.attendance.index') }}" class="nav-link {{ request()->routeIs('employee.attendance.*') ? 'active' : '' }}">
-                            <i data-lucide="clock" class="nav-icon text-blue-500"></i> My History
+                            <i data-lucide="history" class="nav-icon"></i> My History
                         </a>
                     @endif
 
-                    <!-- Inventory & Stock Section -->
+                    {{-- Inventory & Stock --}}
                     @if(auth()->user()->hasPermissionTo('module_inventory') || !auth()->user()->isStaff())
-                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                        <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
                             Inventory & Stock
                         </div>
                         <a href="{{ route('admin.inventory.index') }}" class="nav-link {{ request()->routeIs('admin.inventory.index') ? 'active' : '' }}">
-                            <i data-lucide="package" class="nav-icon"></i> Master Inventory
+                            <i data-lucide="box" class="nav-icon"></i> Master Inventory
+                        </a>
+                        <a href="{{ route('admin.reports.depletion') }}" class="nav-link {{ request()->routeIs('admin.reports.depletion') ? 'active' : '' }}">
+                            <i data-lucide="trending-down" class="nav-icon"></i> Depletion Report
                         </a>
                         <a href="{{ route('purchases.index') }}" class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
-                            <i data-lucide="shopping-cart" class="nav-icon"></i> Purchases
+                            <i data-lucide="shopping-bag" class="nav-icon"></i> Purchases
                         </a>
                         @if(!auth()->user()->isStaff())
                             <a href="{{ route('admin.inventory.upload') }}" class="nav-link {{ request()->routeIs('admin.inventory.upload') ? 'active' : '' }}">
-                                <i data-lucide="file-spreadsheet" class="nav-icon"></i> Inventory Upload
+                                <i data-lucide="upload-cloud" class="nav-icon"></i> Inventory Upload
                             </a>
                         @endif
                     @endif
 
-                    <!-- Recipe Management Section -->
+                    {{-- Recipe Management --}}
                     @if(auth()->user()->hasPermissionTo('module_recipes') || !auth()->user()->isStaff())
-                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                        <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
                             Recipe Management
                         </div>
                         @if(!auth()->user()->isStaff())
-                            <a href="{{ route('admin.ingredients.pending') }}" class="nav-link {{ request()->routeIs('admin.ingredients.pending') ? 'active' : '' }}" style="justify-content: space-between;">
+                            <a href="{{ route('admin.ingredients.pending') }}" class="nav-link {{ request()->routeIs('admin.ingredients.pending') ? 'active' : '' }} flex justify-between items-center">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="check-circle" class="nav-icon text-orange-500"></i> Ingredient Approvals
+                                    <i data-lucide="shield-check" class="nav-icon"></i> Ingredient Approvals
                                 </span>
                                 @php $pendingCount = \App\Models\Ingredient::where('status','pending')->count(); @endphp
                                 @if($pendingCount > 0)
-                                    <span style="background:#ea580c;color:white;font-size:0.65rem;font-weight:800;padding:1px 7px;border-radius:9999px;min-width:20px;text-align:center;">{{ $pendingCount }}</span>
+                                    <span class="bg-red-500 text-white text-[8px] px-2 py-0.5 rounded-full font-black">{{ $pendingCount }}</span>
                                 @endif
                             </a>
-
                         @endif
                         @if(auth()->user()->hasPermissionTo('module_production') || !auth()->user()->isStaff())
                             <a href="{{ route('production.create') }}" class="nav-link {{ request()->routeIs('production.*') ? 'active' : '' }}">
-                                <i data-lucide="chef-hat" class="nav-icon text-red-500"></i> Cook / Production
+                                <i data-lucide="flame" class="nav-icon"></i> Cook / Production
                             </a>
                         @endif
                         <a href="{{ route('recipes.index') }}" class="nav-link {{ request()->routeIs('recipes.*') && !request()->has('is_sub_recipe') ? 'active' : '' }}">
-                            <i data-lucide="book-open" class="nav-icon"></i> All Recipes
+                            <i data-lucide="book" class="nav-icon"></i> All Recipes
                         </a>
                         @if(!auth()->user()->isStaff())
                             <a href="{{ route('recipes.index', ['is_sub_recipe' => 1]) }}" class="nav-link {{ request()->query('is_sub_recipe') == 1 ? 'active' : '' }}">
-                                <i data-lucide="component" class="nav-icon"></i> Sub-Recipes
+                                <i data-lucide="layers" class="nav-icon"></i> Sub-Recipes
                             </a>
                             <a href="{{ route('recipes.create') }}" class="nav-link {{ request()->routeIs('recipes.create') ? 'active' : '' }}">
                                 <i data-lucide="plus-circle" class="nav-icon"></i> Create Recipe
@@ -375,84 +465,80 @@
                         @endif
                     @endif
 
-                    <!-- Administration & HR Section -->
+                    {{-- Administration & HR --}}
                     @if(auth()->user()->hasPermissionTo('module_staff_management') || auth()->user()->hasPermissionTo('module_hr_payroll') || !auth()->user()->isStaff())
-                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                        <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
                             Administration & HR
                         </div>
                         @if(auth()->user()->hasPermissionTo('module_audit_logs') || !auth()->user()->isStaff())
                             <a href="{{ route('audit_logs.index') }}" class="nav-link {{ request()->routeIs('audit_logs.*') ? 'active' : '' }}">
-                                <i data-lucide="shield-alert" class="nav-icon"></i> Audit Logs
-                            </a>
-                        @endif
-                        @if(auth()->user()->isAdmin())
-                            <a href="https://drive.google.com" target="_blank" class="nav-link">
-                                <i data-lucide="hard-drive" class="nav-icon"></i> Google Drive
+                                <i data-lucide="shield" class="nav-icon"></i> Audit Logs
                             </a>
                         @endif
                         @if(auth()->user()->hasPermissionTo('module_staff_management') || !auth()->user()->isStaff())
                             <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-                                <i data-lucide="users" class="nav-icon text-blue-500"></i> Staff Profiles
+                                <i data-lucide="users" class="nav-icon"></i> Staff Profiles
                             </a>
                             <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                                <i data-lucide="briefcase" class="nav-icon text-indigo-500"></i> Roles
+                                <i data-lucide="briefcase" class="nav-icon"></i> Roles
                             </a>
                             <a href="{{ route('admin.schedule.index') }}" class="nav-link {{ request()->routeIs('admin.schedule.*') ? 'active' : '' }}">
-                                <i data-lucide="calendar" class="nav-icon text-amber-500"></i> Staff Schedule
+                                <i data-lucide="calendar" class="nav-icon"></i> Staff Schedule
                             </a>
                         @endif
                         @if(auth()->user()->hasPermissionTo('module_hr_payroll') || !auth()->user()->isStaff())
                             <a href="{{ route('admin.payroll.index') }}" class="nav-link {{ request()->routeIs('admin.payroll.*') ? 'active' : '' }}">
-                                <i data-lucide="pie-chart" class="nav-icon text-green-500"></i> Payroll Management
+                                <i data-lucide="credit-card" class="nav-icon"></i> Payroll Management
                             </a>
                             <a href="{{ route('admin.leave.index') }}" class="nav-link {{ request()->routeIs('admin.leave.*') ? 'active' : '' }}">
-                                <i data-lucide="calendar-check" class="nav-icon text-orange-500"></i> Leave Approvals
+                                <i data-lucide="sun" class="nav-icon"></i> Leave Approvals
                             </a>
                             <a href="{{ route('admin.performance.index') }}" class="nav-link {{ request()->routeIs('admin.performance.*') ? 'active' : '' }}">
-                                <i data-lucide="award" class="nav-icon text-indigo-500"></i> Performance Reviews
+                                <i data-lucide="award" class="nav-icon"></i> Performance Reviews
                             </a>
                         @endif
                     @endif
 
-                    <!-- SOP Management Section -->
+                    {{-- Operations (SOP) --}}
                     @if(auth()->user()->hasPermissionTo('module_sops') || !auth()->user()->isStaff())
-                        <div style="margin: 1.5rem 0 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                        <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
                             Operations (SOP)
                         </div>
                         <a href="{{ route('sop.index') }}" class="nav-link {{ request()->routeIs('sop.*') ? 'active' : '' }}">
-                            <i data-lucide="clipboard-list" class="nav-icon text-blue-500"></i> SOP Checklists
+                            <i data-lucide="clipboard-list" class="nav-icon"></i> SOP Checklists
                         </a>
                         @if(!auth()->user()->isStaff())
                             <a href="{{ route('admin.sop.index') }}" class="nav-link {{ request()->routeIs('admin.sop.index') ? 'active' : '' }}">
                                 <i data-lucide="settings" class="nav-icon"></i> Manage Checklists
                             </a>
                             <a href="{{ route('admin.shifts.index') }}" class="nav-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
-                                <i data-lucide="clock" class="nav-icon text-indigo-500"></i> Manage Shifts
+                                <i data-lucide="watch" class="nav-icon"></i> Manage Shifts
                             </a>
                             <a href="{{ route('admin.shifts.assignments.index') }}" class="nav-link {{ request()->routeIs('admin.shifts.assignments.*') ? 'active' : '' }}">
-                                <i data-lucide="user-plus" class="nav-icon text-purple-500"></i> Daily Assignments
+                                <i data-lucide="user-plus" class="nav-icon"></i> Daily Assignments
                             </a>
                             <a href="{{ route('admin.sop.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.sop.reviews.*') ? 'active' : '' }}">
-                                <i data-lucide="check-square" class="nav-icon text-green-500"></i> Review SOPs
+                                <i data-lucide="check-square" class="nav-icon"></i> Review SOPs
                             </a>
                         @endif
                     @endif
                 @endif
-
-                <!-- Bottom Profile Section preserved -->
             </nav>
 
-            <div
-                style="margin-top: auto; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem;">
-                <div style="flex: 1;">
-                    <div style="font-weight: 500;">{{ auth()->user()->name }}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ auth()->user()->role->label() }}</div>
+            <div class="mt-auto pt-8 border-t border-subtle">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-10 h-10 rounded-full bg-accent text-primary flex items-center justify-center font-black text-xs uppercase">
+                        {{ substr(auth()->user()->name, 0, 2) }}
+                    </div>
+                    <div class="flex-1 overflow-hidden">
+                        <div class="font-bold text-primary truncate text-xs">{{ auth()->user()->name }}</div>
+                        <div class="text-[8px] text-accent uppercase font-black tracking-widest">{{ auth()->user()->role->label() }}</div>
+                    </div>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit"
-                        style="background: none; border: none; cursor: pointer; color: var(--text-muted);">
-                        <i data-lucide="log-out"></i>
+                    <button type="submit" class="btn btn-secondary w-full py-3 text-[9px]">
+                        <i data-lucide="log-out" class="w-3 h-3"></i> Terminate Session
                     </button>
                 </form>
             </div>
@@ -464,71 +550,53 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div class="flex items-center gap-3">
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+                <div class="flex items-center gap-4">
+                    <button class="lg:hidden p-2 text-primary" onclick="toggleSidebar()">
                         <i data-lucide="menu"></i>
                     </button>
-                    <div>
-                        <!-- Breadcrumbs placeholder or page title logic -->
-                        @yield('header')
-                    </div>
+                    @yield('header')
                 </div>
-                <div>
-                    <!-- Actions -->
+                <div class="flex items-center gap-4">
                     @yield('actions')
                 </div>
             </header>
 
             @if(session('success'))
-                <div class="alert alert-success fade-in">
+                <div class="alert alert-success">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="alert alert-error fade-in">
+                <div class="alert alert-error">
                     {{ session('error') }}
                 </div>
             @endif
 
-            @if($errors->any())
-                <div class="alert alert-error fade-in">
-                    <ul style="list-style: none;">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <div class="fade-in">
+            <div class="min-h-0 flex-1">
                 @yield('content')
             </div>
         </main>
     </div>
 
     <!-- Preview Modal -->
-    <div id="previewModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-        <div
-            style="background: white; width: 90%; height: 90%; border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column;">
-            <div
-                style="padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modalTitle" style="margin: 0;">Preview</h3>
-                <button onclick="closePreview()"
-                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <div id="previewModal" style="display: none; position: fixed; inset: 0; background: rgba(6, 16, 30, 0.9); z-index: 1000; align-items: center; justify-content: center; padding: 40px;">
+        <div class="bg-navy-primary w-full h-full border border-subtle rounded-lg flex flex-direction-column overflow-hidden">
+            <div class="p-6 border-b border-subtle flex justify-between items-center bg-navy-deep">
+                <h3 id="modalTitle" class="text-xl font-black text-primary uppercase tracking-tight">Artifact Preview</h3>
+                <button onclick="closePreview()" class="text-muted hover:text-primary transition-all">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
             </div>
-            <div style="flex: 1; background: #f3f4f6;">
-                <iframe id="previewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+            <div class="flex-1 bg-navy-deep p-8">
+                <iframe id="previewFrame" class="w-full h-full border-none rounded-lg bg-white"></iframe>
             </div>
         </div>
     </div>
 
-    <!-- Initialization Scripts -->
     <script>
         lucide.createIcons();
 
-        // Mobile Sidebar Toggle
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -536,28 +604,9 @@
             overlay.classList.toggle('active');
         }
 
-        // Close sidebar when clicking outside on mobile
-        document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
-
-        // Close sidebar on window resize if > 1024px
-        window.addEventListener('resize', function () {
-            if (window.innerWidth > 1024) {
-                const sidebar = document.querySelector('.sidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                sidebar.classList.remove('open');
-                overlay.classList.remove('active');
-            }
-        });
-
         function openPreview(url, name) {
-            // Google Drive Embed Hack: Replace 'view' with 'preview' if needed, or rely on URL
-            // Many Drive URLs are like https://drive.google.com/file/d/XXX/view?usp=sharing
-            // Embed URL is usually https://drive.google.com/file/d/XXX/preview
             let embedUrl = url;
-            if (url.includes('/view')) {
-                embedUrl = url.replace('/view', '/preview');
-            }
-
+            if (url.includes('/view')) embedUrl = url.replace('/view', '/preview');
             document.getElementById('modalTitle').textContent = name;
             document.getElementById('previewFrame').src = embedUrl;
             document.getElementById('previewModal').style.display = 'flex';
@@ -568,15 +617,9 @@
             document.getElementById('previewFrame').src = '';
         }
 
-        // Close on escape
-        document.addEventListener('keydown', function (event) {
-            if (event.key === "Escape") {
-                closePreview();
-            }
-        });
+        document.addEventListener('keydown', (e) => { if (e.key === "Escape") closePreview(); });
     </script>
     @stack('modals')
-    <!-- Tom Select JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     @stack('scripts')
 </body>

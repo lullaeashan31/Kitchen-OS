@@ -29,24 +29,32 @@
         @foreach($run->checklist->items as $item)
             @php
                 $completion = $completions->get($item->id);
+                $isPending = !$completion || in_array($completion->status, ['submitted', 'resubmitted']);
+                $isRejected = $completion && $completion->status === 'rejected';
+                $isCompleted = $completion && $completion->status === 'completed';
             @endphp
             <div
-                class="bg-white rounded-xl border {{ $completion && $completion->status === 'rejected' ? 'border-red-200' : 'border-gray-200' }} shadow-sm overflow-hidden">
+                class="bg-white rounded-xl border {{ $isRejected ? 'border-red-200' : ($isPending ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200') }} shadow-sm overflow-hidden">
                 <div class="p-5 flex flex-col md:flex-row gap-6">
                     <!-- Item Info -->
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="font-bold text-gray-900">{{ $item->name }}</span>
                             @if($completion)
+                                @php
+                                    $statusLabel = $completion->status;
+                                    if ($statusLabel === 'resubmitted') $statusLabel = 'Awaiting Review';
+                                    if ($statusLabel === 'submitted') $statusLabel = 'Awaiting Review';
+                                @endphp
                                 <span
                                     class="px-2 py-0.5 rounded-full text-xs font-bold 
                                                                                 {{ $completion->status === 'completed' ? 'bg-green-100 text-green-700' : '' }}
                                                                                 {{ $completion->status === 'rejected' ? 'bg-red-100 text-red-700' : '' }}
-                                                                                {{ $completion->status === 'resubmitted' ? 'bg-blue-100 text-blue-700' : '' }}">
-                                    {{ ucfirst($completion->status) }}
+                                                                                {{ in_array($completion->status, ['submitted', 'resubmitted']) ? 'bg-amber-100 text-amber-700' : '' }}">
+                                    {{ ucfirst($statusLabel) }}
                                 </span>
                             @else
-                                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Missing</span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Missing</span>
                             @endif
                         </div>
                         @if($item->description)
@@ -89,12 +97,15 @@
                             </button>
                         @endif
 
-                        @if($completion && $completion->status === 'rejected')
-                            <form action="{{ route('admin.sop.reviews.approve_item', [$run, $completion]) }}" method="POST">
+                        @if(!$isCompleted)
+                            <form action="{{ route('admin.sop.reviews.approve_item', [$run, $completion ? $completion->id : $item->id]) }}" method="POST">
                                 @csrf
+                                @if(!$completion)
+                                    <input type="hidden" name="item_id" value="{{ $item->id }}">
+                                @endif
                                 <button type="submit"
-                                    class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors">
-                                    Approve Item
+                                    class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors whitespace-nowrap">
+                                    {{ $completion ? 'Approve' : 'Force Approve' }}
                                 </button>
                             </form>
                         @endif
@@ -146,7 +157,7 @@
 
             function openRejectModal(completionId) {
                 const form = document.getElementById('rejectForm');
-                form.action = `{{ url('admin/sop/reviews/' . $run->id . '/reject') }}/${completionId}`;
+                form.action = "{{ route('admin.sop.reviews.reject', [$run, 'REPLACE_ID']) }}".replace('REPLACE_ID', completionId);
                 document.getElementById('rejectModal').classList.remove('hidden');
                 document.getElementById('rejectModal').classList.add('flex');
             }

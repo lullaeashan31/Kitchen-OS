@@ -58,14 +58,17 @@ class ScheduleController extends Controller
             'requirements.*.required_count' => 'required|integer|min:0|max:50',
         ]);
         ScheduleRequirement::query()->delete();
-        foreach ($request->requirements as $r) {
-            if (($r['required_count'] ?? 0) > 0) {
-                ScheduleRequirement::create([
-                    'day_of_week' => (int) $r['day_of_week'],
-                    'role_id' => (int) $r['role_id'],
-                    'required_count' => (int) $r['required_count'],
-                ]);
-            }
+        $grouped = collect($request->requirements)
+            ->filter(fn($r) => ($r['required_count'] ?? 0) > 0)
+            ->groupBy(fn($r) => $r['day_of_week'] . '_' . $r['role_id']);
+
+        foreach ($grouped as $group) {
+            $r = $group->first();
+            ScheduleRequirement::create([
+                'day_of_week' => (int) $r['day_of_week'],
+                'role_id' => (int) $r['role_id'],
+                'required_count' => (int) $r['required_count'],
+            ]);
         }
         return redirect()->route('admin.schedule.index')->with('success', 'Weekly requirements saved.');
     }

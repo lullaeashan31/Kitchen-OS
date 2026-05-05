@@ -1,6 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+
+// EMERGENCY TOOLS (Remove after use)
+Route::get('/emergency-migrate', function() {
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        return "Migration successful: <pre>" . Artisan::output() . "</pre>";
+    } catch (\Exception $e) {
+        return "Migration failed: " . $e->getMessage();
+    }
+});
+
+Route::get('/emergency-db-fix', function() {
+    try {
+        DB::statement("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS prep_time_minutes INT DEFAULT NULL AFTER yield_batches");
+        DB::statement("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS yield_weight_grams DECIMAL(10,2) DEFAULT NULL AFTER yield_portions");
+        return "DB fix successful. Columns added if they were missing.";
+    } catch (\Exception $e) {
+        return "DB fix failed: " . $e->getMessage();
+    }
+});
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\IngredientController;
@@ -29,6 +52,7 @@ use App\Http\Controllers\VendorController;
  | be assigned to the "web" middleware group. Make something great!
  |
  */
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -148,6 +172,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
         Route::get('recipes/{recipe}/print', [RecipeController::class , 'print'])->name('recipes.print');
         Route::get('recipes/export/{type}', [RecipeController::class , 'export'])->name('recipes.export');
         Route::post('categories/store-quick', [\App\Http\Controllers\CategoryController::class , 'storeQuick'])->name('categories.storeQuick');
+        Route::post('recipes/backup-all', [RecipeController::class , 'backupAll'])->name('recipes.backup_all');
         Route::resource('recipes', RecipeController::class);
         Route::delete('categories/bulk-destroy', [\App\Http\Controllers\CategoryController::class , 'bulkDestroy'])->name('categories.bulk_destroy');
         Route::resource('vendors', \App\Http\Controllers\VendorController::class);
@@ -162,6 +187,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
         Route::resource('purchases', \App\Http\Controllers\PurchaseController::class)->only(['index', 'create', 'store']);
         Route::get('purchases/download/90days', [\App\Http\Controllers\PurchaseController::class , 'downloadInvoices90Days'])->name('purchases.download.90days');
         Route::get('purchases/{purchase}/invoice', [\App\Http\Controllers\PurchaseController::class , 'viewInvoice'])->name('purchases.view.invoice');
+        Route::get('purchases/{purchase}/goods/{index}', [\App\Http\Controllers\PurchaseController::class , 'viewGoodsPhoto'])->name('purchases.view.goods');
         Route::get('purchases/{purchase}/download-invoice', [\App\Http\Controllers\PurchaseController::class , 'downloadInvoice'])->name('purchases.download.invoice');
         Route::post('vendors', [VendorController::class , 'store'])->name('vendors.store');
         // Admin only actions
@@ -181,6 +207,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
         Route::delete('admin/ingredients/{ingredient}/reject', [PendingIngredientController::class , 'destroy'])->name('admin.ingredients.reject');
 
         Route::get('ingredients/search/ajax', [IngredientController::class , 'search'])->name('ingredients.search');
+        Route::get('ingredients/{ingredient}/fifo-cost', [IngredientController::class, 'getFIFOCost'])->name('ingredients.fifo_cost');
 
         // Production Days
         Route::resource('production', ProductionDayController::class);
@@ -274,6 +301,9 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
             Route::post('sop/reviews/{run}/approve', [\App\Http\Controllers\Admin\SopReviewController::class , 'approveRun'])->name('sop.reviews.approve_run');
             Route::post('sop/reviews/{run}/approve/{completion}', [\App\Http\Controllers\Admin\SopReviewController::class , 'approveItem'])->name('sop.reviews.approve_item');
             Route::post('sop/reviews/{run}/reject/{completion}', [\App\Http\Controllers\Admin\SopReviewController::class , 'rejectItem'])->name('sop.reviews.reject');
+
+            Route::get('reports/depletion', [\App\Http\Controllers\Admin\InventoryReportController::class, 'depletion'])->name('reports.depletion');
+            Route::resource('purchase-units', \App\Http\Controllers\Admin\PurchaseUnitController::class);
 
             Route::resource('sop', \App\Http\Controllers\Admin\SopController::class);
             Route::post('sop/{checklist}/archive', [\App\Http\Controllers\Admin\SopController::class , 'archive'])->name('sop.archive');

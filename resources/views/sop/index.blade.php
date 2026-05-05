@@ -12,15 +12,28 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($checklists as $checklist)
             @php
-                $isCompleted = $checklist->todayRun && $checklist->todayRun->status === 'approved';
+                $run = $checklist->todayRun;
+                $hasRejections = $run && $run->completions()->where('status', 'rejected')->exists();
+                $isApproved = $run && $run->status === 'approved';
+                $isSubmitted = $run && $run->completed_at && $run->status !== 'approved' && !$hasRejections;
+                $isDone = $isApproved || $isSubmitted;
             @endphp
             <div
-                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden {{ $isCompleted ? 'opacity-75' : '' }}">
+                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden {{ $isApproved || $isSubmitted ? 'opacity-75' : '' }}">
                 <div class="p-5">
                     <div class="flex justify-between items-start mb-3">
                         <span
-                            class="px-2 py-0.5 rounded-full text-xs font-bold {{ $isCompleted ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700' }}">
-                            {{ $isCompleted ? 'Completed' : 'Today\'s Task' }}
+                            class="px-2 py-0.5 rounded-full text-xs font-bold 
+                            {{ $isApproved ? 'bg-green-100 text-green-700' : ($isSubmitted ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700') }}">
+                            @if($isApproved)
+                                Completed
+                            @elseif($hasRejections)
+                                <span class="text-red-600">Needs Attention</span>
+                            @elseif($isSubmitted)
+                                Submitted
+                            @else
+                                Today's Task
+                            @endif
                         </span>
                         @if($checklist->assignments->isNotEmpty())
                             <span class="text-xs text-gray-500 flex items-center gap-1">
@@ -37,10 +50,15 @@
                         <span class="text-xs font-medium text-gray-500">
                             {{ $checklist->items_count }} Steps to complete
                         </span>
-                        @if($isCompleted)
+                        @if($isApproved)
                             <div class="text-green-600 flex items-center gap-1 text-sm font-bold">
                                 <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                                 Done
+                            </div>
+                        @elseif($isSubmitted)
+                            <div class="text-amber-600 flex items-center gap-1 text-sm font-bold">
+                                <i data-lucide="clock" class="w-4 h-4"></i>
+                                Review Pending
                             </div>
                         @else
                             <a href="{{ route('sop.execute', $checklist) }}"

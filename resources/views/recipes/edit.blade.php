@@ -1,27 +1,24 @@
 @extends('layouts.app')
 
 @section('header')
-<div class="flex items-center gap-4 animate-fade-in-down">
-    <a href="{{ route('recipes.show', $recipe) }}"
-       class="p-2.5 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-blue-600 hover:border-blue-200 hover:shadow-xl transition-all duration-300">
-        <i data-lucide="arrow-left" class="w-5 h-5 md:w-6 md:h-6"></i>
+<div class="flex items-center gap-4">
+    <a href="{{ route('recipes.show', $recipe) }}" class="btn btn-secondary p-3">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i>
     </a>
     <div>
-        <h1 class="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Edit Recipe</h1>
-        <p class="text-xs md:text-sm text-gray-500 font-medium mt-1 uppercase tracking-wider">Refining <span class="text-blue-600 font-black">{{ $recipe->name }}</span></p>
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Edit Recipe</h1>
+        <p class="text-xs md:text-sm text-muted font-medium mt-1 uppercase tracking-widest">Refining <span class="text-accent">{{ $recipe->name }}</span></p>
     </div>
 </div>
 @endsection
 
 @section('actions')
-<div class="flex items-center gap-3 animate-fade-in-down">
-    <button type="button" onclick="window.history.back()"
-            class="px-6 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 text-sm">
+<div class="flex items-center gap-3">
+    <button type="button" onclick="window.history.back()" class="btn btn-secondary">
         Cancel
     </button>
-    <button type="submit" form="recipeForm"
-            class="px-8 py-3 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-blue-700 flex items-center gap-2 text-sm">
-        <i data-lucide="save" class="w-5 h-5"></i> Update Recipe
+    <button type="submit" form="recipeForm" class="btn btn-primary">
+        <i data-lucide="save"></i> Update Recipe
     </button>
 </div>
 @endsection
@@ -34,57 +31,52 @@
         @method('PUT')
 
         {{-- Left Column: Primary Details & Configuration --}}
-        <div class="w-full lg:w-1/3 flex flex-col gap-8 animate-fade-in-left">
-            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div class="p-8 border-b bg-gray-50/30">
-                    <h2 class="text-xl font-black text-gray-900 flex items-center gap-3">
-                        <div class="p-2 bg-blue-600 rounded-xl text-white shadow-lg">
-                            <i data-lucide="info" class="w-5 h-5"></i>
-                        </div>
+        <div class="w-full lg:w-1/3 flex flex-col gap-8">
+            <div class="card p-0 overflow-hidden">
+                <div class="p-8 border-b border-subtle bg-white/5">
+                    <h2 class="flex items-center gap-3">
+                        <i data-lucide="info" class="text-accent"></i>
                         Recipe Details
                     </h2>
                 </div>
                 <div class="p-8 space-y-8">
                     {{-- Recipe Type Selection --}}
-                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-2">
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-3">Recipe Type</label>
+                    <div class="bg-primary/20 p-4 rounded-2xl border border-subtle mb-2">
+                        <label class="block text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Recipe Type</label>
                         <div class="grid grid-cols-2 gap-3">
-                            <label class="relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-white hover:border-blue-200" id="mainTypeLabel">
-                                <input type="radio" name="recipe_type_select" value="main" class="absolute top-2 right-2" onchange="updateRecipeType('main')" {{ !$recipe->is_sub_recipe ? 'checked' : '' }}>
-                                <div class="p-2 bg-blue-50 rounded-lg text-blue-600 group-hover:scale-110 transition-transform">
+                            <label class="relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group border-subtle bg-white/5 hover:border-accent/50" id="mainTypeLabel">
+                                <input type="radio" name="recipe_type_select" value="main" class="absolute top-2 right-2 accent-brass" onchange="updateRecipeType('main')" {{ !$recipe->is_sub_recipe ? 'checked' : '' }}>
+                                <div class="p-2 bg-primary/40 rounded-lg text-accent group-hover:scale-110 transition-transform">
                                     <i data-lucide="utensils" class="w-5 h-5"></i>
                                 </div>
-                                <span class="text-sm font-bold text-gray-700">Main Recipe</span>
+                                <span class="text-[10px] font-bold text-muted uppercase tracking-widest">Main Recipe</span>
                             </label>
-                            <label class="relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-white hover:border-indigo-200" id="subTypeLabel">
-                                <input type="radio" name="recipe_type_select" value="sub" class="absolute top-2 right-2" onchange="updateRecipeType('sub')" {{ $recipe->is_sub_recipe ? 'checked' : '' }}>
-                                <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 group-hover:scale-110 transition-transform">
+                            <label class="relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group border-subtle bg-white/5 hover:border-accent/50" id="subTypeLabel">
+                                <input type="radio" name="recipe_type_select" value="sub" class="absolute top-2 right-2 accent-brass" onchange="updateRecipeType('sub')" {{ $recipe->is_sub_recipe ? 'checked' : '' }}>
+                                <div class="p-2 bg-primary/40 rounded-lg text-accent group-hover:scale-110 transition-transform">
                                     <i data-lucide="component" class="w-5 h-5"></i>
                                 </div>
-                                <span class="text-sm font-bold text-gray-700">Sub-Recipe</span>
+                                <span class="text-[10px] font-bold text-muted uppercase tracking-widest">Sub-Recipe</span>
                             </label>
                         </div>
                     </div>
 
                     {{-- Recipe Name --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Recipe Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
-                               required value="{{ old('name', $recipe->name) }}">
-                        @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        <label class="form-label">Recipe Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" class="form-control" required value="{{ old('name', $recipe->name) }}">
+                        @error('name') <p class="text-red-500 text-[10px] mt-1 font-bold uppercase">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Category --}}
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="block text-sm font-semibold text-gray-700">Category <span class="text-red-500">*</span></label>
-                            <button type="button" onclick="openCategoryModal()" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded transition-all">
+                            <label class="form-label">Category <span class="text-red-500">*</span></label>
+                            <button type="button" onclick="openCategoryModal()" class="text-[10px] font-bold text-accent hover:text-accent-hover uppercase tracking-widest flex items-center gap-1 bg-white/5 px-2 py-1 rounded transition-all">
                                 <i data-lucide="plus" class="w-3 h-3"></i> Quick Add
                             </button>
                         </div>
-                        <select name="category_id" id="category-select" required
-                                class="w-full px-4 py-2 rounded-lg border {{ $errors->has('category_id') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        <select name="category_id" id="category-select" required class="form-control">
                             <option value="" disabled>Select Category</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" {{ old('category_id', $recipe->category_id) == $category->id ? 'selected' : '' }}>
@@ -92,69 +84,57 @@
                                 </option>
                             @endforeach
                         </select>
-                        @error('category_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('category_id') <p class="text-red-500 text-[10px] mt-1 font-bold uppercase">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Smart Scale Section --}}
-                    <div class="bg-white rounded-xl p-5 border border-gray-100 mb-4">
-                        <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3">
-                            <i data-lucide="calculator" class="w-4 h-4 text-blue-500"></i>
+                    <div class="bg-white/5 rounded-xl p-5 border border-subtle mb-4">
+                        <h3 class="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-2 mb-4">
+                            <i data-lucide="calculator" class="w-4 h-4 text-accent"></i>
                             Smart Scale
                         </h3>
                         <div class="flex gap-2">
                             <button type="button" onclick="setMultiplier(0.5)"
-                                class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
+                                class="scaling-btn flex-1 px-3 py-3 rounded-lg border border-subtle bg-white/5 text-muted font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all"
                                 data-multiplier="0.5">0.5x</button>
                             <button type="button" onclick="setMultiplier(1)"
-                                class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-blue-500 bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-all active"
+                                class="scaling-btn flex-1 px-3 py-3 rounded-lg border border-accent bg-accent text-primary font-bold text-[10px] uppercase tracking-widest hover:bg-accent-hover transition-all active"
                                 data-multiplier="1">1x</button>
                             <button type="button" onclick="setMultiplier(2)"
-                                class="scaling-btn flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-all"
+                                class="scaling-btn flex-1 px-3 py-3 rounded-lg border border-subtle bg-white/5 text-muted font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all"
                                 data-multiplier="2">2x</button>
                         </div>
                     </div>
 
                     {{-- Yields Section --}}
-                    <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 border-dashed">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Yield Configuration</label>
-
+                    <div class="bg-primary/20 rounded-2xl p-5 border border-subtle border-dashed">
+                        <label class="block text-[10px] font-bold text-muted uppercase tracking-widest mb-4">Yield Configuration</label>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <div class="flex justify-between items-center mb-1.5">
-                                    <label class="block text-xs text-gray-500 font-medium">Portions <span class="text-red-500">*</span></label>
-                                    <button type="button" onclick="resetScaling()"
-                                        class="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider">Reset</button>
+                                    <label class="text-[10px] text-muted font-bold uppercase tracking-widest">Portions <span class="text-red-500">*</span></label>
+                                    <button type="button" onclick="resetScaling()" class="text-[10px] text-accent hover:text-accent-hover font-bold uppercase tracking-widest">Reset</button>
                                 </div>
                                 <input type="number" name="yield_portions" id="yield_portions" min="1" step="1"
                                     value="{{ old('yield_portions', $recipe->yield_portions ?? 1) }}" required
-                                    class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-center font-bold text-gray-800"
-                                    oninput="updateScaling()">
-                                @error('yield_portions') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 font-medium mb-1.5">Batches</label>
-                                <input type="number" name="yield_batches" min="1" step="1"
-                                    value="{{ old('yield_batches', $recipe->yield_batches ?? 1) }}"
-                                    class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:border-blue-500 outline-none text-center font-bold text-gray-800">
-                                @error('yield_batches') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                    class="form-control text-center font-bold" oninput="updateScaling()">
+                                @error('yield_portions') <p class="text-red-500 text-[10px] mt-1 font-bold uppercase">{{ $message }}</p> @enderror
+                                <input type="hidden" name="yield_batches" value="{{ old('yield_batches', $recipe->yield_batches ?? 1) }}">
                             </div>
                         </div>
                     </div>
 
                     {{-- Sub-Recipe Configuration --}}
                     <div id="subRecipeConfigSection" class="{{ $recipe->is_sub_recipe ? '' : 'hidden' }}">
-                        <div class="bg-indigo-50/50 rounded-2xl p-5 border border-indigo-100">
-                            <h3 class="text-sm font-bold text-indigo-900 mb-1">Sub-Recipe Configuration</h3>
-                            <p class="text-xs text-indigo-600/80 mb-4">Link this recipe to an ingredient for use in other recipes.</p>
-
+                        <div class="bg-white/5 rounded-2xl p-5 border border-subtle">
+                            <h3 class="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">Sub-Recipe Configuration</h3>
+                            <p class="text-[10px] text-muted mb-4">Link this recipe to an ingredient for use in other recipes.</p>
                             <input type="hidden" name="is_sub_recipe" id="is_sub_recipe" value="{{ $recipe->is_sub_recipe ? 1 : 0 }}">
-
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Produced Ingredient</label>
-                                    <select name="produces_ingredient_id" id="produces_ingredient_id"
-                                        class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
-                                        <option value="">-- Auto-create ingredient with recipe name --</option>
+                                    <label class="form-label text-[10px] uppercase">Produced Ingredient</label>
+                                    <select name="produces_ingredient_id" id="produces_ingredient_id" class="form-control">
+                                        <option value="">-- Auto-create with recipe name --</option>
                                         @foreach($ingredients as $ing)
                                             <option value="{{ $ing->id }}" {{ old('produces_ingredient_id', $recipe->produces_ingredient_id) == $ing->id ? 'selected' : '' }}>
                                                 {{ $ing->name }} ({{ $ing->measurement_unit }})
@@ -162,18 +142,16 @@
                                         @endforeach
                                     </select>
                                 </div>
-
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output Qty</label>
+                                        <label class="form-label text-[10px] uppercase">Output Qty</label>
                                         <input type="number" name="output_quantity" step="0.001" min="0"
                                             value="{{ old('output_quantity', $recipe->output_quantity ?? 1) }}"
-                                            class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white font-bold">
+                                            class="form-control font-bold">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-indigo-800 uppercase mb-1.5">Output Unit</label>
-                                        <select name="output_unit"
-                                            class="w-full px-3 py-2.5 rounded-lg border border-indigo-200 focus:border-indigo-500 outline-none bg-white text-sm">
+                                        <label class="form-label text-[10px] uppercase">Output Unit</label>
+                                        <select name="output_unit" class="form-control">
                                             @foreach($units as $unit)
                                                 <option value="{{ $unit->value }}" {{ old('output_unit', $recipe->output_unit ?? 'pcs') == $unit->value ? 'selected' : '' }}>
                                                     {{ $unit->label() }}
@@ -188,35 +166,30 @@
 
                     {{-- Method / Instructions --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">General Method / Overview</label>
-                        <textarea name="method"
-                                  class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none min-h-[150px]"
-                                  required>{{ old('method', $recipe->method) }}</textarea>
+                        <label class="form-label">General Method / Overview</label>
+                        <textarea name="method" class="form-control min-h-[150px]" required>{{ old('method', $recipe->method) }}</textarea>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Right Column: Sets & Sub-Recipes --}}
-        <div class="w-full lg:w-2/3 space-y-8 animate-fade-in-right">
+        <div class="w-full lg:w-2/3 space-y-8">
             {{-- Sub-Recipes Used Section --}}
-            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+            <div class="card p-8">
                 <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-2xl font-black text-gray-900 flex items-center gap-3">
-                        <span class="p-2 bg-indigo-600 rounded-xl shadow-lg">
-                            <i data-lucide="component" class="w-6 h-6 text-white"></i>
-                        </span>
+                    <h2 class="flex items-center gap-3">
+                        <i data-lucide="component" class="text-accent"></i>
                         Sub-Recipes Used
                     </h2>
-                    <button type="button" id="addSubRecipeBtnTop" onclick="openSubRecipeModal()"
-                            class="px-6 py-3 bg-indigo-50 text-indigo-700 font-black rounded-2xl hover:bg-indigo-600 hover:text-white hover:shadow-xl transition-all flex items-center gap-2">
-                        <i data-lucide="plus" class="w-5 h-5"></i> Add Sub‑Recipe
+                    <button type="button" id="addSubRecipeBtnTop" onclick="openSubRecipeModal()" class="btn btn-secondary py-2 px-4">
+                        <i data-lucide="plus"></i> Add Sub‑Recipe
                     </button>
                 </div>
                 <div id="sub-recipes-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div id="no-sub-recipes-msg" class="col-span-full py-16 text-center bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400">
+                    <div id="no-sub-recipes-msg" class="col-span-full py-16 text-center bg-white/5 rounded-3xl border-2 border-dashed border-subtle text-muted">
                         <i data-lucide="package-search" class="w-12 h-12 mx-auto mb-4 opacity-20"></i>
-                        <p class="font-black text-gray-500 uppercase tracking-widest text-xs">No sub‑recipes linked</p>
+                        <p class="font-bold uppercase tracking-widest text-[10px]">No sub‑recipes linked</p>
                     </div>
                 </div>
             </div>
@@ -230,41 +203,38 @@
                     }
                 @endphp
                 @foreach($stages->where('name', '!=', 'Sub-Recipes') as $index => $stage)
-                    <div class="stage-block border border-gray-200 rounded-3xl p-8 bg-white relative group shadow-sm hover:shadow-md transition-all" data-stage-index="{{ $index }}">
+                    <div class="card p-8 relative group" data-stage-index="{{ $index }}">
                         <input type="hidden" name="stages[{{ $index }}][id]" value="{{ data_get($stage, 'id') }}">
-                        <button type="button" onclick="removeStage(this)" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all" title="Remove Set">
+                        <button type="button" onclick="removeStage(this)" class="absolute top-6 right-6 text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all" title="Remove Set">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Set Name</label>
-                                <input type="text" name="stages[{{ $index }}][name]" value="{{ data_get($stage, 'name') }}" required
-                                       class="w-full px-4 py-2 rounded-xl border-2 {{ $errors->has('stages.'.$index.'.name') ? 'border-red-500' : 'border-gray-100' }} focus:border-blue-500 outline-none font-bold">
-                                @error('stages.' . $index . '.name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                <label class="form-label">Set Name</label>
+                                <input type="text" name="stages[{{ $index }}][name]" value="{{ data_get($stage, 'name') }}" required class="form-control font-bold">
+                                @error('stages.' . $index . '.name') <p class="text-red-500 text-[10px] mt-1 font-bold uppercase">{{ $message }}</p> @enderror
                             </div>
                             <div class="col-span-2">
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Instructions for this Set</label>
-                                <textarea name="stages[{{ $index }}][method]" rows="3"
-                                          class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none resize-y"
-                                          placeholder="Describe the steps for this stage...">{{ data_get($stage, 'method') }}</textarea>
+                                <label class="form-label">Instructions for this Set</label>
+                                <textarea name="stages[{{ $index }}][method]" rows="3" class="form-control resize-y" placeholder="Describe the steps for this stage...">{{ data_get($stage, 'method') }}</textarea>
                             </div>
                         </div>
 
                         {{-- Ingredients Table --}}
-                        <div class="bg-gray-50/50 rounded-2xl border border-gray-100 overflow-x-auto">
-                            <table class="w-full min-w-[600px]">
-                                <thead class="bg-gray-100/50 border-b border-gray-200">
+                        <div class="overflow-x-auto rounded-xl border border-subtle">
+                            <table class="table min-w-[600px]">
+                                <thead>
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Item</th>
-                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Quantity</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Unit</th>
+                                        <th class="px-4 py-3 text-left">Item</th>
+                                        <th class="px-4 py-3 text-center w-32">Quantity</th>
+                                        <th class="px-4 py-3 text-left w-32">Unit</th>
                                         @if(auth()->user()->isAdmin())
-                                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Cost</th>
+                                            <th class="px-4 py-3 text-right">Cost</th>
                                         @endif
-                                        <th class="px-4 py-3 text-center"></th>
+                                        <th class="px-4 py-3 text-center w-16"></th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 stage-ingredients-body">
+                                <tbody class="divide-y divide-subtle stage-ingredients-body">
                                     @php
                                         $stageIngredients = [];
                                         if (is_object($stage) && isset($stage->ingredients)) {
@@ -283,9 +253,9 @@
                                             $rCost = $rIngredient->cost ?? $rIngredient['cost'] ?? 0;
                                             $rMeasUnit = $rIngredient->ingredient->measurement_unit ?? $rIngredient['ingredient']['measurement_unit'] ?? 'pcs';
                                         @endphp
-                                        <tr class="group hover:bg-blue-50/30 transition-colors ingredient-row">
+                                        <tr class="group hover:bg-white/5 transition-colors ingredient-row">
                                             <td class="px-4 py-4">
-                                                <select name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][ingredient_id]" class="ingredient-select w-full rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none py-2 px-3 font-medium bg-white" required>
+                                                <select name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][ingredient_id]" class="ingredient-select form-control" required>
                                                     <option value="{{ $rIngId }}" selected data-price="{{ $rPrice }}" data-unit="{{ $rMeasUnit }}">
                                                         {{ $rName }} @if($rMeasUnit) ({{ $rMeasUnit }}) @endif
                                                     </option>
@@ -293,33 +263,32 @@
                                             </td>
                                             <td class="px-4 py-4">
                                                 <input type="number" step="any" name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][quantity]"
-                                                       value="{{ $rQty }}" required data-base-qty="{{ $rQty }}"
-                                                       class="quantity-input w-full h-[44px] rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none text-center font-bold text-gray-900 bg-white" />
+                                                       value="{{ $rQty }}" required data-base-qty="{{ $rQty }}" class="quantity-input form-control text-center font-bold" />
                                             </td>
                                             <td class="px-4 py-4">
                                                 <input type="hidden" name="stages[{{ $index }}][ingredients][{{ $ingIndex }}][unit]" value="{{ $rUnit }}" class="unit-value-input" />
-                                                <input type="text" readonly value="{{ $rUnit }}" class="unit-display w-full h-[44px] rounded-xl border-2 border-gray-100 bg-gray-50 font-bold text-sm text-gray-500 cursor-not-allowed text-center" />
+                                                <input type="text" readonly value="{{ $rUnit }}" class="unit-display form-control bg-primary/20 text-muted cursor-not-allowed text-center font-bold" />
                                             </td>
                                             @if(auth()->user()->isAdmin())
-                                                <td class="px-4 py-4 text-right font-black text-gray-900 cost-display">{{ number_format((float) $rCost, 2) }}</td>
+                                                <td class="px-4 py-4 text-right font-bold text-accent cost-display">{{ number_format((float) $rCost, 2) }}</td>
                                             @endif
                                             <td class="px-4 py-4 text-center">
-                                                <button type="button" onclick="removeRow(this)" class="text-gray-300 hover:text-red-500 p-2 rounded-xl hover:bg-red-50 transition-all">
-                                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                                <button type="button" onclick="removeRow(this)" class="text-muted hover:text-red-500 transition-colors">
+                                                    <i data-lucide="x"></i>
                                                 </button>
                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
-                                <tfoot class="bg-gray-100/30 border-t border-gray-100">
+                                <tfoot class="bg-white/5 border-t border-subtle">
                                     <tr>
                                         <td colspan="5" class="px-4 py-4">
                                             <div class="flex gap-4">
-                                                <button type="button" onclick="addIngredientRow(this)" class="flex-1 py-3 bg-white border-2 border-gray-100 rounded-xl text-blue-600 font-bold hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
-                                                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Add Ingredient
+                                                <button type="button" onclick="addIngredientRow(this)" class="btn btn-secondary flex-1 py-3 text-[10px] uppercase">
+                                                    <i data-lucide="plus-circle"></i> Add Ingredient
                                                 </button>
-                                                <button type="button" onclick="openIngredientModal('')" class="px-6 py-3 bg-white border-2 border-gray-100 rounded-xl text-orange-600 font-bold hover:border-orange-500 hover:bg-orange-50 transition-all flex items-center justify-center gap-2">
-                                                    <i data-lucide="plus-square" class="w-5 h-5"></i> New Item
+                                                <button type="button" onclick="openIngredientModal('')" class="btn btn-secondary flex-1 py-3 text-[10px] uppercase text-accent border-accent/20">
+                                                    <i data-lucide="plus-square"></i> New Item
                                                 </button>
                                             </div>
                                         </td>
@@ -331,38 +300,33 @@
                 @endforeach
             </div>
 
-            <button type="button" id="addStageBtn" onclick="addNewSet()"
-                class="w-full py-6 border-4 border-dashed border-gray-100 rounded-3xl text-gray-400 font-black hover:border-blue-200 hover:text-blue-500 hover:bg-blue-50/30 transition-all flex items-center justify-center gap-3 group">
-                <div class="p-2 bg-gray-100 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-all">
-                    <i data-lucide="plus" class="w-6 h-6"></i>
-                </div>
-                <span class="text-lg uppercase tracking-widest">Add Another Set</span>
+            <button type="button" id="addStageBtn" onclick="addNewSet()" class="w-full py-8 border-2 border-dashed border-subtle rounded-3xl text-muted font-bold hover:border-accent/50 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group">
+                <i data-lucide="plus" class="group-hover:text-accent transition-colors"></i>
+                <span class="text-[10px] uppercase tracking-widest">Add Another Set</span>
             </button>
         </div>
 
         {{-- Sticky Summary Bar --}}
-        <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 z-[60] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-4 md:p-6 animate-fade-in-up">
+        <div class="fixed bottom-0 left-0 right-0 bg-primary/95 backdrop-blur-xl border-t border-subtle z-[60] p-4 md:p-6 shadow-2xl">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex flex-wrap items-center gap-8">
                     <div class="flex flex-col">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total Recipe Cost</span>
+                        <span class="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">Total Recipe Cost</span>
                         <div class="flex items-baseline gap-1">
-                            <span class="text-4xl font-black text-gray-900">₹<span id="totalCostDisplay">0.00</span></span>
-                            <span class="text-sm font-bold text-gray-400">/ Total</span>
+                            <span class="text-4xl font-black text-primary">₹<span id="totalCostDisplay">0.00</span></span>
                         </div>
                     </div>
-                    <div class="flex flex-col border-l border-gray-100 pl-8 md:pl-12">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Cost Per Portion</span>
+                    <div class="flex flex-col border-l border-subtle pl-8">
+                        <span class="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">Cost Per Portion</span>
                         <div class="flex items-baseline gap-1">
-                            <span class="text-3xl font-black text-blue-600">₹<span id="costPerPortionDisplay">0.00</span></span>
-                            <span class="text-xs font-bold text-gray-400">/ Portion</span>
+                            <span class="text-3xl font-black text-accent">₹<span id="costPerPortionDisplay">0.00</span></span>
                         </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-4 w-full md:w-auto">
-                    <button type="button" onclick="window.history.back()" class="flex-1 md:flex-none px-10 py-5 bg-white border-2 border-gray-200 text-gray-600 font-black rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all">Cancel</button>
-                    <button type="submit" class="flex-1 md:flex-none px-14 py-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black rounded-2xl shadow-[0_15px_30px_rgba(37,99,235,0.3)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.4)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
-                        <i data-lucide="check-circle" class="w-6 h-6"></i> Update Recipe
+                    <button type="button" onclick="window.history.back()" class="btn btn-secondary flex-1 px-10">Cancel</button>
+                    <button type="submit" class="btn btn-primary flex-1 px-14">
+                        <i data-lucide="check-circle"></i> Update Recipe
                     </button>
                 </div>
             </div>
@@ -372,47 +336,44 @@
 
 {{-- Templates --}}
 <template id="stageTemplate">
-    <div class="stage-block border border-gray-200 rounded-3xl p-8 bg-white relative group shadow-sm hover:shadow-md transition-all">
+    <div class="card p-8 relative group">
         <input type="hidden" name="stages[STAGE_INDEX][id]" value="">
-        <button type="button" onclick="removeStage(this)" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all" title="Remove Set">
-            <i data-lucide="trash-2" class="w-5 h-5"></i>
+        <button type="button" onclick="removeStage(this)" class="absolute top-6 right-6 text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+            <i data-lucide="trash-2"></i>
         </button>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Set Name</label>
-                <input type="text" name="stages[STAGE_INDEX][name]" value="" required
-                       class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none font-bold">
+                <label class="form-label">Set Name</label>
+                <input type="text" name="stages[STAGE_INDEX][name]" value="" required class="form-control font-bold">
             </div>
             <div class="col-span-2">
-                <label class="block text-sm font-bold text-gray-700 mb-2">Instructions for this Set</label>
-                <textarea name="stages[STAGE_INDEX][method]" rows="3"
-                          class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none resize-y"
-                          placeholder="Describe the steps for this stage..."></textarea>
+                <label class="form-label">Instructions for this Set</label>
+                <textarea name="stages[STAGE_INDEX][method]" rows="3" class="form-control resize-y" placeholder="Describe the steps..."></textarea>
             </div>
         </div>
-        <div class="bg-gray-50/50 rounded-2xl border border-gray-100 overflow-x-auto">
-            <table class="w-full min-w-[600px]">
-                <thead class="bg-gray-100/50 border-b border-gray-200">
+        <div class="overflow-x-auto rounded-xl border border-subtle">
+            <table class="table min-w-[600px]">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Item</th>
-                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Quantity</th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Unit</th>
+                        <th class="px-4 py-3 text-left">Item</th>
+                        <th class="px-4 py-3 text-center w-32">Quantity</th>
+                        <th class="px-4 py-3 text-left w-32">Unit</th>
                         @if(auth()->user()->isAdmin())
-                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Cost</th>
+                            <th class="px-4 py-3 text-right">Cost</th>
                         @endif
-                        <th class="px-4 py-3 text-center"></th>
+                        <th class="px-4 py-3 text-center w-16"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 stage-ingredients-body"></tbody>
-                <tfoot class="bg-gray-100/30 border-t border-gray-100">
+                <tbody class="divide-y divide-subtle stage-ingredients-body"></tbody>
+                <tfoot class="bg-white/5 border-t border-subtle">
                     <tr>
                         <td colspan="5" class="px-4 py-4">
                             <div class="flex gap-4">
-                                <button type="button" onclick="addIngredientRow(this)" class="flex-1 py-3 bg-white border-2 border-gray-100 rounded-xl text-blue-600 font-bold hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
-                                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Add Ingredient
+                                <button type="button" onclick="addIngredientRow(this)" class="btn btn-secondary flex-1 py-3 text-[10px] uppercase">
+                                    <i data-lucide="plus-circle"></i> Add Ingredient
                                 </button>
-                                <button type="button" onclick="openIngredientModal('')" class="px-6 py-3 bg-white border-2 border-gray-100 rounded-xl text-orange-600 font-bold hover:border-orange-500 hover:bg-orange-50 transition-all flex items-center justify-center gap-2">
-                                    <i data-lucide="plus-square" class="w-5 h-5"></i> New Item
+                                <button type="button" onclick="openIngredientModal('')" class="btn btn-secondary flex-1 py-3 text-[10px] uppercase text-accent border-accent/20">
+                                    <i data-lucide="plus-square"></i> New Item
                                 </button>
                             </div>
                         </td>
@@ -424,35 +385,63 @@
 </template>
 
 <template id="ingredientRowTemplate">
-    <tr class="group hover:bg-blue-50/30 transition-colors ingredient-row">
+    <tr class="group hover:bg-white/5 transition-colors ingredient-row">
         <td class="px-4 py-4">
-            <select name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_id]" class="ingredient-select w-full rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none py-2 px-3 font-medium bg-white" required>
+            <select name="stages[STAGE_INDEX][ingredients][ROW_INDEX][ingredient_id]" class="ingredient-select form-control" required>
                 <option value="">Select Item...</option>
             </select>
         </td>
         <td class="px-4 py-4">
-            <input type="number" step="any" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][quantity]" required data-base-qty=""
-                   class="quantity-input w-full h-[44px] rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none text-center font-bold text-gray-900 bg-white" placeholder="0" />
+            <input type="number" step="any" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][quantity]" required data-base-qty="" class="quantity-input form-control text-center font-bold" placeholder="0" />
         </td>
         <td class="px-4 py-4">
             <input type="hidden" name="stages[STAGE_INDEX][ingredients][ROW_INDEX][unit]" value="" class="unit-value-input" />
-            <input type="text" readonly value="" class="unit-display w-full h-[44px] rounded-xl border-2 border-gray-100 bg-gray-50 font-bold text-sm text-gray-500 cursor-not-allowed text-center" placeholder="Unit" />
+            <input type="text" readonly value="" class="unit-display form-control bg-primary/20 text-muted cursor-not-allowed text-center font-bold" placeholder="Unit" />
         </td>
         @if(auth()->user()->isAdmin())
-            <td class="px-4 py-4 text-right font-black text-gray-900 cost-display">0.00</td>
+            <td class="px-4 py-4 text-right font-bold text-accent cost-display">0.00</td>
         @endif
         <td class="px-4 py-4 text-center">
-            <button type="button" onclick="removeRow(this)" class="text-gray-300 hover:text-red-500 p-2 rounded-xl hover:bg-red-50 transition-all">
-                <i data-lucide="x" class="w-4 h-4"></i>
+            <button type="button" onclick="removeRow(this)" class="text-muted hover:text-red-500 transition-colors">
+                <i data-lucide="x"></i>
             </button>
         </td>
     </tr>
 </template>
 
+{{-- Hidden options for dynamic population --}}
+<div id="ingredientOptions" style="display: none;">
+    @php
+        $producedIds = $recipe->stages->where('name', 'Sub-Recipes')->first() ? 
+                       $recipe->stages->where('name', 'Sub-Recipes')->first()->ingredients->pluck('ingredient_id')->toArray() : [];
+    @endphp
+    <optgroup label="Core Ingredients">
+        @foreach($ingredients as $ing)
+            <option value="{{ $ing->id }}" data-price="{{ $ing->latest_price ?? $ing->price ?? 0 }}" data-unit="{{ $ing->measurement_unit }}">
+                {{ $ing->name }} ({{ $ing->measurement_unit }})
+            </option>
+        @endforeach
+    </optgroup>
+    <optgroup label="Sub-Recipes">
+        @foreach($ingredients->whereIn('id', $producedIds) as $sub)
+            <option value="{{ $sub->id }}" data-price="{{ $sub->latest_price ?? $sub->price ?? 0 }}" data-unit="{{ $sub->measurement_unit }}">
+                {{ $sub->name }} ({{ $sub->measurement_unit }})
+            </option>
+        @endforeach
+    </optgroup>
+</div>
+
 {{-- Modals --}}
 @include('recipes.partials.modals')
 
 @push('scripts')
+<style>
+    .ts-dropdown { z-index: 99999 !important; background: var(--navy-primary) !important; border: 1px solid var(--color-border) !important; border-radius: 0.75rem !important; box-shadow: 0 20px 40px rgba(0,0,0,0.4) !important; }
+    .ts-dropdown .option.active { background-color: var(--brass) !important; color: white !important; }
+    .ts-dropdown .option { color: var(--ivory) !important; border-bottom: 1px solid rgba(242,237,230,0.05) !important; }
+    .ts-control { background: transparent !important; border: none !important; color: var(--ivory) !important; padding: 0 !important; }
+    body > .ts-dropdown { opacity: 1 !important; visibility: visible !important; display: block; }
+</style>
 <script>
     // Configuration & Data
     const UNIT_LABELS_MAP = {
@@ -471,7 +460,7 @@
                     'name' => $ing->ingredient->name ?? 'Unknown',
                     'qty' => (float)$ing->quantity,
                     'unit' => $ing->unit,
-                    'price' => (float)($ing->ingredient->latest_price ?? $ing->ingredient->price ?? 0),
+                    'cost' => (float)$ing->cost,
                 ];
             }
         }
@@ -481,6 +470,31 @@
 
     // Initialization
     document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Tom Select for searchable dropdowns
+        if (typeof TomSelect !== 'undefined') {
+            // Category Select
+            const catSelect = document.getElementById('category-select');
+            if (catSelect) {
+                new TomSelect(catSelect, {
+                    create: false,
+                    placeholder: "Select Category...",
+                    allowEmptyOption: true
+                });
+            }
+
+            // Sub-Recipe Selector in Modal
+            const subSelectorEl = document.getElementById('sub-recipe-selector');
+            if (subSelectorEl) {
+                window.subRecipeSelector = new TomSelect(subSelectorEl, {
+                    create: false,
+                    placeholder: "-- Search Sub-Recipe --",
+                    allowEmptyOption: true,
+                    maxOptions: null,
+                    dropdownParent: 'body'
+                });
+            }
+        }
+
         // Initialize existing rows
         document.querySelectorAll('.ingredient-row').forEach(row => initIngredientRow(row));
         
@@ -520,9 +534,11 @@
     function setMultiplier(val) {
         scaleMultiplier = val;
         document.querySelectorAll('.scaling-btn').forEach(btn => {
-            btn.classList.toggle('bg-blue-500', parseFloat(btn.dataset.multiplier) === val);
-            btn.classList.toggle('text-white', parseFloat(btn.dataset.multiplier) === val);
-            btn.classList.toggle('active', parseFloat(btn.dataset.multiplier) === val);
+            const isMatch = parseFloat(btn.dataset.multiplier) === val;
+            btn.classList.toggle('bg-accent', isMatch);
+            btn.classList.toggle('text-primary', isMatch);
+            btn.classList.toggle('border-accent', isMatch);
+            btn.classList.toggle('active', isMatch);
         });
         
         document.querySelectorAll('.ingredient-row').forEach(row => {
@@ -567,11 +583,15 @@
         const subLabel = document.getElementById('subTypeLabel');
         
         if (isSub) {
-            subLabel.className = 'relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-indigo-50 border-indigo-500 ring-4 ring-indigo-500/10';
-            mainLabel.className = 'relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-white border-gray-100 hover:border-blue-200';
+            subLabel.classList.add('border-accent', 'bg-white/5', 'ring-2', 'ring-accent/20');
+            subLabel.classList.remove('border-subtle');
+            mainLabel.classList.remove('border-accent', 'bg-white/5', 'ring-2', 'ring-accent/20');
+            mainLabel.classList.add('border-subtle');
         } else {
-            mainLabel.className = 'relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-blue-50 border-blue-500 ring-4 ring-blue-500/10';
-            subLabel.className = 'relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer group bg-white border-gray-100 hover:border-indigo-200';
+            mainLabel.classList.add('border-accent', 'bg-white/5', 'ring-2', 'ring-accent/20');
+            mainLabel.classList.remove('border-subtle');
+            subLabel.classList.remove('border-accent', 'bg-white/5', 'ring-2', 'ring-accent/20');
+            subLabel.classList.add('border-subtle');
         }
     }
 
@@ -625,6 +645,18 @@
         const select = row.querySelector('.ingredient-select');
         const qtyInput = row.querySelector('.quantity-input');
         
+        // Initialize Tom Select for searchability
+        if (select && typeof TomSelect !== 'undefined' && !select.tomselect) {
+            const ts = new TomSelect(select, {
+                create: false,
+                placeholder: "Select Ingredient...",
+                allowEmptyOption: true,
+                maxOptions: null,
+                dropdownParent: 'body'
+            });
+            select.tomselect = ts;
+        }
+
         if (select) {
             select.addEventListener('change', () => {
                 const opt = select.options[select.selectedIndex];
@@ -646,16 +678,42 @@
         calculateRowCost(row);
     }
 
-    function calculateRowCost(row) {
+    async function calculateRowCost(row) {
         const select = row.querySelector('.ingredient-select');
-        const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
+        const qtyInput = row.querySelector('.quantity-input');
         const costDisplay = row.querySelector('.cost-display');
         if (!costDisplay || !select) return;
 
-        const opt = select.options[select.selectedIndex];
-        const price = parseFloat(opt?.dataset?.price) || 0;
-        costDisplay.textContent = (price * qty).toFixed(2);
-        calculateTotal();
+        const ingredientId = select.value;
+        const qty = parseFloat(qtyInput.value) || 0;
+        
+        if (!ingredientId || qty <= 0) {
+            costDisplay.textContent = '0.00';
+            calculateTotal();
+            return;
+        }
+
+        try {
+            const unitInput = row.querySelector('.unit-value-input');
+            const unit = unitInput ? unitInput.value : '';
+            
+            const kitchenSlug = '{{ request()->route("kitchen_slug") }}';
+            const url = `/k/${kitchenSlug}/ingredients/${ingredientId}/fifo-cost?quantity=${qty}&unit=${unit}`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.cost !== undefined) {
+                costDisplay.textContent = parseFloat(data.cost).toFixed(2);
+                calculateTotal();
+            }
+        } catch (error) {
+            console.error('Error fetching FIFO cost:', error);
+            // Display error instead of falling back to average price
+            costDisplay.textContent = 'Insufficient Stock';
+            costDisplay.classList.add('text-red-500', 'text-[10px]');
+            calculateTotal();
+        }
     }
 
     function removeRow(btn) {
@@ -671,7 +729,7 @@
         
         // Sub-recipes cost
         window.addedSubRecipes.forEach(s => {
-            total += (s.qty * s.price);
+            total += parseFloat(s.cost || 0);
         });
 
         const portions = parseFloat(document.getElementById('yield_portions').value) || 1;
@@ -684,20 +742,49 @@
     function closeSubRecipeModal() { document.getElementById('addSubRecipeModal').classList.add('hidden'); }
     
     function confirmAddSubRecipe() {
-        const select = document.getElementById('sub-recipe-selector');
-        const opt = select.options[select.selectedIndex];
+        let val = '';
+        let opt = null;
+
+        if (window.subRecipeSelector) {
+            val = window.subRecipeSelector.getValue();
+            opt = window.subRecipeSelector.options[val];
+        } else {
+            const select = document.getElementById('sub-recipe-selector');
+            val = select.value;
+            opt = select.options[select.selectedIndex];
+        }
+        
         const qty = parseFloat(document.getElementById('sub-recipe-qty').value);
+        if (!val || isNaN(qty)) return alert('Please select a sub-recipe and quantity');
         
-        if (!opt.value || isNaN(qty)) return alert('Please select a sub-recipe and quantity');
+        const originalOpt = document.querySelector(`#sub-recipe-selector option[value="${val}"]`);
         
-        window.addedSubRecipes.push({
-            id: opt.value,
-            ingId: opt.dataset.ingId,
-            name: opt.dataset.name,
-            qty: qty,
-            unit: opt.dataset.unit,
-            price: parseFloat(opt.dataset.price)
-        });
+        const subData = { 
+            id: val,
+            ingId: originalOpt?.dataset?.ingId || opt?.ingId || val,
+            name: originalOpt?.dataset?.name || opt?.name || opt?.text || 'Unknown', 
+            qty: qty, 
+            unit: originalOpt?.dataset?.unit || opt?.unit || 'pcs', 
+            cost: 0 // Will be updated by FIFO fetch
+        };
+
+        // Fetch FIFO cost for the sub-recipe (which is an ingredient)
+        try {
+            const kitchenSlug = '{{ request()->route("kitchen_slug") }}';
+            const url = `/k/${kitchenSlug}/ingredients/${subData.ingId}/fifo-cost?quantity=${qty}&unit=${subData.unit}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.cost !== undefined) {
+                subData.cost = parseFloat(data.cost);
+            } else {
+                subData.cost = qty * parseFloat(originalOpt?.dataset?.price || 0);
+            }
+        } catch (e) {
+            console.error("FIFO sub-recipe cost fetch failed", e);
+            subData.cost = qty * parseFloat(originalOpt?.dataset?.price || 0);
+        }
+
+        window.addedSubRecipes.push(subData);
         
         renderSubRecipeCards();
         calculateTotal();
@@ -710,21 +797,21 @@
         document.getElementById('no-sub-recipes-msg').classList.toggle('hidden', window.addedSubRecipes.length > 0);
 
         window.addedSubRecipes.forEach((s, i) => {
-            const cost = (s.qty * s.price).toFixed(2);
+            const cost = parseFloat(s.cost || 0).toFixed(2);
             const card = document.createElement('div');
-            card.className = 'sub-recipe-card bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex justify-between items-center animate-fade-in-up';
+            card.className = 'sub-recipe-card bg-white/5 border border-subtle rounded-2xl p-5 flex justify-between items-center';
             card.innerHTML = `
                 <div class="flex items-center gap-4">
-                    <div class="p-3 bg-white rounded-xl shadow-sm text-indigo-500">
+                    <div class="p-3 bg-primary/40 rounded-xl text-accent">
                         <i data-lucide="component" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-black text-gray-900">${s.name}</h4>
-                        <p class="text-sm font-bold text-indigo-600">${s.qty} ${s.unit} • ₹${cost}</p>
+                        <h4 class="font-bold text-primary">${s.name}</h4>
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-widest">${s.qty} ${s.unit} • <span class="text-accent">₹${cost}</span></p>
                     </div>
                 </div>
-                <button type="button" onclick="removeSubRecipe(${i})" class="text-gray-400 hover:text-red-500 p-2 rounded-xl hover:bg-white transition-all">
-                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                <button type="button" onclick="removeSubRecipe(${i})" class="text-muted hover:text-red-500 transition-all p-2">
+                    <i data-lucide="trash-2"></i>
                 </button>
             `;
             container.appendChild(card);

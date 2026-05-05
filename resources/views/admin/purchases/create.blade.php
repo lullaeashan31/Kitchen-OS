@@ -1,30 +1,29 @@
 @extends('layouts.app')
 
 @section('header')
-    <h1 class="text-2xl font-bold text-gray-800">Log New Purchase</h1>
-    <p class="text-sm text-gray-500">Record incoming stock and update inventory.</p>
+    <h1>Log New Purchase</h1>
+    <p class="text-muted text-sm">Record incoming stock and update inventory.</p>
 @endsection
 
 @section('content')
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div class="card">
             <form action="{{ route('purchases.store') }}" method="POST" id="purchaseForm" enctype="multipart/form-data">
                 @csrf
 
                 <!-- Header Fields -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Date <span class="text-red-500">*</span></label>
+                        <label class="form-label">Date <span style="color: var(--accent);">*</span></label>
                         <input type="date" name="purchase_date" value="{{ old('purchase_date', date('Y-m-d')) }}" required
-                            class="w-full px-4 py-2 rounded-lg border {{ $errors->has('purchase_date') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none transition-all">
-                        @error('purchase_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            class="form-control">
+                        @error('purchase_date') <p style="color: var(--accent); font-size: 0.75rem; margin-top: 0.25rem;">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
+                        <label class="form-label">Vendor Name <span style="color: var(--accent);">*</span></label>
                         <div class="flex gap-2">
-                            <div class="w-full relative {{ $errors->has('vendor_id') ? 'border border-red-500 rounded-lg' : '' }}">
+                            <div class="w-full relative">
                                 <select name="vendor_id" id="vendorSelect" required placeholder="Select or search vendor..."
-                                    class="w-full rounded-lg border border-gray-200">
+                                    class="form-control">
                                     <option value="">Select Vendor...</option>
                                     @foreach($vendors as $vendor)
                                         <option value="{{ $vendor->id }}" {{ old('vendor_id') == $vendor->id ? 'selected' : '' }}>{{ $vendor->name }}</option>
@@ -32,63 +31,61 @@
                                 </select>
                             </div>
                             <button type="button" onclick="openVendorModal()"
-                                class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                                class="btn btn-secondary p-2"
                                 title="Add New Vendor">
-                                <i data-lucide="plus" class="w-5 h-5"></i>
+                                <i data-lucide="plus"></i>
                             </button>
                         </div>
-                        @error('vendor_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('vendor_id') <p style="color: var(--accent); font-size: 0.75rem; margin-top: 0.25rem;">{{ $message }}</p> @enderror
                     </div>
                     {{-- Invoice Photo --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Invoice Photo <span class="text-red-500">*</span></label>
+                        <label class="form-label">Invoice Photo <span style="color: var(--accent);">*</span></label>
                         <div class="flex gap-2 items-center">
-                            <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border {{ $errors->has('invoice_photo') ? 'border-red-500' : 'border-gray-200' }} bg-white hover:bg-gray-50 transition-all">
-                                <i data-lucide="folder-open" class="w-4 h-4 text-gray-500"></i>
-                                <span class="text-sm text-gray-500" id="invoice_photo_label">Choose File</span>
+                            <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 border border-subtle hover:bg-white/5 transition-all" style="border: 1px solid var(--border-subtle);">
+                                <i data-lucide="folder-open" class="w-4 h-4 text-muted"></i>
+                                <span class="text-sm text-muted" id="invoice_photo_label">Choose File</span>
                                 <input type="file" name="invoice_photo" id="invoice_photo" accept="image/*" required class="hidden"
                                     onchange="handleFileSelect(this, 'invoice_preview', 'invoice_photo_label')">
                             </label>
                             <button type="button" onclick="openCamera('invoice')"
-                                class="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex items-center gap-2 text-sm font-semibold">
-                                <i data-lucide="camera" class="w-4 h-4"></i> Live Camera
+                                class="btn btn-secondary text-xs">
+                                <i data-lucide="camera"></i> Live Camera
                             </button>
                         </div>
                         <div id="invoice_preview" class="mt-2 hidden">
-                            <img src="" alt="Invoice Preview" class="h-24 rounded-lg border border-gray-200 object-cover">
-                            <button type="button" onclick="clearPhoto('invoice_photo','invoice_preview','invoice_photo_label')" class="ml-2 text-xs text-red-500 hover:underline">Remove</button>
+                            <img src="" alt="Invoice Preview" class="h-24 border border-subtle object-cover" style="border: 1px solid var(--border-subtle);">
+                            <button type="button" onclick="clearPhoto('invoice_photo','invoice_preview','invoice_photo_label')" class="ml-2 text-xs text-muted hover:underline">Remove</button>
                         </div>
-                        @error('invoice_photo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('invoice_photo') <p style="color: var(--accent); font-size: 0.75rem; margin-top: 0.25rem;">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Goods Photo --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Goods Photo <span class="text-red-500">*</span></label>
+                        <label class="form-label">Goods Photo <span style="color: var(--accent);">*</span></label>
                         <div class="flex gap-2 items-center">
-                            <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border {{ $errors->has('goods_photo') || $errors->has('goods_photo.*') ? 'border-red-500' : 'border-gray-200' }} bg-white hover:bg-gray-50 transition-all">
-                                <i data-lucide="folder-open" class="w-4 h-4 text-gray-500"></i>
-                                <span class="text-sm text-gray-500" id="goods_photo_label">Choose Files (Multiple)</span>
+                            <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 border border-subtle hover:bg-white/5 transition-all" style="border: 1px solid var(--border-subtle);">
+                                <i data-lucide="folder-open" class="w-4 h-4 text-muted"></i>
+                                <span class="text-sm text-muted" id="goods_photo_label">Choose Files (Multiple)</span>
                                 <input type="file" name="goods_photo[]" id="goods_photo" accept="image/*" multiple required class="hidden"
                                     onchange="handleMultipleFileSelect(this, 'goods_preview_grid', 'goods_photo_label')">
                             </label>
                             <button type="button" onclick="openCamera('goods')"
-                                class="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
-                                <i data-lucide="camera" class="w-4 h-4"></i> Live Camera
+                                class="btn btn-secondary text-xs">
+                                <i data-lucide="camera"></i> Live Camera
                             </button>
                         </div>
                         <div id="goods_preview_grid" class="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {{-- Multiple previews will appear here --}}
                         </div>
-                        @error('goods_photo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                        @error('goods_photo.*') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('goods_photo') <p style="color: var(--accent); font-size: 0.75rem; margin-top: 0.25rem;">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
                 <!-- Items Table -->
                 <div class="mb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            <i data-lucide="shopping-cart" class="w-5 h-5 text-blue-500"></i> Items
+                        <h2 class="flex items-center gap-2">
+                            <i data-lucide="shopping-cart"></i> Items
                         </h2>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="addItemRow()">
                             <i data-lucide="plus"></i> Add Item
@@ -96,17 +93,17 @@
                     </div>
 
                     <div class="overflow-visible">
-                        <table class="w-full text-left" id="itemsTable">
+                        <table class="table" id="itemsTable">
                             <thead>
-                                <tr class="text-xs font-bold text-gray-500 uppercase border-b border-gray-100">
-                                    <th class="pb-3 w-5/12">Inventory Item <span class="text-red-500">*</span></th>
-                                    <th class="pb-3 w-2/12">Quantity <span class="text-red-500">*</span></th>
-                                    <th class="pb-3 w-2/12">Unit Price</th>
-                                    <th class="pb-3 w-2/12 text-right">Total Price</th>
-                                    <th class="pb-3 w-1/12"></th>
+                                <tr>
+                                    <th class="w-5/12">Inventory Item <span style="color: var(--accent);">*</span></th>
+                                    <th class="w-2/12">Quantity <span style="color: var(--accent);">*</span></th>
+                                    <th class="w-2/12">Unit Price</th>
+                                    <th class="w-2/12 text-right">Total Price</th>
+                                    <th class="w-1/12"></th>
                                 </tr>
                             </thead>
-                            <tbody id="itemsBody" class="divide-y divide-gray-50">
+                            <tbody id="itemsBody">
                                 @if(old('items'))
                                     @foreach(old('items') as $index => $item)
                                         <tr class="item-row group">
@@ -131,13 +128,13 @@
                                                 <div class="flex gap-2">
                                                     <div class="w-2/3">
                                                     <input type="number" name="items[{{ $index }}][quantity]"
-                                                        class="w-full px-3 py-2 rounded-lg border {{ $errors->has('items.'.$index.'.quantity') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none quantity-input"
+                                                        class="form-control quantity-input"
                                                         step="0.001" min="0" required placeholder="0" value="{{ $item['quantity'] ?? '' }}">
-                                                        @error('items.'.$index.'.quantity') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                                     </div>
                                                     <select name="items[{{ $index }}][unit]"
-                                                        class="w-1/3 px-2 py-2 rounded-lg border {{ $errors->has('items.'.$index.'.unit') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none unit-select bg-white text-sm"
+                                                        class="form-control unit-select text-sm"
                                                         required>
+                                                    </select>
                                                         <!-- Options populated via JS on init, but we can set default logic here if possible. 
                                                              However, since unit options depend on ingredient, it's safer to let JS handle dynamic population based on selected ingredient.
                                                              But for 'old' value, we might need to pre-populate. 
@@ -151,20 +148,20 @@
 
                                             <td class="py-3 px-2 align-top">
                                                 <input type="number" name="items[{{ $index }}][unit_price]"
-                                                    class="w-full px-3 py-2 rounded-lg border {{ $errors->has('items.'.$index.'.unit_price') ? 'border-red-500' : 'border-gray-200' }} focus:border-blue-500 outline-none unit-price-input"
+                                                    class="form-control unit-price-input"
                                                     step="0.01" min="0" max="9999999" placeholder="0.00" value="{{ $item['unit_price'] ?? '' }}">
-                                                <span class="text-xs text-gray-400 block mt-1 text-right">Per <span class="unit-text">Unit</span></span>
-                                                @error('items.'.$index.'.unit_price') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                                <span class="text-xs text-muted block mt-1 text-right">Per <span class="unit-text">Unit</span></span>
+                                                @error('items.'.$index.'.unit_price') <p style="color: var(--accent); font-size: 0.75rem; margin-top: 0.25rem;">{{ $message }}</p> @enderror
                                             </td>
 
                                             <td class="py-3 px-2 align-top text-right">
                                                 <input type="number" name="items[{{ $index }}][total_price]"
-                                                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-right font-bold text-gray-700 total-price-input outline-none"
+                                                    class="form-control text-right font-bold total-price-input"
                                                     step="0.01" min="0" placeholder="0.00" value="{{ $item['total_price'] ?? '' }}">
                                             </td>
 
                                             <td class="py-3 pl-2 align-top text-right">
-                                                <button type="button" class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                                <button type="button" class="p-2 text-muted hover:text-accent transition-colors"
                                                     onclick="removeRow(this)">
                                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
@@ -177,16 +174,15 @@
                         </table>
                     </div>
 
-                    <div class="mt-4 p-4 bg-gray-50 rounded-lg flex justify-end items-center border border-gray-100 gap-4">
-                        <span class="text-sm font-medium text-gray-600">Total Purchase Value:</span>
-                        <span class="text-xl font-bold text-gray-800">₹<span id="grandTotalDisplay">0.00</span></span>
+                    <div class="mt-4 p-4 rounded border border-subtle flex justify-end items-center gap-4" style="background: rgba(181, 151, 90, 0.05);">
+                        <span class="text-sm font-bold text-muted uppercase">Total Purchase Value:</span>
+                        <span class="text-xl font-bold" style="color: var(--accent);">₹<span id="grandTotalDisplay">0.00</span></span>
                     </div>
                 </div>
 
                 <div class="flex gap-4">
-                    <button type="submit"
-                        class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="save" class="w-5 h-5"></i> Save Purchases
+                    <button type="submit" class="btn btn-primary w-full py-4 text-lg">
+                        <i data-lucide="save"></i> Save Purchases
                     </button>
                 </div>
             </form>
@@ -215,32 +211,31 @@
                     <div class="flex gap-2">
                         <div class="w-2/3">
                         <input type="number" name="items[INDEX][quantity]"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none quantity-input"
+                            class="form-control quantity-input"
                             step="0.001" min="0" required placeholder="0">
                         </div>
                         <select name="items[INDEX][unit]"
-                            class="w-1/3 px-2 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none unit-select bg-white text-sm"
+                            class="form-control unit-select text-sm"
                             required>
-                            <!-- Populated by JS -->
                         </select>
                     </div>
                 </td>
 
                 <td class="py-3 px-2 align-top">
                     <input type="number" name="items[INDEX][unit_price]"
-                        class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 outline-none unit-price-input"
+                        class="form-control unit-price-input"
                         step="0.01" min="0" max="9999999" placeholder="0.00">
-                    <span class="text-xs text-gray-400 block mt-1 text-right">Per <span class="unit-text">Unit</span></span>
+                    <span class="text-xs text-muted block mt-1 text-right">Per <span class="unit-text">Unit</span></span>
                 </td>
 
                 <td class="py-3 px-2 align-top text-right">
                     <input type="number" name="items[INDEX][total_price]"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-right font-bold text-gray-700 total-price-input outline-none"
+                        class="form-control text-right font-bold total-price-input"
                         step="0.01" min="0" placeholder="0.00">
                 </td>
 
                 <td class="py-3 pl-2 align-top text-right">
-                    <button type="button" class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                    <button type="button" class="p-2 text-muted hover:text-accent transition-colors"
                         onclick="removeRow(this)">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
@@ -248,84 +243,69 @@
             </tr>
         </template>
         <!-- Vendor Modal -->
-        <div id="vendorModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeVendorModal()"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Add New Vendor</h3>
-                                <div class="mt-2">
-                                    <form id="vendorForm">
-                                        @csrf
-                                        <div class="mb-4">
-                                            <label class="block text-sm font-medium text-gray-700">Name</label>
-                                            <input type="text" name="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                        </div>
-                                        <div class="mb-4">
-                                            <label class="block text-sm font-medium text-gray-700">Contact Person (Optional)</label>
-                                            <input type="text" name="contact_person" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                        </div>
-                                        <div class="mb-4">
-                                            <label class="block text-sm font-medium text-gray-700">Phone (Optional)</label>
-                                            <input type="tel" name="phone" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" title="Enter 10 digit phone number" maxlength="10" minlength="10"
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                        </div>
-                                        <div id="vendorError" class="text-red-500 text-sm hidden mb-2"></div>
-                                    </form>
-                                </div>
-                            </div>
+        <div id="vendorModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/70">
+            <div class="card w-full max-w-lg shadow-2xl">
+                <div class="p-6">
+                    <h3 class="text-xl mb-4">Add New Vendor</h3>
+                    <form id="vendorForm" class="space-y-4">
+                        @csrf
+                        <div>
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" required class="form-control">
                         </div>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
-                        <button type="button" onclick="submitVendor()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                            Save Vendor
-                        </button>
-                        <button type="button" onclick="closeVendorModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancel
-                        </button>
+                        <div>
+                            <label class="form-label">Contact Person (Optional)</label>
+                            <input type="text" name="contact_person" class="form-control">
+                        </div>
+                        <div>
+                            <label class="form-label">Phone (Optional)</label>
+                            <input type="tel" name="phone" inputmode="numeric" pattern="[0-9]*" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10)" 
+                                   maxlength="10" minlength="10" class="form-control">
+                        </div>
+                        <div id="vendorError" style="color: var(--accent); font-size: 0.75rem;" class="hidden"></div>
+                    </form>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" onclick="closeVendorModal()" class="btn btn-secondary">Cancel</button>
+                        <button type="button" onclick="submitVendor()" class="btn btn-primary">Save Vendor</button>
                     </div>
                 </div>
             </div>
         </div>
     {{-- ===== CAMERA MODAL ===== --}}
-    <div id="cameraModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <i data-lucide="camera" class="w-5 h-5 text-blue-600"></i>
-                    <span id="cameraModalTitle">Take Photo</span>
-                </h3>
-                <button type="button" onclick="closeCamera()" class="text-gray-400 hover:text-red-500 transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-
-            {{-- Live Feed --}}
-            <div id="cameraFeedWrap" class="">
-                <video id="cameraFeed" autoplay playsinline class="w-full rounded-xl bg-black" style="max-height:340px;"></video>
-                <div class="mt-4 flex gap-3">
-                    <button type="button" onclick="capturePhoto()"
-                        class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition">
-                        <i data-lucide="aperture" class="w-5 h-5"></i> Capture
+    <div id="cameraModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/70">
+        <div class="card w-full max-w-md shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="flex items-center gap-2">
+                        <i data-lucide="camera"></i>
+                        <span id="cameraModalTitle">Take Photo</span>
+                    </h3>
+                    <button type="button" onclick="closeCamera()" class="text-muted hover:text-accent transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
-                    <button type="button" onclick="closeCamera()"
-                        class="px-5 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 transition">Cancel</button>
                 </div>
-            </div>
 
-            {{-- Preview after capture --}}
-            <div id="cameraPreviewWrap" class="hidden">
-                <canvas id="captureCanvas" class="w-full rounded-xl border border-gray-200" style="max-height:340px;"></canvas>
-                <div class="mt-4 flex gap-3">
-                    <button type="button" onclick="retakePhoto()"
-                        class="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition font-semibold">Retake</button>
-                    <button type="button" onclick="usePhoto()"
-                        class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition">
-                        <i data-lucide="check" class="w-5 h-5"></i> Use Photo
-                    </button>
+                {{-- Live Feed --}}
+                <div id="cameraFeedWrap">
+                    <video id="cameraFeed" autoplay playsinline class="w-full bg-black border border-subtle" style="max-height:340px;"></video>
+                    <div class="mt-4 flex gap-3">
+                        <button type="button" onclick="capturePhoto()" class="btn btn-primary flex-1">
+                            <i data-lucide="aperture"></i> Capture
+                        </button>
+                        <button type="button" onclick="closeCamera()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+
+                {{-- Preview after capture --}}
+                <div id="cameraPreviewWrap" class="hidden">
+                    <canvas id="captureCanvas" class="w-full border border-subtle" style="max-height:340px;"></canvas>
+                    <div class="mt-4 flex gap-3">
+                        <button type="button" onclick="retakePhoto()" class="btn btn-secondary flex-1">Retake</button>
+                        <button type="button" onclick="usePhoto()" class="btn btn-primary flex-1">
+                            <i data-lucide="check"></i> Use Photo
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -498,18 +478,20 @@
                 let errorMsg = input.parentNode.querySelector('.unit-price-error');
                 
                 if (val > max) {
+                if (val > max) {
                     if (!errorMsg) {
                         errorMsg = document.createElement('p');
-                        errorMsg.className = 'text-red-500 text-[10px] mb-1 font-semibold unit-price-error';
+                        errorMsg.style.color = 'var(--accent)';
+                        errorMsg.style.fontSize = '10px';
+                        errorMsg.style.fontWeight = 'bold';
+                        errorMsg.className = 'unit-price-error mb-1';
                         errorMsg.textContent = 'Max 7 digits (9,999,999)';
                         input.parentNode.insertBefore(errorMsg, input);
                     }
-                    input.classList.add('border-red-500');
-                    input.classList.remove('border-gray-200');
+                    input.style.borderColor = 'var(--accent)';
                 } else {
                     if (errorMsg) errorMsg.remove();
-                    input.classList.remove('border-red-500');
-                    input.classList.add('border-gray-200');
+                    input.style.borderColor = 'var(--border-subtle)';
                 }
             }
 

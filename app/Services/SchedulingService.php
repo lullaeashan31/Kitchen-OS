@@ -54,9 +54,18 @@ class SchedulingService
                     $eligible = $availableOnDate->filter(fn($s) => !in_array($s->id, $alreadyAssignedToday));
 
                     // 3. To rotate fairly, sort eligible staff by their assignment count (asc)
-                    // We'll calculate current counts from global history + this local run
-                    $eligible = $eligible->sortBy(function ($user) {
-                        return ShiftAssignment::where('user_id', $user->id)->count();
+                    // Optimization: Bulk fetch assignment counts to avoid N+1 queries
+                    $eligibleIds = $eligible->pluck('id')->toArray();
+                    $historicalCounts = ShiftAssignment::whereIn('user_id', $eligibleIds)
+                        ->select('user_id', DB::raw('count(*) as count'))
+                        ->groupBy('user_id')
+                        ->pluck('count', 'user_id')
+                        ->toArray();
+
+                    $eligible = $eligible->sortBy(function ($user) use ($historicalCounts, $staffAssignedCounts) {
+                        $history = $historicalCounts[$user->id] ?? 0;
+                        $currentRun = $staffAssignedCounts[$user->id] ?? 0;
+                        return $history + $currentRun;
                     });
 
                     // 4. Assign up to 'required' count

@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class PosController extends Controller
 {
+    protected $fifoService;
+
+    public function __construct(\App\Services\FIFOInventoryService $fifoService)
+    {
+        $this->fifoService = $fifoService;
+    }
     public function uploadForm(string $kitchen_slug)
     {
         return view('pos.upload');
@@ -90,37 +96,82 @@ class PosController extends Controller
 
         DB::transaction(function () use ($mapped, &$processedCount) {
             foreach ($mapped as $item) {
-                $recipe = Recipe::with('ingredients')->find($item['recipe_id']);
-                $qtySold = $item['quantity'];
+                $recipe = Recipe::find($item['recipe_id']);
+                if (!$recipe) continue;
 
-                if (!$recipe)
-                    continue;
-
-                // Deduct Inventory based on Recipe
-                foreach ($recipe->ingredients as $ingredient) {
-                    $qtyPerPortion = $ingredient->pivot->quantity / ($recipe->yields ?: 1);
-                    $totalDeduct = $qtyPerPortion * $qtySold;
-
-                    $ingredient->decrement('current_stock', $totalDeduct);
-
-                    // Log it
-                    InventoryLog::create([
-                        'ingredient_id' => $ingredient->id,
-                        'user_id' => auth()->id(),
-                        'quantity_change' => -$totalDeduct,
-                        'action' => 'POS_SALE',
-                        'notes' => "POS Sales: {$qtySold} x {$recipe->name}",
-                        'stock_before' => $ingredient->current_stock + $totalDeduct,
-                        'stock_after' => $ingredient->current_stock,
-                    ]);
-                }
+                $qtySold = floatval($item['quantity']);
+                $this->deductRecipeInventory($recipe, $qtySold, $recipe->name);
+                
                 $processedCount++;
             }
         });
 
         session()->forget('pos_import_data');
 
-        return redirect()->route('pos.upload')->with('success', "Processed {$processedCount} sales items. Inventory updated.");
+        return redirect()->route('pos.upload')->with('success', "Processed {$processedCount} sales items. Inventory updated recursively including sub-recipes.");
+    }
+
+    private function deductRecipeInventory(Recipe $recipe, float $qtySold, string $mainRecipeName)
+    {
+        $recipe->load('recipeIngredients.ingredient');
+
+        foreach ($recipe->recipeIngredients as $recipeIngredient) {
+            $ingredient = $recipeIngredient->ingredient;
+            if (!$ingredient) continue;
+
+            // Determine the base yield amount for this recipe
+            // Priority: Weight Grams -> Portions -> Legacy Yields
+            $yieldAmount = 1.0;
+            if ($recipe->yield_weight_grams > 0) {
+                $yieldAmount = (float) $recipe->yield_weight_grams;
+            } elseif ($recipe->yield_portions > 0) {
+                $yieldAmount = (float) $recipe->yield_portions;
+            } else {
+                $yieldAmount = (float) ($recipe->yields ?: 1);
+            }
+
+            // Calculate how much of THIS ingredient is needed for the quantity sold
+            $qtyPerUnitOfOutput = (float) ($recipeIngredient->quantity / $yieldAmount);
+            $totalDeduct = $qtyPerUnitOfOutput * $qtySold;
+
+            // Check if this ingredient is actually a Sub-Recipe (produced by another recipe)
+            $subRecipe = Recipe::where('produces_ingredient_id', $ingredient->id)
+                ->where('status', \App\Enums\RecipeStatus::Permanent)
+                ->first();
+
+            if ($subRecipe) {
+                // HYBRID DEDUCTION: 
+                // 1. Try to deduct from the prepared ingredient stock (FIFO)
+                // 2. If insufficient, recurse into sub-recipe for the remainder
+                
+                $availableStock = (float) $ingredient->current_stock;
+                $deductFromStock = min($totalDeduct, $availableStock);
+                
+                if ($deductFromStock > 0) {
+                    try {
+                        $this->fifoService->deductStock($ingredient, $deductFromStock, 'POS_SALE', null);
+                    } catch (\Exception $e) {
+                        \Log::warning('POS: Failed to deduct prepared stock for ' . $ingredient->name . ': ' . $e->getMessage());
+                    }
+                }
+
+                $remainingToRecurse = $totalDeduct - $deductFromStock;
+                if ($remainingToRecurse > 0.001) {
+                    $this->deductRecipeInventory($subRecipe, $remainingToRecurse, $mainRecipeName);
+                }
+            } else {
+                // It's a raw ingredient - deduct from stock using FIFO
+                try {
+                    $this->fifoService->deductStock($ingredient, $totalDeduct, 'POS_SALE', null);
+                } catch (\Exception $e) {
+                    \Log::error('POS: Critical inventory deduction failure for ' . $ingredient->name . ': ' . $e->getMessage());
+                    // We don't throw exception here to avoid breaking the transaction if possible, 
+                    // but FIFO service already throws. So we catch and log if we want to continue, 
+                    // or let it throw to rollback. The transaction in process() will handle rollback.
+                    throw $e; 
+                }
+            }
+        }
     }
 
     private function fileToArray($file)

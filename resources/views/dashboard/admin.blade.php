@@ -1,235 +1,193 @@
 @extends('layouts.app')
 
 @section('header')
-    <div class="mb-6">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Admin Dashboard</h1>
-        <p class="text-sm text-gray-500 mt-1">System Overview & Management Console</p>
+    <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Admin Dashboard</h1>
+        <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Kitchen OS <span class="text-accent">Management Console</span></p>
     </div>
 @endsection
 
 @section('content')
-    <!-- Overview Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total Staff -->
-        <a href="{{ route('admin.staff.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                            <i data-lucide="users" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Staff</h3>
+    {{-- Overview Stats Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {{-- Total Staff --}}
+        <a href="{{ route('admin.staff.index') }}" class="card p-0 overflow-hidden group">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-accent text-primary rounded-xl transition-all group-hover:scale-110">
+                        <i data-lucide="users" class="w-5 h-5"></i>
                     </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['total_staff'] }}</div>
-                    <p class="text-xs text-gray-500 mt-1">Registered Employees</p>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Personnel</h3>
                 </div>
+                <div class="text-4xl font-black text-primary">{{ $stats['total_staff'] }}</div>
+                <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Total Registered Staff</p>
             </div>
         </a>
 
-        <!-- Active Now -->
-        <a href="{{ route('admin.attendance.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                            <i data-lucide="activity" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Active Now</h3>
+        {{-- Active Now --}}
+        <a href="{{ route('admin.attendance.index') }}" class="card p-0 overflow-hidden group border-accent/20">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-white/5 text-accent rounded-xl border border-subtle">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
                     </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['active_staff'] }}</div>
-                    <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
-                        <span class="relative flex h-2 w-2">
-                            <span
-                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        Currently Clocked In
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Operations</h3>
+                </div>
+                <div class="flex items-baseline gap-3">
+                    <div class="text-4xl font-black text-primary">{{ $stats['active_staff'] }}</div>
+                    <div class="flex h-2 w-2 mb-2">
+                        <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-accent opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                    </div>
+                </div>
+                <p class="text-[9px] font-bold text-accent uppercase tracking-tight mt-1">Currently On-Shift</p>
+            </div>
+        </a>
+
+        {{-- Today's Attendance --}}
+        <a href="{{ route('admin.attendance.index') }}" class="card p-0 overflow-hidden group">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-white/5 text-muted rounded-xl border border-subtle">
+                        <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Attendance</h3>
+                </div>
+                <div class="text-4xl font-black text-primary">{{ $stats['today_clock_in'] }}</div>
+                <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">
+                    <span class="text-primary">{{ $stats['today_clock_out'] }}</span> Shifts Completed Today
+                </p>
+            </div>
+        </a>
+
+        {{-- Recipes --}}
+        <a href="{{ route('recipes.index') }}" class="card p-0 overflow-hidden group">
+            <div class="p-8 relative">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-white/5 text-muted rounded-xl border border-subtle">
+                        <i data-lucide="chef-hat" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">R&D</h3>
+                </div>
+                <div class="text-4xl font-black text-primary">{{ $stats['total_recipes'] }}</div>
+                @if($stats['pending_ingredients'] > 0)
+                    <p class="text-[9px] font-black text-accent uppercase tracking-tight mt-1 bg-accent/5 px-2 py-0.5 rounded-full inline-block">
+                        {{ $stats['pending_ingredients'] }} Ingredients Pending
                     </p>
-                </div>
-            </div>
-        </a>
-
-        <!-- Today's Attendance -->
-        <a href="{{ route('admin.attendance.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
-                            <i data-lucide="calendar-check" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Today's Shift</h3>
-                    </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['today_clock_in'] }}</div>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <span class="font-medium text-gray-700">{{ $stats['today_clock_out'] }}</span> completed shifts
-                    </p>
-                </div>
-            </div>
-        </a>
-
-        <!-- Recipes & Ingredients -->
-        <a href="{{ route('recipes.index') }}" class="block group">
-            <div
-                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all h-full">
-                <div
-                    class="absolute right-0 top-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                </div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-purple-100 text-purple-600 rounded-lg">
-                            <i data-lucide="chef-hat" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Recipes</h3>
-                    </div>
-                    <div class="text-3xl font-extrabold text-gray-800">{{ $stats['total_recipes'] }}</div>
-                    @if($stats['pending_ingredients'] > 0)
-                        <p
-                            class="text-xs text-amber-600 font-bold mt-1 bg-amber-50 inline-block px-2 py-0.5 rounded-full border border-amber-100">
-                            {{ $stats['pending_ingredients'] }} Ingredients Pending
-                        </p>
-                    @else
-                        <p class="text-xs text-gray-500 mt-1">All ingredients approved</p>
-                    @endif
-                </div>
+                @else
+                    <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Global Library Synced</p>
+                @endif
             </div>
         </a>
     </div>
 
-    <!-- Command Centre Section -->
-    <div class="mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <i data-lucide="layout-dashboard" class="w-6 h-6 text-indigo-600"></i>
+    {{-- Command Centre --}}
+    <div class="mb-10">
+        <h2 class="text-[11px] font-black text-accent uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
             Command Centre
         </h2>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <!-- SOP Progress -->
-            <a href="{{ route('admin.sop.reviews.index') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                        <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            {{-- SOP Status --}}
+            <a href="{{ route('admin.sop.reviews.index') }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-white/5 text-accent rounded-lg border border-subtle">
+                        <i data-lucide="clipboard-check" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">SOP Status</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">SOP Status</span>
                 </div>
                 <div class="flex items-end justify-between">
                     <div>
-                        <div class="text-2xl font-black text-gray-800">
+                        <div class="text-2xl font-black text-primary">
                             {{ $stats['completed_checklists'] }}/{{ $stats['total_checklists'] }}
                         </div>
-                        <p class="text-xs text-gray-500">Checklists done</p>
+                        <p class="text-[9px] font-bold text-muted uppercase">Execution Rate</p>
                     </div>
-                    @php 
-                        $sopPercent = $stats['total_checklists'] > 0 ? ($stats['completed_checklists'] / $stats['total_checklists']) * 100 : 0;
-                    @endphp
-                    <div class="w-12 h-12 relative flex items-center justify-center">
+                    @php $sopPercent = $stats['total_checklists'] > 0 ? ($stats['completed_checklists'] / $stats['total_checklists']) * 100 : 0; @endphp
+                    <div class="w-10 h-10 relative flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
-                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-100" />
-                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="{{ 125.6 * (1 - $sopPercent / 100) }}" class="text-blue-500 transition-all duration-500" />
+                            <circle cx="20" cy="20" r="16" stroke="rgba(242,237,230,0.05)" stroke-width="3" fill="transparent" />
+                            <circle cx="20" cy="20" r="16" stroke="var(--brass)" stroke-width="3" fill="transparent" stroke-dasharray="100.5" stroke-dashoffset="{{ 100.5 * (1 - $sopPercent / 100) }}" class="transition-all duration-700" />
                         </svg>
-                        <span class="absolute text-[10px] font-bold text-blue-600">{{ round($sopPercent) }}%</span>
+                        <span class="absolute text-[8px] font-black text-accent">{{ round($sopPercent) }}%</span>
                     </div>
                 </div>
             </a>
 
-            <!-- Overdue Count -->
-            <a href="{{ route('admin.sop.reviews.index') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 {{ $stats['overdue_sop_count'] > 0 ? 'ring-2 ring-red-500 ring-inset hover:bg-red-50' : 'hover:bg-gray-50' }} transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['overdue_sop_count'] > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
-                        <i data-lucide="clock-alert" class="w-5 h-5"></i>
+            {{-- Overdue --}}
+            <a href="{{ route('admin.sop.reviews.index') }}" class="card p-6 border-red-500/20 bg-red-500/5 hover:border-red-500/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-red-500/10 text-red-500 rounded-lg">
+                        <i data-lucide="clock-alert" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Overdue</span>
+                    <span class="text-[9px] font-black text-red-500/60 uppercase tracking-widest">High Risk</span>
                 </div>
-                <div>
-                    <div class="text-2xl font-black {{ $stats['overdue_sop_count'] > 0 ? 'text-red-600' : 'text-gray-800' }}">
-                        {{ $stats['overdue_sop_count'] }}
-                    </div>
-                    <p class="text-xs text-gray-500">Checklists missed</p>
-                </div>
+                <div class="text-2xl font-black text-red-500">{{ $stats['overdue_sop_count'] }}</div>
+                <p class="text-[9px] font-bold text-red-500/40 uppercase">Overdue Checklists</p>
             </a>
 
-            <!-- Inventory Alerts -->
-            <a href="{{ route('admin.inventory.index', ['stock_status' => 'low', 'include_out' => '1']) }}" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['low_stock_count'] > 0 ? 'bg-amber-100 text-amber-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
-                        <i data-lucide="package-search" class="w-5 h-5"></i>
+            {{-- Inventory --}}
+            <a href="{{ route('admin.inventory.index', ['stock_status' => 'low', 'include_out' => '1']) }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-white/5 text-muted rounded-lg border border-subtle">
+                        <i data-lucide="package-search" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Inventory</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">Inventory</span>
                 </div>
-                <div>
-                    <div class="text-2xl font-black {{ $stats['low_stock_count'] > 0 ? 'text-amber-600' : 'text-gray-800' }}">
-                        {{ $stats['low_stock_count'] }}
-                    </div>
-                    <p class="text-xs text-gray-500">Low stock alerts</p>
+                <div class="text-2xl font-black {{ $stats['low_stock_count'] > 0 ? 'text-accent' : 'text-primary' }}">
+                    {{ $stats['low_stock_count'] }}
                 </div>
+                <p class="text-[9px] font-bold text-muted uppercase">Stock Alerts</p>
             </a>
 
-            <!-- Purchase Pending -->
-            <a href="{{ route('purchases.index') }}" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['pending_purchases_count'] > 0 ? 'bg-purple-100 text-purple-600' : 'bg-gray-50 text-gray-400' }} rounded-lg">
-                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            {{-- Purchases --}}
+            <a href="{{ route('purchases.index') }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-white/5 text-muted rounded-lg border border-subtle">
+                        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Purchases</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">Procurement</span>
                 </div>
-                <div>
-                    <div class="text-2xl font-black {{ $stats['pending_purchases_count'] > 0 ? 'text-purple-600' : 'text-gray-800' }}">
-                        {{ $stats['pending_purchases_count'] }}
-                    </div>
-                    <p class="text-xs text-gray-500">Pending approval</p>
-                </div>
+                <div class="text-2xl font-black text-primary">{{ $stats['pending_purchases_count'] }}</div>
+                <p class="text-[9px] font-bold text-muted uppercase">Awaiting Approval</p>
             </a>
 
-            <!-- POS Sync -->
-            <a href="{{ route('pos.upload') }}" class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 {{ $stats['pos_synced_today'] ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600' }} rounded-lg">
-                        <i data-lucide="{{ $stats['pos_synced_today'] ? 'refresh-cw' : 'alert-circle' }}" class="w-5 h-5"></i>
+            {{-- POS Sync --}}
+            <a href="{{ route('pos.upload') }}" class="card p-6 group hover:border-accent/40">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 {{ $stats['pos_synced_today'] ? 'bg-accent/10 text-accent' : 'bg-red-500/10 text-red-500' }} rounded-lg">
+                        <i data-lucide="{{ $stats['pos_synced_today'] ? 'refresh-cw' : 'alert-circle' }}" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">POS Sync</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">System Sync</span>
                 </div>
-                <div>
-                    <div class="text-lg font-black {{ $stats['pos_synced_today'] ? 'text-emerald-600' : 'text-rose-600' }}">
-                        {{ $stats['pos_synced_today'] ? 'Synced' : 'Required' }}
-                    </div>
-                    <p class="text-xs text-gray-500">{{ $stats['pos_synced_today'] ? 'Sales data up to date' : 'Upload daily sales CSV' }}</p>
+                <div class="text-lg font-black {{ $stats['pos_synced_today'] ? 'text-accent' : 'text-red-500' }} uppercase tracking-tighter">
+                    {{ $stats['pos_synced_today'] ? 'Synced' : 'Required' }}
                 </div>
+                <p class="text-[9px] font-bold text-muted uppercase">{{ $stats['pos_synced_today'] ? 'Sales Data OK' : 'Manual CSV Required' }}</p>
             </a>
         </div>
     </div>
 
-
     @if($stats['low_stock_count'] > 0)
-        <div class="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-red-800 flex items-center gap-2">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
-                    Low Stock Alerts ({{ $stats['low_stock_count'] }})
+        <div class="card bg-red-500/5 border-red-500/20 p-8 mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-[11px] font-black text-red-500 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    Critical Stock Shortage ({{ $stats['low_stock_count'] }})
                 </h2>
-                <a href="{{ route('admin.inventory.index') }}"
-                    class="text-sm font-medium text-red-600 hover:text-red-800 underline">View Master Inventory</a>
+                <a href="{{ route('admin.inventory.index') }}" class="text-[10px] font-black text-red-500 hover:underline uppercase tracking-widest">Full Inventory</a>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($stats['low_stock_items'] as $item)
-                    <div class="bg-white p-4 rounded-xl border border-red-100 flex justify-between items-center shadow-sm">
+                    <div class="bg-primary/20 p-4 rounded-xl border border-red-500/20 flex justify-between items-center transition-all hover:bg-primary/30">
                         <div>
-                            <div class="font-bold text-gray-800">{{ $item->name }}</div>
-                            <div class="text-xs text-gray-500">Min: {{ $item->alert_threshold }} {{ $item->measurement_unit }}</div>
+                            <div class="font-bold text-primary text-sm">{{ $item->name }}</div>
+                            <div class="text-[9px] font-bold text-muted uppercase mt-1">Min. Required: {{ $item->alert_threshold }} {{ $item->measurement_unit }}</div>
                         </div>
                         <div class="text-right">
-                            <div class="font-bold text-red-600 text-lg">{{ $item->current_stock_display }}</div>
-                            <div class="text-xs text-gray-400">{{ $item->measurement_unit }}</div>
+                            <div class="font-black text-red-500 text-xl">{{ $item->current_stock_display }}</div>
+                            <div class="text-[9px] font-bold text-red-500/60 uppercase">{{ $item->measurement_unit }}</div>
                         </div>
                     </div>
                 @endforeach
@@ -237,102 +195,93 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Quick Actions Panel -->
-        <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <i data-lucide="zap" class="w-5 h-5 text-yellow-500"></i> Quick Actions
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {{-- Quick Actions Panel --}}
+        <div class="lg:col-span-2 card p-8">
+            <h2 class="text-[11px] font-black text-accent uppercase tracking-widest mb-8 flex items-center gap-3">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+                Operational Shortcuts
             </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="{{ route('admin.attendance.index') }}"
-                    class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                    <div
-                        class="bg-blue-100 p-3 rounded-full text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <a href="{{ route('admin.attendance.index') }}" class="flex items-center gap-5 p-5 rounded-xl border border-subtle hover:border-accent/40 bg-white/5 transition-all group">
+                    <div class="bg-primary p-4 rounded-xl text-accent border border-subtle group-hover:bg-accent group-hover:text-primary transition-all">
                         <i data-lucide="clipboard-list" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-800">Manage Attendance</h4>
-                        <p class="text-xs text-gray-500 line-clamp-1">View reports & fix logs</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Attendance Flow</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Override logs & shifts</p>
                     </div>
                 </a>
 
-                <a href="{{ route('recipes.create') }}"
-                    class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-purple-200 hover:bg-purple-50/50 transition-all group">
-                    <div
-                        class="bg-purple-100 p-3 rounded-full text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                <a href="{{ route('recipes.create') }}" class="flex items-center gap-5 p-5 rounded-xl border border-subtle hover:border-accent/40 bg-white/5 transition-all group">
+                    <div class="bg-primary p-4 rounded-xl text-accent border border-subtle group-hover:bg-accent group-hover:text-primary transition-all">
                         <i data-lucide="plus" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-800">Create New Recipe</h4>
-                        <p class="text-xs text-gray-500 line-clamp-1">Add dish to database</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">New Formulation</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Initialize recipe build</p>
                     </div>
                 </a>
 
-                <a href="{{ route('excel.import_form') }}"
-                    class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all group">
-                    <div
-                        class="bg-green-100 p-3 rounded-full text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                <a href="{{ route('excel.import_form') }}" class="flex items-center gap-5 p-5 rounded-xl border border-subtle hover:border-accent/40 bg-white/5 transition-all group">
+                    <div class="bg-primary p-4 rounded-xl text-accent border border-subtle group-hover:bg-accent group-hover:text-primary transition-all">
                         <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-800">Import Master Data</h4>
-                        <p class="text-xs text-gray-500 line-clamp-1">Upload Excel sheets</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Bulk Import</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Sync master Excel data</p>
                     </div>
                 </a>
 
-                <a href="{{ route('admin.staff.index') }}"
-                    class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all group">
-                    <div
-                        class="bg-indigo-100 p-3 rounded-full text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <a href="{{ route('admin.staff.index') }}" class="flex items-center gap-5 p-5 rounded-xl border border-subtle hover:border-accent/40 bg-white/5 transition-all group">
+                    <div class="bg-primary p-4 rounded-xl text-accent border border-subtle group-hover:bg-accent group-hover:text-primary transition-all">
                         <i data-lucide="user-cog" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-800">Manage Staff</h4>
-                        <p class="text-xs text-gray-500 line-clamp-1">Add/Edit employees</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Staff Registry</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Manage personnel & roles</p>
                     </div>
                 </a>
             </div>
         </div>
 
-        <!-- System Status -->
-        <div
-            class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
-
-            <h2 class="text-lg font-bold mb-6 flex items-center gap-2 relative z-10">
-                <i data-lucide="server" class="w-5 h-5 text-green-400"></i> System Status
+        {{-- System Health --}}
+        <div class="card bg-primary p-8 border-subtle">
+            <h2 class="text-[11px] font-black text-accent uppercase tracking-widest mb-8 flex items-center gap-3">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                Engine Status
             </h2>
 
-            <div class="space-y-6 relative z-10">
+            <div class="space-y-8">
                 <div class="flex items-start gap-4">
-                    <div class="w-2 h-2 mt-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+                    <div class="w-2 h-2 mt-1.5 rounded-full bg-accent shadow-[0_0_12px_rgba(181,151,90,0.6)]"></div>
                     <div>
-                        <h4 class="text-sm font-bold text-gray-200">Database Active</h4>
-                        <p class="text-xs text-gray-400">Connection stable</p>
+                        <h4 class="text-xs font-black text-primary uppercase tracking-tight">Database Cluster</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-0.5">High availability active</p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-4">
-                    <div class="w-2 h-2 mt-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]"></div>
+                    <div class="w-2 h-2 mt-1.5 rounded-full bg-accent shadow-[0_0_12px_rgba(181,151,90,0.6)]"></div>
                     <div>
-                        <h4 class="text-sm font-bold text-gray-200">Cloud Sync</h4>
-                        <p class="text-xs text-gray-400">Drive Integration Ready</p>
+                        <h4 class="text-xs font-black text-primary uppercase tracking-tight">Cloud Backbone</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-0.5">S3 + Drive Synced</p>
                     </div>
                 </div>
 
                 <div class="flex items-start gap-4">
-                    <div class="w-2 h-2 mt-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.6)]"></div>
+                    <div class="w-2 h-2 mt-1.5 rounded-full bg-accent shadow-[0_0_12px_rgba(181,151,90,0.6)]"></div>
                     <div>
-                        <h4 class="text-sm font-bold text-gray-200">Tablet Mode</h4>
-                        <p class="text-xs text-gray-400">Accessible at /time-clock</p>
+                        <h4 class="text-xs font-black text-primary uppercase tracking-tight">Node Access</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-0.5">Tablet/POS Gateway Up</p>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-white/10">
-                <div class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">Current Version</div>
-                <div class="text-2xl font-mono text-white">v2.1.0</div>
+            <div class="mt-12 pt-8 border-t border-subtle">
+                <div class="text-[9px] font-black text-muted uppercase tracking-[0.3em] mb-2">Build Identifier</div>
+                <div class="text-3xl font-black text-primary tracking-tighter italic">v2.1.0-tra</div>
             </div>
         </div>
     </div>

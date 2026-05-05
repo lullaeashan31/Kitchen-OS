@@ -102,15 +102,16 @@
     <div class="meta">
         <div>
             <div class="meta-item">Category: {{ $recipe->category->name ?? 'N/A' }}</div>
-            <div class="meta-item">Yield: {{ $recipe->yields }} Portions</div>
+            <div class="meta-item">Yield: {{ $recipe->yield_portions ?? $recipe->yields }} Portions</div>
+            @if($recipe->yield_weight_grams)
+                <div class="meta-item">Total Weight: {{ number_format($recipe->yield_weight_grams, 0) }}g</div>
+            @endif
         </div>
         <div class="text-right">
-            <div class="meta-item">Prep Time: {{ $recipe->prep_time_minutes ?? '-' }} mins</div>
             @if($recipe->isSubRecipe())
-                <div class="meta-item">Output: {{ number_format($recipe->output_quantity, 3) }} {{ $recipe->output_unit }}
-                </div>
                 <div class="meta-item">Storage: {{ $recipe->producesIngredient->storage_location ?? 'Not Assigned' }}</div>
             @endif
+            <div class="meta-item">Printed: {{ now()->format('d M Y H:i') }}</div>
         </div>
     </div>
 
@@ -134,8 +135,8 @@
                     @foreach($stage->ingredients as $ri)
                         <tr>
                             <td>
-                                {{ $ri->ingredient->name }}
-                                @if($ri->ingredient->allergen_tags && count($ri->ingredient->allergen_tags) > 0)
+                                {{ $ri->ingredient->name ?? 'Unknown' }}
+                                @if($ri->ingredient && $ri->ingredient->allergen_tags && count($ri->ingredient->allergen_tags) > 0)
                                     <span style="font-size: 0.8em; color: #d32f2f; font-weight: bold; margin-left: 5px;">
                                         [{{ implode(', ', $ri->ingredient->allergen_tags) }}]
                                     </span>
@@ -184,7 +185,7 @@
                     @endif
                     @foreach($items as $ri)
                         <tr>
-                            <td style="{{ $group ? 'padding-left: 20px;' : '' }}">{{ $ri->ingredient->name }}</td>
+                            <td style="{{ $group ? 'padding-left: 20px;' : '' }}">{{ $ri->ingredient->name ?? 'Unknown' }}</td>
                             <td>{{ $ri->ingredient->storage_location ?? '-' }}</td>
                             <td class="text-right">{{ number_format($ri->quantity, 3) }}</td>
                             <td>{{ $ri->unit }}</td>
@@ -199,6 +200,67 @@
         <h3 class="section-title">Recipe Overview / Description</h3>
         <div class="method" style="background: #fafafa; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
             {{ $recipe->method }}</div>
+    @endif
+
+    @php
+        $allSubRecipes = collect();
+        foreach($recipe->stages as $stage) {
+            foreach($stage->ingredients as $ri) {
+                if ($ri->ingredient && $ri->ingredient->producedByRecipes && $ri->ingredient->producedByRecipes->count() > 0) {
+                    $allSubRecipes->push($ri->ingredient->producedByRecipes->first());
+                }
+            }
+        }
+        $allSubRecipes = $allSubRecipes->unique('id');
+    @endphp
+
+    @if($allSubRecipes->count() > 0)
+        <div style="page-break-before: always;"></div>
+        <h3 class="section-title">Sub-Recipe Detailed Instructions</h3>
+        <p style="font-size: 0.8em; color: #666; margin-bottom: 20px;">The following details are for sub-components used in this recipe.</p>
+
+        @foreach($allSubRecipes as $sub)
+            <div style="margin-bottom: 40px; border: 1px solid #eee; padding: 20px; border-radius: 10px; background: #fff;">
+                <h4 style="margin-top: 0; color: #1a56db; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; font-size: 1.2em;">
+                    Sub-Recipe: {{ $sub->name }}
+                </h4>
+                
+                <div style="display: flex; gap: 20px; margin-bottom: 15px; font-size: 0.85em; color: #4b5563;">
+                    <span><strong>Target Yield:</strong> {{ $sub->yield_portions ?? $sub->yields }} Portions</span>
+                    @if($sub->yield_weight_grams)
+                        <span><strong>Total Weight:</strong> {{ number_format($sub->yield_weight_grams, 0) }}g</span>
+                    @endif
+                </div>
+
+                <table style="font-size: 0.85em; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background: #f8fafc;">
+                            <th width="60%" style="padding: 10px; border: 1px solid #e5e7eb;">Ingredient</th>
+                            <th width="20%" class="text-right" style="padding: 10px; border: 1px solid #e5e7eb;">Qty</th>
+                            <th width="20%" style="padding: 10px; border: 1px solid #e5e7eb;">Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($sub->stages as $sStage)
+                            @foreach($sStage->ingredients as $sRi)
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #e5e7eb;">{{ $sRi->ingredient->name ?? 'Unknown' }}</td>
+                                    <td class="text-right" style="padding: 8px; border: 1px solid #e5e7eb;">{{ number_format($sRi->quantity, 3) }}</td>
+                                    <td style="padding: 8px; border: 1px solid #e5e7eb;">{{ $sRi->unit }}</td>
+                                </tr>
+                            @endforeach
+                        @endforeach
+                    </tbody>
+                </table>
+
+                @if($sub->method)
+                    <div style="font-size: 0.9em; line-height: 1.6; background: #fdfdfd; border: 1px solid #f1f5f9; padding: 15px; border-radius: 6px;">
+                        <strong style="color: #374151; text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.05em;">Preparation Method:</strong><br>
+                        <div style="margin-top: 8px; white-space: pre-wrap;">{{ $sub->method }}</div>
+                    </div>
+                @endif
+            </div>
+        @endforeach
     @endif
 
 </body>

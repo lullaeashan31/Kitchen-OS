@@ -15,11 +15,13 @@ class InventoryController extends Controller
 {
     protected $excelService;
     protected $pdfParser;
+    protected $fifoService;
 
-    public function __construct(ExcelImportService $excelService, PdfInventoryParser $pdfParser)
+    public function __construct(ExcelImportService $excelService, PdfInventoryParser $pdfParser, \App\Services\FIFOInventoryService $fifoService)
     {
         $this->excelService = $excelService;
         $this->pdfParser = $pdfParser;
+        $this->fifoService = $fifoService;
     }
 
     public function index(Request $request, string $kitchen_slug)
@@ -254,11 +256,32 @@ class InventoryController extends Controller
 
         DB::transaction(function () use ($request, $ingredient) {
             $oldStock = $ingredient->current_stock;
-            $newStock = $oldStock + $request->adjustment_quantity;
+            $quantityChange = $request->adjustment_quantity;
+            $newStock = $oldStock + $quantityChange;
 
             if ($newStock < 0) {
-                // "Negative stock not allowed" - User rule
-                throw new \Exception("Insufficient stock. adjustment would result in negative stock.");
+                throw new \Exception("Insufficient stock. Adjustment would result in negative stock.");
+            }
+
+            // FIFO Handling
+            if ($quantityChange < 0) {
+                // Deduction: Use FIFO logic
+                $this->fifoService->deductStock(
+                    $ingredient, 
+                    abs($quantityChange), 
+                    'Adjustment', 
+                    null // Manual adjustment doesn't have a source log id usually, or we can use the InventoryLog id later
+                );
+            } else if ($quantityChange > 0 && $request->reason === 'Opening balance fix') {
+                // Adding stock via opening balance: Create a "Virtual Batch"
+                \App\Models\PurchaseBatch::create([
+                    'kitchen_id' => $ingredient->kitchen_id,
+                    'ingredient_id' => $ingredient->id,
+                    'quantity_initial' => $quantityChange,
+                    'quantity_remaining' => $quantityChange,
+                    'price_per_unit' => $ingredient->price ?? 0,
+                    'created_at' => now(),
+                ]);
             }
 
             $ingredient->current_stock = $newStock;
@@ -267,12 +290,24 @@ class InventoryController extends Controller
             InventoryLog::create([
                 'ingredient_id' => $ingredient->id,
                 'user_id' => Auth::id(),
-                'quantity_change' => $request->adjustment_quantity,
+                'quantity_change' => $quantityChange,
                 'action' => 'adjustment',
                 'stock_before' => $oldStock,
                 'stock_after' => $newStock,
                 'reason' => $request->reason,
             ]);
+
+            // Add to central Audit Log
+            \App\Models\AuditLog::log(
+                'Manual Adjustment: ' . $request->reason,
+                $ingredient,
+                ['current_stock' => $oldStock],
+                [
+                    'current_stock' => $newStock, 
+                    'adjustment' => $quantityChange,
+                    'reason' => $request->reason
+                ]
+            );
         });
 
         return back()->with('success', 'Stock adjusted successfully.');

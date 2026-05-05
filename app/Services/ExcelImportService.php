@@ -17,11 +17,13 @@ class ExcelImportService
 {
     protected $ingredientService;
     protected $recipeService;
+    protected $fifoService;
 
-    public function __construct(IngredientService $ingredientService, RecipeService $recipeService)
+    public function __construct(IngredientService $ingredientService, RecipeService $recipeService, \App\Services\FIFOInventoryService $fifoService)
     {
         $this->ingredientService = $ingredientService;
         $this->recipeService = $recipeService;
+        $this->fifoService = $fifoService;
     }
 
     public function importRecipes(UploadedFile $file, User $user): array
@@ -56,7 +58,9 @@ class ExcelImportService
                     'recipe_name' => 'required|string',
                     'category' => 'required|string',
                     'method' => 'required|string',
-                    'yields' => 'nullable|integer|min:1',
+                    'yield_portions' => 'nullable|numeric|min:0.001',
+                    'yield_weight_grams' => 'nullable|numeric|min:0.001',
+                    'yields' => 'nullable|numeric|min:0.001',
                 ]);
 
                 if ($validator->fails()) {
@@ -75,7 +79,9 @@ class ExcelImportService
                     'name' => trim($firstRow['recipe_name']),
                     'category_id' => $category->id,
                     'method' => $firstRow['method'],
-                    'yields' => $firstRow['yields'] ?? 1,
+                    'yield_portions' => $firstRow['yield_portions'] ?? null,
+                    'yield_weight_grams' => $firstRow['yield_weight_grams'] ?? null,
+                    'yields' => $firstRow['yield_portions'] ?? $firstRow['yields'] ?? 1,
                     // If creating new, default to Draft. If updating, keep status? Or reset to Draft?
                     // "Update existing recipes via reupload" -> usually reset to draft or keep?
                     // Let's reset to draft for safety on update too? Or keep.
@@ -96,6 +102,8 @@ class ExcelImportService
                         'quantity' => 'required|numeric|min:0',
                         'unit' => 'required|string',
                         'cost' => 'nullable|numeric|min:0',
+                        'purchase_quantity' => 'required|numeric|min:0.001',
+                        'usage_quantity' => 'required|numeric|min:0.001',
                     ]);
 
                     if ($ingValidator->fails()) {
@@ -103,6 +111,14 @@ class ExcelImportService
                     }
 
                     $ingredient = $this->ingredientService->createOrFind($row['ingredient_name']);
+
+                    // Update ingredient with purchase/usage quantity if provided
+                    if (isset($row['purchase_quantity']) || isset($row['usage_quantity'])) {
+                        $ingUpdates = [];
+                        if (isset($row['purchase_quantity'])) $ingUpdates['purchase_quantity'] = $row['purchase_quantity'];
+                        if (isset($row['usage_quantity'])) $ingUpdates['usage_quantity'] = $row['usage_quantity'];
+                        $ingredient->update($ingUpdates);
+                    }
 
                     $ingredientsData[] = [
                         'ingredient_id' => $ingredient->id,
@@ -171,6 +187,8 @@ class ExcelImportService
                     'category' => 'nullable|string',
                     'measurement_unit' => 'required|string',
                     'purchase_unit' => 'nullable|string',
+                    'purchase_quantity' => 'required|numeric|min:0.001',
+                    'usage_quantity' => 'required|numeric|min:0.001',
                     'price_per_unit' => 'required|numeric|min:0',
                     'vendor' => 'nullable|string',
                     'minimum_stock_level' => 'nullable|numeric|min:0',
@@ -184,6 +202,8 @@ class ExcelImportService
                     'name' => trim($row['item_name']),
                     'measurement_unit' => trim($row['measurement_unit']),
                     'purchase_unit' => trim($row['purchase_unit'] ?? $row['measurement_unit']),
+                    'purchase_quantity' => $row['purchase_quantity'] ?? 1,
+                    'usage_quantity' => $row['usage_quantity'] ?? 1,
                     'price' => $row['price_per_unit'],
                     'vendor' => $row['vendor'] ?? null,
                     'alert_threshold' => $row['minimum_stock_level'] ?? 0,
@@ -216,17 +236,29 @@ class ExcelImportService
                     $ingredient = \App\Models\Ingredient::find($row['inventory_id']);
                     $ingredient->update($attributes);
                 } else {
-                    // Create new
-                    // Check duplicate name?
-                    // "Each item gets unique inventory_id".
-                    // If name exists, duplicate? User says "Excel upload replaces existing items only if inventory_id matches".
-                    // Implies if I upload "Onion" without ID, and "Onion" exists, I might create duplicate "Onion" or fail?
-                    // Safest: Update if name matches? Or strictly ID?
-                    // "Excel upload replaces existing items only if inventory_id matches." -> This implies STRICT validation.
-                    // If I upload "Onion" (no ID) and "Onion" exists -> Error or New ID?
-                    // I will look for Name match as fallback to avoid chaos, or create new.
-                    // Let's create new if no ID.
                     $ingredient = \App\Models\Ingredient::create($attributes);
+                }
+
+                // If stock was provided, ensure we have a FIFO batch for it
+                if (isset($row['current_stock']) && $row['current_stock'] > 0) {
+                    $currentQty = (float)$row['current_stock'];
+                    
+                    // Check if approved batches already exist that cover this stock
+                    $existingBatchQty = \App\Models\PurchaseBatch::where('ingredient_id', $ingredient->id)
+                        ->sum('quantity_remaining');
+                    
+                    if ($currentQty > $existingBatchQty) {
+                        $diff = $currentQty - $existingBatchQty;
+                        // Create a "Migration/Opening Balance" batch for the difference
+                        \App\Models\PurchaseBatch::create([
+                            'kitchen_id' => $ingredient->kitchen_id,
+                            'ingredient_id' => $ingredient->id,
+                            'quantity_initial' => $diff,
+                            'quantity_remaining' => $diff,
+                            'price_per_unit' => $ingredient->price ?? 0,
+                            'created_at' => now(),
+                        ]);
+                    }
                 }
 
                 DB::commit();
@@ -285,23 +317,23 @@ class ExcelImportService
                     throw new \Exception("Item '{$name}' not found in inventory.");
                 }
 
-                $oldStock = $ingredient->current_stock;
+                // Use FIFO Deduction
+                $oldStock = (float) $ingredient->current_stock;
+                
+                $this->fifoService->deductStock(
+                    $ingredient, 
+                    $qtySold, 
+                    'Sales Report', 
+                    null 
+                );
+
                 $newStock = $oldStock - $qtySold;
-
-                // We allow negative stock if necessary for sales (usually) but let's check system rules.
-                // InventoryController@adjust says "Negative stock not allowed".
-                // Let's stick to that or just log warning?
-                // For sales report, maybe we should allow it but warn? 
-                // Or strictly prevent. I'll strictly prevent to match InventoryController@adjust.
-                if ($newStock < 0) {
-                    throw new \Exception("Insufficient stock for '{$name}'. adjustment would result in negative stock.");
-                }
-
                 $ingredient->current_stock = $newStock;
                 $ingredient->save();
 
                 // Log the deduction
                 \App\Models\InventoryLog::create([
+                    'kitchen_id' => $ingredient->kitchen_id,
                     'ingredient_id' => $ingredient->id,
                     'user_id' => $user->id,
                     'quantity_change' => -$qtySold,

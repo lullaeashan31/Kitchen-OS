@@ -32,6 +32,7 @@ class SopController extends Controller
                 });
             })
             ->with(['todayRun'])
+            ->withCount('items')
             ->get();
 
         return view('sop.index', compact('checklists'));
@@ -119,7 +120,7 @@ class SopController extends Controller
             ->first();
 
         $photoHistory = $completion ? ($completion->photo_history ?? []) : [];
-        $status = 'completed';
+        $status = 'resubmitted';
 
         if ($completion && $completion->status === 'rejected') {
             // Move current photo to history
@@ -130,7 +131,6 @@ class SopController extends Controller
                     'reason' => $completion->rejection_reason
                 ];
             }
-            $status = 'resubmitted';
         }
 
         $completion = SopItemCompletion::updateOrCreate(
@@ -163,16 +163,19 @@ class SopController extends Controller
     {
         $run = SopDailyRun::where('checklist_id', $checklist->id)->where('date', today())->firstOrFail();
 
+        $totalItems = $checklist->items()->count();
+        if ($totalItems === 0) {
+            return back()->with('error', 'This checklist has no items to complete.');
+        }
+
         if ($this->isChecklistFullyCompleted($checklist, $run)) {
             $run->update([
-                'status' => 'approved', // Auto-approve on completion
-                'approved_at' => now(),
-                'completed_at' => now()
+                'status' => 'pending', // Keep as pending for DB ENUM compatibility
+                'approved_at' => null,
+                'completed_at' => now() // This marks it as submitted by staff
             ]);
 
-            // TODO: Notify Manager
-
-            return redirect()->route('sop.index')->with('success', 'Checklist submitted and auto-approved!');
+            return redirect()->route('sop.index')->with('success', 'Checklist submitted for review!');
         }
 
         return back()->with('error', 'Please complete all items first.');

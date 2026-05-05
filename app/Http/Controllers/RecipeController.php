@@ -129,6 +129,10 @@ class RecipeController extends Controller
             },
             'stages.ingredients.ingredient'
         ]);
+        // Ensure costs are up-to-date with current FIFO data
+        $this->recipeService->recalculateRecipeCosts($recipe);
+        $recipe->refresh();
+
         $costPerPortion = $this->costService->calculateCostPerPortion($recipe);
 
         return view('recipes.show', compact('recipe', 'costPerPortion'));
@@ -229,8 +233,12 @@ class RecipeController extends Controller
 
     public function print(string $kitchen_slug, Recipe $recipe, Request $request)
     {
-        // Load necessary relationships
-        $recipe->load(['category', 'ingredients', 'stages.ingredients.ingredient', 'recipeIngredients.ingredient']);
+        // Load necessary relationships including sub-recipe expansion
+        $recipe->load([
+            'category',
+            'stages.ingredients.ingredient.producedByRecipes.stages.ingredients.ingredient',
+            'recipeIngredients.ingredient.producedByRecipes'
+        ]);
 
         if ($request->has('download') && $request->download == 'pdf') {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('recipes.print', compact('recipe'));
@@ -275,4 +283,18 @@ class RecipeController extends Controller
                 return redirect()->route('recipes.index')->with('error', 'Invalid export type.');
         }
     }
+
+    public function backupAll(string $kitchen_slug, \App\Services\GoogleDriveService $driveService)
+    {
+        $this->authorize('viewAny', Recipe::class);
+
+        // Only backup permanent recipes for now
+        $recipes = Recipe::permanent()->get();
+        foreach ($recipes as $recipe) {
+            \App\Jobs\ArchiveRecipePdf::dispatch($recipe);
+        }
+
+        return back()->with('success', "Backup started in the background for " . $recipes->count() . " recipes. PDFs will be archived to Google Drive shortly.");
+    }
 }
+

@@ -90,6 +90,11 @@ class Ingredient extends Model
         return $this->hasMany(InventoryLog::class);
     }
 
+    public function batches()
+    {
+        return $this->hasMany(PurchaseBatch::class);
+    }
+
     public function producedByRecipes()
     {
         return $this->hasMany(Recipe::class, 'produces_ingredient_id');
@@ -108,8 +113,8 @@ class Ingredient extends Model
             ->first();
 
         if ($latest instanceof Purchase) {
-            $purchaseUnit = $latest->unit;
-            $baseUnit = Unit::tryFrom($this->measurement_unit);
+            $purchaseUnit = $this->resolveUnit($latest->unit);
+            $baseUnit = $this->resolveUnit($this->measurement_unit);
 
             if ($purchaseUnit && $baseUnit && $purchaseUnit->canConvertTo($baseUnit)) {
                 $divisor = $purchaseUnit->convertTo(1, $baseUnit);
@@ -120,25 +125,29 @@ class Ingredient extends Model
             return (float) $latest->unit_price;
         }
 
-        // 2. If no purchase, check if this ingredient is produced by a recipe
-        $producingRecipe = $this->producedByRecipes()
-            ->where('status', \App\Enums\RecipeStatus::Permanent->value) // Only from approved recipes
-            ->latest()
-            ->first();
+        return 0;
+    }
 
-        if ($producingRecipe) {
-            // For sub-recipes that produce an ingredient, calculate cost per output unit
-            // Example: 1000g produced for ₹100 total -> ₹0.10 per gram
-            if ($producingRecipe->output_quantity > 0) {
-                return (float) ($producingRecipe->total_cost / $producingRecipe->output_quantity);
-            }
-            
-            // Fallback for simple portion-based sub-recipes
-            return (float) ($producingRecipe->cost_per_portion ?? 0);
+    /**
+     * Helper to resolve a unit string to a Unit enum case (copied from FIFO service for model-level use)
+     */
+    protected function resolveUnit($unit): ?Unit
+    {
+        if ($unit instanceof Unit) return $unit;
+        if (empty($unit)) return null;
+
+        $resolved = Unit::tryFrom($unit);
+        if ($resolved) return $resolved;
+
+        foreach (Unit::cases() as $case) {
+            if (strcasecmp($case->name, $unit) === 0) return $case;
         }
 
-        // 3. Fallback to base price
-        return (float) ($this->price ?? 0);
+        foreach (Unit::cases() as $case) {
+            if (stripos($case->label(), $unit) !== false) return $case;
+        }
+
+        return null;
     }
 
     /**
@@ -167,7 +176,7 @@ class Ingredient extends Model
                 ];
             }
 
-            $pUnit = $p->unit;
+            $pUnit = $this->resolveUnit($p->unit);
             $qty = (float) $p->quantity;
             
             $normalized = $qty;
