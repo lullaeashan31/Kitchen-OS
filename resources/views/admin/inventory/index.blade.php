@@ -138,50 +138,50 @@
         </form>
     </div>
 
-    <div style="background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
+    <div class="table-container mb-6">
         <form id="bulkDeleteForm" action="{{ route('admin.inventory.bulk_destroy') }}" method="POST">
             @csrf
             @method('DELETE')
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+            <table class="table">
+                <thead>
                     <tr>
-                        <th style="padding: 0.75rem 1rem; width: 40px;">
+                        <th style="width: 40px;">
                             <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
                         </th>
-                        <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Item Name</th>
-                        <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Category</th>
-                        <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Vendor / Price / Purchased</th>
-                        <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Purchased</th>
-                        <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Used</th>
-                        <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Current Stock</th>
-                        <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Unit</th>
-                        <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Price / Unit</th>
-                        <th style="padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Status</th>
-                        <th style="padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Actions</th>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Vendor / Price / Purchased</th>
+                        <th style="text-align: right;">Total Purchased</th>
+                        <th style="text-align: right;">Total Used</th>
+                        <th style="text-align: right;">Current Stock</th>
+                        <th>Unit</th>
+                        <th style="text-align: right;">Price / Unit</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($inventory as $item)
-                        <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 0.75rem 1rem;">
+                        <tr>
+                            <td>
                                 <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="item-checkbox" onclick="toggleBulkBtn()">
                             </td>
-                            <td style="padding: 0.75rem 1rem; font-weight: 500;">{{ $item->name }}</td>
-                            <td style="padding: 0.75rem 1rem;">{{ $item->category->name ?? '-' }}</td>
+                            <td style="font-weight: 500;">{{ $item->name }}</td>
+                            <td>{{ $item->category->name ?? '-' }}</td>
                             <td style="padding: 0.75rem 1rem; font-size: 0.8rem;">
                                 @php $vendorSummary = $item->vendor_purchase_summary; @endphp
                                 @if($vendorSummary->isEmpty())
                                     <span style="color: #94a3b8;">—</span>
                                 @else
                                     @foreach($vendorSummary as $v)
-                                        <div style="margin-bottom: 0.4rem; padding-bottom: 0.25rem; border-bottom: 1px dashed #f1f5f9; last-child: border-bottom: none;">
-                                            <div style="font-weight: 700; color: #1e293b; font-size: 0.85rem;">{{ $v['name'] }}</div>
+                                        <div style="margin-bottom: 0.4rem; padding-bottom: 0.25rem; border-bottom: 1px dashed var(--border-subtle); last-child: border-bottom: none;">
+                                            <div style="font-weight: 700; color: var(--text-primary); font-size: 0.85rem;">{{ $v['name'] }}</div>
                                             <div class="flex items-center gap-1 mt-0.5">
-                                                <span style="color: #475569; font-weight: 500;">
+                                                <span style="color: var(--text-muted); font-weight: 500;">
                                                     {{ number_format($v['purchase_quantity'], $v['purchase_quantity'] == (int)$v['purchase_quantity'] ? 0 : 1) }} {{ $v['purchase_unit'] }}
                                                 </span>
-                                                <span style="color: #94a3b8; font-size: 0.75rem;">(₹{{ number_format($v['unit_price'], 2) }}/{{ $v['purchase_unit'] }})</span>
-                                                <span style="color: #cbd5e1; font-size: 0.75rem;">→</span>
+                                                <span style="color: var(--text-muted); font-size: 0.75rem;">(₹{{ number_format($v['unit_price'], 2) }}/{{ $v['purchase_unit'] }})</span>
+                                                <span style="color: var(--border-subtle); font-size: 0.75rem;">→</span>
                                                 <span style="color: #16a34a; font-weight: 600; font-size: 0.75rem;">
                                                     {{ number_format($v['normalized_quantity'], 0) }} {{ $v['base_unit'] }}
                                                 </span>
@@ -190,18 +190,18 @@
                                     @endforeach
                                 @endif
                             </td>
-                            <td style="padding: 0.75rem 1rem; text-align: right; color: #16a34a; font-weight: 500;">
+                            <td style="text-align: right; color: #16a34a; font-weight: 500;">
                                 {{ number_format($item->total_purchased, 3) }}
                             </td>
-                            <td style="padding: 0.75rem 1rem; text-align: right; color: #ef4444; font-weight: 500;">
+                            <td style="text-align: right; color: #ef4444; font-weight: 500;">
                                 {{ number_format($item->total_used, 3) }}
                             </td>
-                            <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; {{ $item->current_stock_display <= $item->alert_threshold ? 'color: #ef4444;' : '' }}">
+                            <td style="text-align: right; font-weight: 600; {{ $item->current_stock_display <= $item->alert_threshold ? 'color: #ef4444;' : 'color: var(--text-primary);' }}">
                                 {{ number_format($item->current_stock_display, 3) }}
                             </td>
-                            <td style="padding: 0.75rem 1rem;">{{ $item->measurement_unit }}</td>
-                            <td style="padding: 0.75rem 1rem; text-align: right;">{{ number_format($item->price, 2) }}</td>
-                            <td style="padding: 0.75rem 1rem;">
+                            <td>{{ $item->measurement_unit }}</td>
+                            <td style="text-align: right;">{{ number_format($item->price, 2) }}</td>
+                            <td>
                                 @if($item->current_stock_display <= $item->alert_threshold)
                                     <span style="display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: #fef2f2; color: #dc2626;">
                                         Low Stock
@@ -212,17 +212,17 @@
                                     </span>
                                 @endif
                             </td>
-                            <td style="padding: 0.75rem 1rem; text-align: right;">
+                            <td style="text-align: right;">
                                 <a href="{{ route('admin.inventory.show', $item) }}" 
-                                   style="font-size: 0.85rem; color: #64748b; margin-right: 0.75rem; text-decoration: none;">
+                                   style="font-size: 0.85rem; color: var(--text-muted); margin-right: 0.75rem; text-decoration: none;">
                                     History
                                 </a>
                                 <a href="{{ route('ingredients.edit', $item) }}" 
-                                   style="font-size: 0.85rem; color: #3b82f6; margin-right: 0.75rem; text-decoration: none;">
+                                   style="font-size: 0.85rem; color: var(--accent); margin-right: 0.75rem; text-decoration: none;">
                                     Edit
                                 </a>
                                 <button type="button" onclick="openAdjustModal('{{ $item->id }}', '{{ addslashes($item->name) }}', '{{ $item->current_stock_display }}')" 
-                                    style="font-size: 0.85rem; color: #3b82f6; background: none; border: none; cursor: pointer; text-decoration: underline;">
+                                    style="font-size: 0.85rem; color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: underline;">
                                     Adjust
                                 </button>
                             </td>
@@ -243,14 +243,14 @@
     <!-- Adjust Modal -->
     <div id="adjustModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 99999; overflow: auto;">
         <div style="min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 2rem;">
-            <div style="background: white; padding: 2rem; border-radius: 0.75rem; width: 450px; max-width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); margin: auto;">
-                <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 600; color: #1e293b;">Adjust Stock: <span id="modalItemName"></span></h3>
-                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Current Stock: <strong id="modalCurrentStock" style="color: #3b82f6;"></strong></p>
+            <div class="card" style="width: 450px; max-width: 100%; margin: auto; padding: 2rem;">
+                <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">Adjust Stock: <span id="modalItemName"></span></h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Current Stock: <strong id="modalCurrentStock" style="color: var(--accent);"></strong></p>
                 
                 <form id="adjustForm" method="POST" action="">
                     @csrf
                     <div style="margin-bottom: 1.25rem;">
-                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Adjustment Quantity (+ or -)</label>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Adjustment Quantity (+ or -)</label>
                         <input type="number" step="0.001" name="adjustment_quantity" required 
                             placeholder="e.g., 10 or -5"
                             style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;"
@@ -259,7 +259,7 @@
                     </div>
 
                     <div style="margin-bottom: 1.5rem;">
-                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Reason</label>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Reason</label>
                         <select name="reason" required
                             style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;"
                             onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
@@ -292,18 +292,18 @@
     <!-- Sales Upload Sales Modal -->
     <div id="salesUploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 99999; overflow: auto;">
         <div style="min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 2rem;">
-            <div style="background: white; padding: 2rem; border-radius: 0.75rem; width: 450px; max-width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); margin: auto;">
+            <div class="card" style="width: 450px; max-width: 100%; margin: auto; padding: 2rem;">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #1e293b;">Upload Sales Report</h3>
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">Upload Sales Report</h3>
                     <button onclick="closeSalesUploadModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
                 
-                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
                     Upload an Excel/CSV file with <code>item_name</code> and <code>quantity_sold</code> to automatically adjust stock.
                     <br><br>
-                    <a href="{{ route('excel.sales_template') }}" class="text-indigo-600 hover:underline inline-flex items-center gap-1 font-bold">
+                    <a href="{{ route('excel.sales_template') }}" class="inline-flex items-center gap-1 font-bold" style="color: var(--accent);">
                         <i data-lucide="download" class="w-3 h-3"></i> Download Template
                     </a>
                 </p>
@@ -311,7 +311,7 @@
                 <form action="{{ route('admin.inventory.import_sales') }}" method="POST" enctype="multipart/form-data" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerHTML = 'Processing...';">
                     @csrf
                     <div style="margin-bottom: 1.5rem;">
-                        <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Select File (Excel or CSV)</label>
+                        <label class="block text-sm font-bold mb-2 uppercase tracking-wide" style="color: var(--text-muted);">Select File (Excel or CSV)</label>
                         <div class="relative">
                             <input type="file" name="file" required 
                                 class="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 focus:outline-none transition-colors"
@@ -321,7 +321,7 @@
 
                     <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                         <button type="button" onclick="closeSalesUploadModal()" 
-                            class="px-4 py-2 border-2 border-gray-200 text-gray-600 rounded-lg font-bold hover:bg-gray-50 transition-colors">
+                            class="px-4 py-2 border-2 rounded-lg font-bold transition-colors" style="border-color: var(--border-subtle); color: var(--text-muted);">
                             Cancel
                         </button>
                         <button type="submit" 

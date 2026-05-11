@@ -76,10 +76,12 @@
                                 <i data-lucide="plus" class="w-3 h-3"></i> Quick Add
                             </button>
                         </div>
-                        <select name="category_id" id="category-select" required class="form-control">
+                        <select name="category_id" id="category-select" required class="form-control"
+                                style="background-color: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 10px 14px; width: 100%; cursor: pointer; appearance: auto;">
                             <option value="" disabled>Select Category</option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id', $recipe->category_id) == $category->id ? 'selected' : '' }}>
+                                <option value="{{ $category->id }}" {{ old('category_id', $recipe->category_id) == $category->id ? 'selected' : '' }}
+                                        style="background-color: var(--bg-card); color: var(--text-primary);">
                                     {{ $category->name }} @if($category->type == 'ingredient') (Ingredient) @endif
                                 </option>
                             @endforeach
@@ -203,7 +205,7 @@
                     }
                 @endphp
                 @foreach($stages->where('name', '!=', 'Sub-Recipes') as $index => $stage)
-                    <div class="card p-8 relative group" data-stage-index="{{ $index }}">
+                    <div class="card p-8 relative group stage-block" data-stage-index="{{ $index }}">
                         <input type="hidden" name="stages[{{ $index }}][id]" value="{{ data_get($stage, 'id') }}">
                         <button type="button" onclick="removeStage(this)" class="absolute top-6 right-6 text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all" title="Remove Set">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
@@ -336,7 +338,7 @@
 
 {{-- Templates --}}
 <template id="stageTemplate">
-    <div class="card p-8 relative group">
+    <div class="card p-8 relative group stage-block">
         <input type="hidden" name="stages[STAGE_INDEX][id]" value="">
         <button type="button" onclick="removeStage(this)" class="absolute top-6 right-6 text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
             <i data-lucide="trash-2"></i>
@@ -472,15 +474,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Initialize Tom Select for searchable dropdowns
         if (typeof TomSelect !== 'undefined') {
-            // Category Select
-            const catSelect = document.getElementById('category-select');
-            if (catSelect) {
-                new TomSelect(catSelect, {
-                    create: false,
-                    placeholder: "Select Category...",
-                    allowEmptyOption: true
-                });
-            }
+            // NOTE: Category uses native <select> — no TomSelect needed (static list)
 
             // Sub-Recipe Selector in Modal
             const subSelectorEl = document.getElementById('sub-recipe-selector');
@@ -741,7 +735,7 @@
     function openSubRecipeModal() { document.getElementById('addSubRecipeModal').classList.remove('hidden'); }
     function closeSubRecipeModal() { document.getElementById('addSubRecipeModal').classList.add('hidden'); }
     
-    function confirmAddSubRecipe() {
+    async function confirmAddSubRecipe() {
         let val = '';
         let opt = null;
 

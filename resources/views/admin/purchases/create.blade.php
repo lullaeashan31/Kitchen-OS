@@ -325,6 +325,48 @@
                 margin: 0 !important;
                 opacity: 0 !important;
             }
+
+            /* Dark Theme for Tom Select */
+            .ts-wrapper .ts-control {
+                background-color: var(--bg-primary) !important;
+                border-color: var(--border-subtle) !important;
+                color: var(--text-primary) !important;
+                box-shadow: none !important;
+            }
+            .ts-wrapper.focus .ts-control {
+                border-color: var(--accent) !important;
+                box-shadow: 0 0 0 2px rgba(181, 151, 90, 0.1) !important;
+            }
+            .ts-dropdown {
+                background-color: var(--bg-card) !important;
+                border-color: var(--border-subtle) !important;
+                color: var(--text-primary) !important;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            }
+            .ts-dropdown .option {
+                color: var(--text-primary) !important;
+            }
+            .ts-dropdown .option:hover,
+            .ts-dropdown .option.active {
+                background-color: rgba(181, 151, 90, 0.1) !important;
+                color: var(--accent) !important;
+            }
+            .ts-dropdown-content .dropdown-input {
+                background-color: var(--bg-primary) !important;
+                border-color: var(--border-subtle) !important;
+                color: var(--text-primary) !important;
+            }
+            .ts-wrapper .ts-control .item {
+                background-color: rgba(181, 151, 90, 0.1) !important;
+                color: var(--accent) !important;
+                border-color: var(--border-subtle) !important;
+            }
+            .ts-wrapper .ts-control input {
+                color: var(--text-primary) !important;
+            }
+            .ts-wrapper .ts-control input::placeholder {
+                color: var(--text-muted) !important;
+            }
         </style>
         <script>
             let rowCount = {{ count(old('items', [])) }};
@@ -477,7 +519,6 @@
                 const max = 9999999;
                 let errorMsg = input.parentNode.querySelector('.unit-price-error');
                 
-                if (val > max) {
                 if (val > max) {
                     if (!errorMsg) {
                         errorMsg = document.createElement('p');
@@ -790,7 +831,7 @@
                 const wrapper = document.createElement('div');
                 wrapper.className = 'relative group';
                 wrapper.innerHTML = `
-                    <img src="${src}" class="w-full h-20 object-cover rounded-lg border border-gray-200">
+                    <img src="${src}" class="w-full h-20 object-cover rounded-lg" style="border: 1px solid var(--border-subtle);">
                     <button type="button" onclick="removeGoodsPhoto(${index})" 
                         class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

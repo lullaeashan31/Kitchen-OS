@@ -30,7 +30,7 @@
                         <th class="p-6 font-semibold">Staff Code</th>
                         <th class="p-6 font-semibold">Status</th>
                         <th class="p-6 font-semibold">Onboarding Data</th>
-                        <th class="p-6 font-semibold">Role & Access</th>
+                        <th class="p-6 font-semibold">Role &amp; Access</th>
                         <th class="p-6 font-semibold">Joined Date</th>
                         <th class="p-6 font-semibold text-right">Actions</th>
                     </tr>
@@ -97,7 +97,6 @@
                                                 Clocked Out
                                             </span>
                                         @endif
-                                        
                                         @if($user->employeeProfile)
                                             <span class="text-[10px] text-gray-400 mt-1 italic">Profile Verified</span>
                                         @endif
@@ -172,7 +171,7 @@
                                     <a href="{{ route('admin.staff.edit', $user->id) }}"
                                        class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 transition-colors border border-orange-200 shadow-sm"
                                        title="Edit details">
-                                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                        <i data-lucide="pencil" class="w-5 h-5"></i>
                                     </a>
                                     
                                     <form action="{{ route('admin.staff.destroy', $user->id) }}" method="POST" class="inline-block" 
@@ -180,9 +179,14 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
-                                                class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors border border-red-200 shadow-sm"
+                                                class="inline-flex items-center justify-center w-10 h-10 rounded-lg btn-danger"
                                                 title="Delete user">
-                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="3 6 5 6 21 6"/>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                                <line x1="14" y1="11" x2="14" y2="17"/>
+                                            </svg>
                                         </button>
                                     </form>
                                 </div>
@@ -238,7 +242,6 @@
                     
                     modal.classList.remove('hidden');
                     
-                    // Small delay to allow tailwind classes to apply transition
                     setTimeout(() => {
                         modal.classList.remove('opacity-0');
                         modal.classList.add('opacity-100');
@@ -246,7 +249,6 @@
                         modalBox.classList.add('scale-100');
                     }, 10);
                     
-                    // Reinitialize Lucide icons
                     if (typeof lucide !== 'undefined') {
                         lucide.createIcons();
                     }
@@ -268,10 +270,9 @@
             
             setTimeout(() => {
                 modal.classList.add('hidden');
-            }, 300); // Wait for transition
+            }, 300);
         }
 
-        // Close modal on outside click
         document.getElementById('staffDetailsModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeStaffDetails();

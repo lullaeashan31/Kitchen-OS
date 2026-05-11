@@ -8,6 +8,7 @@ use App\Models\Ingredient;
 use App\Models\InventoryLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Enums\Unit;
 
 class FIFOInventoryService
@@ -137,7 +138,7 @@ class FIFOInventoryService
             }
         }
 
-        // 2. Handle Scenarios for missing physical stock
+        // 2. Handle Scenarios for missing physical stock — use avg_cost as fallback (never crash on view)
         if ($remaining > 0.0001) {
             // Check for sub-recipe production
             $producingRecipe = \App\Models\Recipe::where('produces_ingredient_id', $ingredient->id)
@@ -169,11 +170,16 @@ class FIFOInventoryService
                     $totalCost += $remaining * $costPerUnit;
                     $remaining = 0;
                 } else {
-                    throw new \Exception("Cannot calculate cost for sub-recipe ingredient '{$ingredient->name}'. No yield/output information available on the producing recipe.");
+                    // Fallback: use avg_cost or price
+                    $fallbackPrice = (float)($ingredient->avg_cost ?? $ingredient->price ?? 0);
+                    $totalCost += $remaining * $fallbackPrice;
+                    Log::warning("FIFOCost: No yield on sub-recipe for '{$ingredient->name}', used avg_cost fallback.");
                 }
             } else {
-                // STRICT: No fallback to average or latest price.
-                throw new \Exception("Insufficient stock for {$ingredient->name}. Missing: " . number_format($remaining, 3) . " " . $ingredient->measurement_unit);
+                // Insufficient FIFO stock — fall back to avg_cost or price for cost estimation
+                $fallbackPrice = (float)($ingredient->avg_cost ?? $ingredient->price ?? 0);
+                $totalCost += $remaining * $fallbackPrice;
+                Log::warning("FIFOCost: Insufficient stock for '{$ingredient->name}' (missing: {$remaining}), used avg_cost fallback (₹{$fallbackPrice}).");
             }
         }
 

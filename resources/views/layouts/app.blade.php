@@ -69,6 +69,7 @@
             font-size: 0.9rem;
             margin: 0;
             -webkit-font-smoothing: antialiased;
+            color-scheme: dark;
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -253,6 +254,15 @@
             outline: none !important;
         }
 
+        /* Fix native browser picker icons (date/time) to be visible on dark background */
+        ::-webkit-calendar-picker-indicator {
+            filter: invert(1) opacity(0.5);
+            cursor: pointer;
+        }
+        ::-webkit-calendar-picker-indicator:hover {
+            filter: invert(1) opacity(0.9);
+        }
+
         .form-label {
             display: block;
             font-size: 10px;
@@ -278,13 +288,27 @@
             border-radius: var(--radius);
         }
 
-        .btn-primary, button[type="submit"]:not(.nav-link button) { 
+        .btn-primary, button[type="submit"]:not(.nav-link button):not(.btn-danger):not(.btn-icon-action) { 
             background-color: var(--accent) !important; 
             color: var(--bg-primary) !important; 
             padding: 14px 28px !important;
             border: none !important;
         }
-        .btn-primary:hover, button[type="submit"]:not(.nav-link button):hover { background-color: var(--accent-hover) !important; }
+        .btn-primary:hover, button[type="submit"]:not(.nav-link button):not(.btn-danger):not(.btn-icon-action):hover { background-color: var(--accent-hover) !important; }
+
+        .btn-danger {
+            background-color: #fef2f2 !important;
+            color: #dc2626 !important;
+            border: 1px solid #fecaca !important;
+            padding: 0 !important;
+        }
+        .btn-danger:hover { background-color: #fee2e2 !important; color: #b91c1c !important; }
+
+        .btn-icon-action {
+            padding: 0 !important;
+            background-color: transparent !important;
+            border: none !important;
+        }
 
         .btn-secondary {
             background-color: var(--bg-card) !important;
@@ -308,11 +332,52 @@
         .badge-warning { background: rgba(181, 151, 90, 0.1) !important; color: var(--accent) !important; border: 1px solid rgba(181, 151, 90, 0.2) !important; }
         .badge-danger { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; }
 
-        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
         ::-webkit-scrollbar-thumb { background: var(--bg-card); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* TOM SELECT — force dropdown above sticky/fixed elements */
+        .ts-wrapper .ts-dropdown,
+        .ts-dropdown {
+            z-index: 9999 !important;
+            position: absolute !important;
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-subtle) !important;
+            border-top: none !important;
+            border-radius: 0 0 var(--radius) var(--radius) !important;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.6) !important;
+            color: var(--text-primary) !important;
+        }
+        .ts-dropdown .ts-dropdown-content { max-height: 220px; overflow-y: auto; }
+        .ts-dropdown .option { 
+            padding: 10px 14px; 
+            color: var(--text-primary) !important; 
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+        .ts-dropdown .option:hover,
+        .ts-dropdown .option.active { 
+            background: rgba(181,151,90,0.12) !important; 
+            color: var(--accent) !important; 
+        }
+        .ts-dropdown .option.selected { 
+            background: rgba(181,151,90,0.08) !important; 
+            color: var(--accent) !important; 
+        }
+        .ts-wrapper .ts-control {
+            background-color: var(--bg-primary) !important;
+            border: 1px solid var(--border-subtle) !important;
+            color: var(--text-primary) !important;
+            border-radius: var(--radius) !important;
+            min-height: 42px !important;
+            padding: 8px 12px !important;
+            box-shadow: none !important;
+        }
+        .ts-wrapper.focus .ts-control { border-color: var(--accent) !important; }
+        .ts-control input { color: var(--text-primary) !important; background: transparent !important; }
+        .ts-control .item { color: var(--accent) !important; font-weight: 700; }
+        .ts-control .placeholder { color: var(--text-muted) !important; }
 
         /* ALERTS */
         .alert {
@@ -359,11 +424,11 @@
                 @if(auth()->user()->isSuperAdmin() && !app()->has('current_kitchen'))
                     <a href="{{ route('superadmin.dashboard') }}"
                         class="nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                        <i data-lucide="layout-dashboard" class="nav-icon"></i> Central Dashboard
+                        <i data-lucide="layout-dashboard" class="nav-icon"></i> SuperAdmin Dashboard
                     </a>
                     <a href="{{ route('superadmin.kitchens.index') }}"
                         class="nav-link {{ request()->routeIs('superadmin.kitchens.*') ? 'active' : '' }}">
-                        <i data-lucide="layout" class="nav-icon"></i> Manage Kitchens
+                        <i data-lucide="layout" class="nav-icon"></i> Kitchens
                     </a>
                 @endif
 
@@ -379,11 +444,11 @@
                             Time Clock
                         </div>
                         <a href="{{ route('attendance.tablet') }}" class="nav-link">
-                            <i data-lucide="clock" class="nav-icon"></i> Launch Tablet Mode
+                            <i data-lucide="clock" class="nav-icon"></i> Tablet Mode
                         </a>
                         @if(!auth()->user()->isStaff())
                             <a href="{{ route('admin.attendance.index') }}" class="nav-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
-                                <i data-lucide="list" class="nav-icon"></i> Attendance List
+                                <i data-lucide="list" class="nav-icon"></i> Attendance
                             </a>
                         @endif
                     @endif
@@ -400,17 +465,17 @@
                             <i data-lucide="credit-card" class="nav-icon"></i> My Payslips
                         </a>
                         <a href="{{ route('employee.attendance.index') }}" class="nav-link {{ request()->routeIs('employee.attendance.*') ? 'active' : '' }}">
-                            <i data-lucide="history" class="nav-icon"></i> My History
+                            <i data-lucide="history" class="nav-icon"></i> My Attendance
                         </a>
                     @endif
 
                     {{-- Inventory & Stock --}}
                     @if(auth()->user()->hasPermissionTo('module_inventory') || !auth()->user()->isStaff())
                         <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
-                            Inventory & Stock
+                            Inventory
                         </div>
                         <a href="{{ route('admin.inventory.index') }}" class="nav-link {{ request()->routeIs('admin.inventory.index') ? 'active' : '' }}">
-                            <i data-lucide="box" class="nav-icon"></i> Master Inventory
+                            <i data-lucide="box" class="nav-icon"></i> Inventory
                         </a>
                         <a href="{{ route('admin.reports.depletion') }}" class="nav-link {{ request()->routeIs('admin.reports.depletion') ? 'active' : '' }}">
                             <i data-lucide="trending-down" class="nav-icon"></i> Depletion Report
@@ -428,12 +493,12 @@
                     {{-- Recipe Management --}}
                     @if(auth()->user()->hasPermissionTo('module_recipes') || !auth()->user()->isStaff())
                         <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
-                            Recipe Management
+                            Recipes
                         </div>
                         @if(!auth()->user()->isStaff())
                             <a href="{{ route('admin.ingredients.pending') }}" class="nav-link {{ request()->routeIs('admin.ingredients.pending') ? 'active' : '' }} flex justify-between items-center">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="shield-check" class="nav-icon"></i> Ingredient Approvals
+                                    <i data-lucide="shield-check" class="nav-icon"></i> Pending Ingredients
                                 </span>
                                 @php $pendingCount = \App\Models\Ingredient::where('status','pending')->count(); @endphp
                                 @if($pendingCount > 0)
@@ -443,24 +508,24 @@
                         @endif
                         @if(auth()->user()->hasPermissionTo('module_production') || !auth()->user()->isStaff())
                             <a href="{{ route('production.create') }}" class="nav-link {{ request()->routeIs('production.*') ? 'active' : '' }}">
-                                <i data-lucide="flame" class="nav-icon"></i> Cook / Production
+                                <i data-lucide="flame" class="nav-icon"></i> Production
                             </a>
                         @endif
                         <a href="{{ route('recipes.index') }}" class="nav-link {{ request()->routeIs('recipes.*') && !request()->has('is_sub_recipe') ? 'active' : '' }}">
-                            <i data-lucide="book" class="nav-icon"></i> All Recipes
+                            <i data-lucide="book" class="nav-icon"></i> Recipes
                         </a>
                         @if(!auth()->user()->isStaff())
                             <a href="{{ route('recipes.index', ['is_sub_recipe' => 1]) }}" class="nav-link {{ request()->query('is_sub_recipe') == 1 ? 'active' : '' }}">
                                 <i data-lucide="layers" class="nav-icon"></i> Sub-Recipes
                             </a>
                             <a href="{{ route('recipes.create') }}" class="nav-link {{ request()->routeIs('recipes.create') ? 'active' : '' }}">
-                                <i data-lucide="plus-circle" class="nav-icon"></i> Create Recipe
+                                <i data-lucide="plus-circle" class="nav-icon"></i> Add Recipe
                             </a>
                             <a href="{{ route('categories.index') }}" class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}">
                                 <i data-lucide="tag" class="nav-icon"></i> Categories
                             </a>
                             <a href="{{ route('ingredients.index') }}" class="nav-link {{ request()->routeIs('ingredients.*') ? 'active' : '' }}">
-                                <i data-lucide="database" class="nav-icon"></i> Master Ingredients
+                                <i data-lucide="database" class="nav-icon"></i> Ingredients
                             </a>
                         @endif
                     @endif
@@ -468,7 +533,7 @@
                     {{-- Administration & HR --}}
                     @if(auth()->user()->hasPermissionTo('module_staff_management') || auth()->user()->hasPermissionTo('module_hr_payroll') || !auth()->user()->isStaff())
                         <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
-                            Administration & HR
+                            Admin
                         </div>
                         @if(auth()->user()->hasPermissionTo('module_audit_logs') || !auth()->user()->isStaff())
                             <a href="{{ route('audit_logs.index') }}" class="nav-link {{ request()->routeIs('audit_logs.*') ? 'active' : '' }}">
@@ -477,24 +542,24 @@
                         @endif
                         @if(auth()->user()->hasPermissionTo('module_staff_management') || !auth()->user()->isStaff())
                             <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-                                <i data-lucide="users" class="nav-icon"></i> Staff Profiles
+                                <i data-lucide="users" class="nav-icon"></i> Staff
                             </a>
                             <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
                                 <i data-lucide="briefcase" class="nav-icon"></i> Roles
                             </a>
                             <a href="{{ route('admin.schedule.index') }}" class="nav-link {{ request()->routeIs('admin.schedule.*') ? 'active' : '' }}">
-                                <i data-lucide="calendar" class="nav-icon"></i> Staff Schedule
+                                <i data-lucide="calendar" class="nav-icon"></i> Schedule
                             </a>
                         @endif
                         @if(auth()->user()->hasPermissionTo('module_hr_payroll') || !auth()->user()->isStaff())
                             <a href="{{ route('admin.payroll.index') }}" class="nav-link {{ request()->routeIs('admin.payroll.*') ? 'active' : '' }}">
-                                <i data-lucide="credit-card" class="nav-icon"></i> Payroll Management
+                                <i data-lucide="credit-card" class="nav-icon"></i> Payroll
                             </a>
                             <a href="{{ route('admin.leave.index') }}" class="nav-link {{ request()->routeIs('admin.leave.*') ? 'active' : '' }}">
-                                <i data-lucide="sun" class="nav-icon"></i> Leave Approvals
+                                <i data-lucide="sun" class="nav-icon"></i> Leaves
                             </a>
                             <a href="{{ route('admin.performance.index') }}" class="nav-link {{ request()->routeIs('admin.performance.*') ? 'active' : '' }}">
-                                <i data-lucide="award" class="nav-icon"></i> Performance Reviews
+                                <i data-lucide="award" class="nav-icon"></i> Performance
                             </a>
                         @endif
                     @endif
@@ -502,23 +567,23 @@
                     {{-- Operations (SOP) --}}
                     @if(auth()->user()->hasPermissionTo('module_sops') || !auth()->user()->isStaff())
                         <div class="mt-6 mb-2 px-4 text-[9px] uppercase text-accent font-black tracking-[0.2em] opacity-40">
-                            Operations (SOP)
+                            SOPs
                         </div>
                         <a href="{{ route('sop.index') }}" class="nav-link {{ request()->routeIs('sop.*') ? 'active' : '' }}">
-                            <i data-lucide="clipboard-list" class="nav-icon"></i> SOP Checklists
+                            <i data-lucide="clipboard-list" class="nav-icon"></i> SOPs
                         </a>
                         @if(!auth()->user()->isStaff())
                             <a href="{{ route('admin.sop.index') }}" class="nav-link {{ request()->routeIs('admin.sop.index') ? 'active' : '' }}">
-                                <i data-lucide="settings" class="nav-icon"></i> Manage Checklists
+                                <i data-lucide="settings" class="nav-icon"></i> SOP Management
                             </a>
                             <a href="{{ route('admin.shifts.index') }}" class="nav-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
-                                <i data-lucide="watch" class="nav-icon"></i> Manage Shifts
+                                <i data-lucide="watch" class="nav-icon"></i> Shifts
                             </a>
                             <a href="{{ route('admin.shifts.assignments.index') }}" class="nav-link {{ request()->routeIs('admin.shifts.assignments.*') ? 'active' : '' }}">
-                                <i data-lucide="user-plus" class="nav-icon"></i> Daily Assignments
+                                <i data-lucide="user-plus" class="nav-icon"></i> Assignments
                             </a>
                             <a href="{{ route('admin.sop.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.sop.reviews.*') ? 'active' : '' }}">
-                                <i data-lucide="check-square" class="nav-icon"></i> Review SOPs
+                                <i data-lucide="check-square" class="nav-icon"></i> SOP Reviews
                             </a>
                         @endif
                     @endif
@@ -538,7 +603,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-secondary w-full py-3 text-[9px]">
-                        <i data-lucide="log-out" class="w-3 h-3"></i> Terminate Session
+                        <i data-lucide="log-out" class="w-3 h-3"></i> Logout
                     </button>
                 </form>
             </div>

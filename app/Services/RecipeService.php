@@ -384,11 +384,17 @@ class RecipeService
                 $recipeUnit = $this->fifoService->resolveUnit($recipeIngredient->unit);
                 $quantityToCost = (float)$recipeIngredient->quantity;
 
-                if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
-                    $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
-                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
-                } else {
-                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                try {
+                    if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
+                        $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
+                        $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
+                    } else {
+                        $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                    }
+                } catch (\Exception $e) {
+                    $fallback = (float)($ingredient->avg_cost ?? $ingredient->price ?? 0);
+                    $cost = $fallback * $quantityToCost;
+                    Log::warning("approve: FIFO cost fallback for '{$ingredient->name}': " . $e->getMessage());
                 }
 
                 // Update cost
@@ -554,11 +560,18 @@ class RecipeService
                 $recipeUnit = $this->fifoService->resolveUnit($recipeIngredient->unit);
                 $quantityToCost = (float)$recipeIngredient->quantity;
 
-                if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
-                    $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
-                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
-                } else {
-                    $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                try {
+                    if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
+                        $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
+                        $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
+                    } else {
+                        $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                    }
+                } catch (\Exception $e) {
+                    // Fallback to avg_cost * quantity if FIFO calculation fails
+                    $fallback = (float)($ingredient->avg_cost ?? $ingredient->price ?? 0);
+                    $cost = $fallback * $quantityToCost;
+                    Log::warning("recalculateRecipeCosts fallback for '{$ingredient->name}': " . $e->getMessage());
                 }
 
                 $recipeIngredient->update(['cost' => $cost]);

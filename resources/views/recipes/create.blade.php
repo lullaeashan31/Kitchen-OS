@@ -314,7 +314,7 @@
         <div class="w-full xl:w-1/3 space-y-4 md:space-y-6">
 
             <!-- Basic Details Card -->
-            <div class="card p-0 sticky top-6">
+            <div class="card p-0 sticky top-6" style="overflow: visible;">
                 <div class="p-6 border-b border-subtle">
                     <h2 class="flex items-center gap-2 text-primary">
                         <i data-lucide="info" class="text-accent"></i>
@@ -357,10 +357,12 @@
                                 + Quick Add
                             </button>
                         </div>
-                        <select name="category_id" required id="category-select" class="form-control">
+                        <select name="category_id" required id="category-select" class="form-control"
+                                style="background-color: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 10px 14px; width: 100%; cursor: pointer; appearance: auto;">
                             <option value="" disabled {{ old('category_id') ? '' : 'selected' }}>Select category...</option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}
+                                        style="background-color: var(--bg-card); color: var(--text-primary);">
                                     {{ $category->name }}
                                 </option>
                             @endforeach
@@ -1064,15 +1066,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize Tom Select for searchable dropdowns
             if (typeof TomSelect !== 'undefined') {
-                // Initialize Category Select
-                const catSelect = document.getElementById('category-select');
-                if (catSelect) {
-                    new TomSelect(catSelect, {
-                        create: false,
-                        placeholder: "Select Category...",
-                        allowEmptyOption: true
-                    });
-                }
+                // NOTE: Category uses native <select> — no TomSelect needed (static list)
 
                 // Initialize Sub-Recipe Selector in Modal
                 const subSelectorEl = document.getElementById('sub-recipe-selector');
