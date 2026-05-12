@@ -61,7 +61,6 @@
         <form method="GET" action="{{ route('admin.inventory.index') }}" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <!-- Search -->
             <div class="flex flex-col gap-1">
-                <label class="text-xs font-bold text-gray-500 uppercase">Search Item</label>
                 <input type="text" name="search" class="form-control" placeholder="Name..." value="{{ request('search') }}">
             </div>
 
@@ -250,9 +249,9 @@
                 <form id="adjustForm" method="POST" action="">
                     @csrf
                     <div style="margin-bottom: 1.25rem;">
-                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Adjustment Quantity (+ or -)</label>
-                        <input type="number" step="0.001" name="adjustment_quantity" required 
-                            placeholder="e.g., 10 or -5"
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Quantity to Add or Remove</label>
+                        <input type="number" step="0.001" name="adjustment_quantity" required
+                            placeholder="e.g., +10 to add, -5 to remove"
                             style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;"
                             onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                         <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 0.25rem;">Enter positive to add, negative to reduce stock</small>

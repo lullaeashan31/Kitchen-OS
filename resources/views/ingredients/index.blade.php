@@ -39,7 +39,7 @@
                             <td>
                                 <div class="font-semibold">{{ $ingredient->name }}</div>
                                 @if($ingredient->status === 'pending')
-                                    <span class="badge-warning">Pending Approval</span>
+                                    <span class="badge-warning">Awaiting Approval</span>
                                 @endif
                             </td>
                             <td>
@@ -53,11 +53,11 @@
                             </td>
                             <td>
                                 @if($ingredient->status === 'approved')
-                                    <span class="badge-success">✔ Approved</span>
+                                    <span class="badge-success">Active</span>
                                 @elseif($ingredient->status === 'pending')
-                                    <span class="badge-warning">⏳ Pending</span>
+                                    <span class="badge-warning">Awaiting Approval</span>
                                 @else
-                                    <span class="badge-danger">✕ Rejected</span>
+                                    <span class="badge-danger">Not Approved</span>
                                 @endif
                             </td>
                             <td>{{ $ingredient->recipes_count ?? 0 }} Recipes</td>

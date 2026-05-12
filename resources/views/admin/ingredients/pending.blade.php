@@ -6,9 +6,9 @@
             <span class="p-2 bg-orange-100 text-orange-600 rounded-xl">
                 <i data-lucide="shield-check" class="w-8 h-8"></i>
             </span>
-            Ingredient Approval Queue
+            New Ingredients to Review
         </h1>
-        <p class="text-sm text-slate-500 mt-2">New ingredients submitted by staff members that require your verification before usage in recipes.</p>
+        <p class="text-sm text-slate-500 mt-2">Staff have added these items. Set the price, unit, and category, then approve them for use in recipes.</p>
     </div>
 @endsection
 
@@ -22,7 +22,7 @@
                             <tr class="bg-slate-50/80 border-b border-slate-100">
                                 <th class="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Ingredient Details</th>
                                 <th class="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Created By</th>
-                                <th class="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Configuration Required</th>
+                                <th class="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Details Needed</th>
                                 <th class="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Status</th>
                                 <th class="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-wider text-right">Actions</th>
                             </tr>

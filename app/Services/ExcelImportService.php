@@ -321,17 +321,15 @@ class ExcelImportService
                 $oldStock = (float) $ingredient->current_stock;
                 
                 $this->fifoService->deductStock(
-                    $ingredient, 
-                    $qtySold, 
-                    'Sales Report', 
-                    null 
+                    $ingredient,
+                    $qtySold,
+                    'Sales Report',
+                    null
                 );
 
-                $newStock = $oldStock - $qtySold;
-                $ingredient->current_stock = $newStock;
-                $ingredient->save();
-
                 // Log the deduction
+                $ingredient->refresh();
+                $newStock = $ingredient->current_stock;
                 \App\Models\InventoryLog::create([
                     'kitchen_id' => $ingredient->kitchen_id,
                     'ingredient_id' => $ingredient->id,

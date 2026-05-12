@@ -11,7 +11,19 @@ class UnitConversionService
      */
     public function convert(float $value, Unit|string $fromUnit, Unit|string $toUnit): float
     {
-        return $value;
+        if (is_string($fromUnit)) {
+            $fromUnit = Unit::tryFrom($fromUnit) ?? Unit::Gram;
+        }
+        if (is_string($toUnit)) {
+            $toUnit = Unit::tryFrom($toUnit) ?? Unit::Gram;
+        }
+        if ($fromUnit === $toUnit) {
+            return $value;
+        }
+        if (!$fromUnit->canConvertTo($toUnit)) {
+            return $value;
+        }
+        return $fromUnit->convertTo($value, $toUnit);
     }
 
     /**

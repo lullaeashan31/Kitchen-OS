@@ -8,7 +8,7 @@
             </a>
             <div>
                 <h1>Create Recipe</h1>
-                <p class="text-muted text-sm mt-1">Design a new culinary creation.</p>
+                <p class="text-muted text-sm mt-1">Add a new recipe to your kitchen book.</p>
             </div>
         </div>
     </div>

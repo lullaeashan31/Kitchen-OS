@@ -49,12 +49,11 @@
                         <label class="block text-sm font-bold text-gray-700 mb-2">Leave Type</label>
                         <select name="type" required
                             class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-gray-800">
-                            <option value="casual" {{ old('type') == 'casual' ? 'selected' : '' }}>Casual Leave (2 weeks
-                                advance required)</option>
-                            <option value="sick" {{ old('type') == 'sick' ? 'selected' : '' }}>Sick Leave (Emergency)</option>
-                            <option value="annual" {{ old('type') == 'annual' ? 'selected' : '' }}>Annual Leave (2 weeks
-                                advance required)</option>
+                            <option value="casual" {{ old('type') == 'casual' ? 'selected' : '' }}>Casual Leave</option>
+                            <option value="sick" {{ old('type') == 'sick' ? 'selected' : '' }}>Sick Leave</option>
+                            <option value="annual" {{ old('type') == 'annual' ? 'selected' : '' }}>Annual Leave</option>
                         </select>
+                        <p style="font-size:0.75rem;color:#7A7A72;margin-top:6px;">Casual and annual leave requires at least 2 weeks' notice. Sick leave can be submitted on the day.</p>
                     </div>
 
                     <div>

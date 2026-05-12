@@ -3,7 +3,7 @@
 @section('header')
     <div class="mb-8">
         <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Manager Dashboard</h1>
-        <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Kitchen OS <span class="text-accent">Operational Overview</span></p>
+        <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Here's what's happening in your kitchen today.</p>
     </div>
 @endsection
 
@@ -37,7 +37,7 @@
                     <div class="p-3 bg-white/5 text-muted rounded-xl border border-subtle">
                         <i data-lucide="clock" class="w-5 h-5"></i>
                     </div>
-                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Personnel</h3>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Check-ins Today</h3>
                 </div>
                 <div class="text-4xl font-black text-primary">{{ $stats['today_attendance'] }}</div>
                 <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Check-ins Recorded</p>
@@ -51,10 +51,10 @@
                     <div class="p-3 bg-white/5 text-muted rounded-xl border border-subtle">
                         <i data-lucide="book-open" class="w-5 h-5"></i>
                     </div>
-                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">R&D</h3>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Recipes</h3>
                 </div>
                 <div class="text-4xl font-black text-primary">{{ $stats['total_recipes'] }}</div>
-                <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Approved Formulations</p>
+                <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Approved recipes</p>
             </div>
         </a>
 
@@ -65,10 +65,10 @@
                     <div class="p-3 bg-accent/10 text-accent rounded-xl border border-accent/20">
                         <i data-lucide="alert-circle" class="w-5 h-5"></i>
                     </div>
-                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Review</h3>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Needs Approval</h3>
                 </div>
                 <div class="text-4xl font-black text-accent">{{ $stats['pending_ingredients'] }}</div>
-                <p class="text-[9px] font-bold text-accent uppercase tracking-tight mt-1">Pending Validation</p>
+                <p class="text-[9px] font-bold text-accent uppercase tracking-tight mt-1">Awaiting approval</p>
             </div>
         </a>
     </div>
@@ -77,7 +77,7 @@
     <div class="mb-10">
         <h2 class="text-[11px] font-black text-accent uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
             <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-            Command Centre
+            Today's Overview
         </h2>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -94,7 +94,7 @@
                         <div class="text-2xl font-black text-primary">
                             {{ $stats['completed_checklists'] }}/{{ $stats['total_checklists'] }}
                         </div>
-                        <p class="text-[9px] font-bold text-muted uppercase">Execution</p>
+                        <p class="text-[9px] font-bold text-muted uppercase">Done today</p>
                     </div>
                     @php $sopPercent = $stats['total_checklists'] > 0 ? ($stats['completed_checklists'] / $stats['total_checklists']) * 100 : 0; @endphp
                     <div class="w-10 h-10 relative flex items-center justify-center">
@@ -165,7 +165,7 @@
     <div class="card p-8">
         <h2 class="text-[11px] font-black text-accent uppercase tracking-widest mb-8 flex items-center gap-3">
             <i data-lucide="briefcase" class="w-4 h-4"></i>
-            Operational Toolkit
+            Quick Actions
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -181,16 +181,16 @@
                 <div class="w-16 h-16 bg-primary text-accent rounded-full border border-subtle flex items-center justify-center mb-6 group-hover:bg-accent group-hover:text-primary transition-all">
                     <i data-lucide="plus-circle" class="w-8 h-8"></i>
                 </div>
-                <h4 class="font-black text-primary uppercase text-xs tracking-widest">Protocol Build</h4>
-                <p class="text-[9px] font-bold text-muted uppercase mt-2">Create new recipe SOPs</p>
+                <h4 class="font-black text-primary uppercase text-xs tracking-widest">New Recipe</h4>
+                <p class="text-[9px] font-bold text-muted uppercase mt-2">Write a new recipe</p>
             </a>
 
             <a href="{{ route('ingredients.index') }}" class="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-subtle hover:border-accent/40 hover:bg-white/5 transition-all group text-center">
                 <div class="w-16 h-16 bg-primary text-accent rounded-full border border-subtle flex items-center justify-center mb-6 group-hover:bg-accent group-hover:text-primary transition-all">
                     <i data-lucide="database" class="w-8 h-8"></i>
                 </div>
-                <h4 class="font-black text-primary uppercase text-xs tracking-widest">Master Library</h4>
-                <p class="text-[9px] font-bold text-muted uppercase mt-2">Review database items</p>
+                <h4 class="font-black text-primary uppercase text-xs tracking-widest">Ingredients</h4>
+                <p class="text-[9px] font-bold text-muted uppercase mt-2">Browse all ingredients</p>
             </a>
         </div>
     </div>

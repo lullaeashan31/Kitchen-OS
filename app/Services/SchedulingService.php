@@ -32,6 +32,13 @@ class SchedulingService
 
             if ($staff->isEmpty()) return;
 
+            // Pre-load all approved leave requests for the date range to avoid N+1 queries
+            $approvedLeaves = LeaveRequest::where('status', 'approved')
+                ->where('start_date', '<=', $end->toDateString())
+                ->where('end_date', '>=', $start->toDateString())
+                ->get()
+                ->groupBy('user_id');
+
             // Keep a local assignment counter map for this run.
             // (Collection::fill does not exist on Support\Collection.)
             $staffAssignedCounts = array_fill_keys($staff->pluck('id')->toArray(), 0);
@@ -44,7 +51,7 @@ class SchedulingService
                     $required = (int)($shift->required_staff ?? 1);
 
                     // 1. Get available staff for this date (considering leaves/off-days)
-                    $availableOnDate = $this->getAvailableStaffForDate($staff, $currentDate);
+                    $availableOnDate = $this->getAvailableStaffForDate($staff, $currentDate, $approvedLeaves);
 
                     // 2. Filter out already assigned today
                     $alreadyAssignedToday = ShiftAssignment::where('date', $currentDate->toDateString())
@@ -98,10 +105,11 @@ class SchedulingService
     /**
      * Check if staff is available on a specific date.
      */
-    private function getAvailableStaffForDate($staff, $date)
+    private function getAvailableStaffForDate($staff, $date, $approvedLeaves = null)
     {
         $dayName = $date->format('l');
-        return $staff->filter(function ($user) use ($date, $dayName) {
+        $dateStr = $date->toDateString();
+        return $staff->filter(function ($user) use ($date, $dayName, $dateStr, $approvedLeaves) {
             // 1. Check Weekly Off (Only for legacy string values)
             if (!is_numeric($user->weekly_off_day)) {
                 if ($user->weekly_off_day === $dayName) {
@@ -109,12 +117,18 @@ class SchedulingService
                 }
             }
 
-            // 2. Check Approved Leave
-            $hasLeave = LeaveRequest::where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->whereDate('start_date', '<=', $date)
-                ->whereDate('end_date', '>=', $date)
-                ->exists();
+            // 2. Check Approved Leave (use pre-loaded collection to avoid N+1)
+            if ($approvedLeaves !== null) {
+                $hasLeave = isset($approvedLeaves[$user->id]) && $approvedLeaves[$user->id]->some(function ($leave) use ($dateStr) {
+                    return $leave->start_date <= $dateStr && $leave->end_date >= $dateStr;
+                });
+            } else {
+                $hasLeave = LeaveRequest::where('user_id', $user->id)
+                    ->where('status', 'approved')
+                    ->whereDate('start_date', '<=', $date)
+                    ->whereDate('end_date', '>=', $date)
+                    ->exists();
+            }
 
             if ($hasLeave) {
                 return false;

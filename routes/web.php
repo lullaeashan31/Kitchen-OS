@@ -1,28 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-
-// EMERGENCY TOOLS (Remove after use)
-Route::get('/emergency-migrate', function() {
-    try {
-        Artisan::call('migrate', ['--force' => true]);
-        return "Migration successful: <pre>" . Artisan::output() . "</pre>";
-    } catch (\Exception $e) {
-        return "Migration failed: " . $e->getMessage();
-    }
-});
-
-Route::get('/emergency-db-fix', function() {
-    try {
-        DB::statement("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS prep_time_minutes INT DEFAULT NULL AFTER yield_batches");
-        DB::statement("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS yield_weight_grams DECIMAL(10,2) DEFAULT NULL AFTER yield_portions");
-        return "DB fix successful. Columns added if they were missing.";
-    } catch (\Exception $e) {
-        return "DB fix failed: " . $e->getMessage();
-    }
-});
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RecipeController;
@@ -74,6 +53,10 @@ Route::get('/storage/purchases/{type}/{filename}', function ($type, $filename) {
 
 // Custom route to serve attendance photos (fixes 403 error)
 Route::get('/storage/attendance/{path}', function ($path) {
+    if (str_contains($path, '..')) {
+        abort(403);
+    }
+
     $full_path = "attendance/{$path}";
 
     // Check public disk first
@@ -92,7 +75,7 @@ Route::get('/storage/attendance/{path}', function ($path) {
     $mimeType = $disk->mimeType($full_path);
 
     return response($file, 200)->header('Content-Type', $mimeType);
-})->where('path', '.*');
+})->where('path', '.*')->middleware('auth');
 
 // Onboarding Wizard (Public with Token)
 Route::get('/onboarding/{token}', [\App\Http\Controllers\Employee\OnboardingWizardController::class , 'show'])->name('onboarding.wizard');
@@ -206,7 +189,7 @@ Route::middleware(['auth', 'tenant'])->prefix('k/{kitchen_slug}')->group(functio
         Route::put('admin/ingredients/{ingredient}/approve', [PendingIngredientController::class , 'update'])->name('admin.ingredients.approve');
         Route::delete('admin/ingredients/{ingredient}/reject', [PendingIngredientController::class , 'destroy'])->name('admin.ingredients.reject');
 
-        Route::get('ingredients/search/ajax', [IngredientController::class , 'search'])->name('ingredients.search');
+        Route::get('ingredients/search/ajax', [IngredientController::class , 'search'])->name('ingredients.search')->middleware('throttle:30,1');
         Route::get('ingredients/{ingredient}/fifo-cost', [IngredientController::class, 'getFIFOCost'])->name('ingredients.fifo_cost');
 
         // Production Days

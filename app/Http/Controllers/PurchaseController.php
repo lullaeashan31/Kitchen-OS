@@ -256,75 +256,73 @@ class PurchaseController extends Controller
      */
     protected function executeApproval(Purchase $purchase)
     {
-        DB::transaction(function () use ($purchase) {
-            /** @var Purchase $purchase */
-            /** @var Ingredient|null $ingredient */
-            $ingredient = $purchase->ingredient()->lockForUpdate()->first();
-            if (!($ingredient instanceof Ingredient)) return;
+        /** @var Purchase $purchase */
+        /** @var Ingredient|null $ingredient */
+        $ingredient = $purchase->ingredient()->lockForUpdate()->first();
+        if (!($ingredient instanceof Ingredient)) return;
 
-            // Normalize quantity to ingredient base unit
-            $quantity = (float)$purchase->quantity;
-            $purchaseUnit = $this->fifoService->resolveUnit($purchase->unit);
-            $baseUnit = $this->fifoService->resolveUnit($ingredient->base_unit);
-            $normalizedQuantity = $quantity;
+        // Normalize quantity to ingredient base unit
+        $quantity = (float)$purchase->quantity;
+        $purchaseUnit = $this->fifoService->resolveUnit($purchase->unit);
+        $baseUnit = $this->fifoService->resolveUnit($ingredient->base_unit);
+        $normalizedQuantity = $quantity;
 
-            if ($purchaseUnit && $baseUnit && $purchaseUnit->canConvertTo($baseUnit)) {
-                $normalizedQuantity = $purchaseUnit->convertTo($quantity, $baseUnit);
-            }
+        if ($purchaseUnit && $baseUnit && $purchaseUnit->canConvertTo($baseUnit)) {
+            $normalizedQuantity = $purchaseUnit->convertTo($quantity, $baseUnit);
+        }
 
-            // Update Purchase Status
-            $purchase->update([
-                'status' => 'approved',
-                'remaining_quantity' => $normalizedQuantity,
-                'approved_by' => Auth::id() ?? $purchase->created_by,
-                'approved_at' => now(),
-            ]);
+        // Update Purchase Status
+        $purchase->update([
+            'status' => 'approved',
+            'remaining_quantity' => $normalizedQuantity,
+            'approved_by' => Auth::id() ?? $purchase->created_by,
+            'approved_at' => now(),
+        ]);
 
-            $totalPrice = (float) $purchase->total_price;
-            $unitPrice = (float) $purchase->unit_price;
+        $totalPrice = (float) $purchase->total_price;
+        $unitPrice = (float) $purchase->unit_price;
 
-            // Create FIFO Batch
-            PurchaseBatch::create([
-                'kitchen_id' => $ingredient->kitchen_id,
-                'purchase_id' => $purchase->id,
-                'ingredient_id' => $ingredient->id,
-                'quantity_initial' => $normalizedQuantity,
-                'quantity_remaining' => $normalizedQuantity,
-                'price_per_unit' => $normalizedQuantity > 0 ? ($totalPrice / $normalizedQuantity) : $unitPrice,
-            ]);
+        // Create FIFO Batch
+        PurchaseBatch::create([
+            'kitchen_id' => $ingredient->kitchen_id,
+            'purchase_id' => $purchase->id,
+            'ingredient_id' => $ingredient->id,
+            'quantity_initial' => $normalizedQuantity,
+            'quantity_remaining' => $normalizedQuantity,
+            'price_per_unit' => $normalizedQuantity > 0 ? ($totalPrice / $normalizedQuantity) : $unitPrice,
+        ]);
 
-            // Update Ingredient Stock & Avg Price
-            $currentStock = (float) $ingredient->current_stock;
-            $currentAvgCost = (float) ($ingredient->avg_cost ?? 0);
-            $newStock = $currentStock + $normalizedQuantity;
+        // Update Ingredient Stock & Avg Price
+        $currentStock = (float) $ingredient->current_stock;
+        $currentAvgCost = (float) ($ingredient->avg_cost ?? 0);
+        $newStock = $currentStock + $normalizedQuantity;
 
-            if ($newStock > 0) {
-                $newAvgCost = (($currentStock * $currentAvgCost) + $totalPrice) / $newStock;
-            } else {
-                $newAvgCost = $unitPrice;
-            }
+        if ($newStock > 0) {
+            $newAvgCost = (($currentStock * $currentAvgCost) + $totalPrice) / $newStock;
+        } else {
+            $newAvgCost = $unitPrice;
+        }
 
-            // Update basic configuration based on latest purchase
-            $ingredient->purchase_price = $purchase->total_price;
-            $ingredient->purchase_quantity = $normalizedQuantity;
-            $ingredient->purchase_unit = $ingredient->measurement_unit;
-            $ingredient->current_stock = $newStock;
-            $ingredient->avg_cost = $newAvgCost;
-            $ingredient->price = $normalizedQuantity > 0 ? ($totalPrice / $normalizedQuantity) : $unitPrice;
-            $ingredient->save();
+        // Update basic configuration based on latest purchase
+        $ingredient->purchase_price = $purchase->total_price;
+        $ingredient->purchase_quantity = $normalizedQuantity;
+        $ingredient->purchase_unit = $ingredient->measurement_unit;
+        $ingredient->current_stock = $newStock;
+        $ingredient->avg_cost = $newAvgCost;
+        $ingredient->price = $normalizedQuantity > 0 ? ($totalPrice / $normalizedQuantity) : $unitPrice;
+        $ingredient->save();
 
-            // Log Inventory Change
-            InventoryLog::create([
-                'kitchen_id' => $ingredient->kitchen_id,
-                'ingredient_id' => $ingredient->id,
-                'user_id' => Auth::id() ?? $purchase->created_by,
-                'quantity_change' => $normalizedQuantity,
-                'action' => 'purchase_approved',
-                'stock_before' => $currentStock,
-                'stock_after' => $newStock,
-                'reason' => 'Purchase Approved (Auto/Manual). Vendor: ' . ($purchase->vendor->name ?? $purchase->vendor_name ?? 'Unknown') . '. Invoice: ' . $purchase->id,
-            ]);
-        });
+        // Log Inventory Change
+        InventoryLog::create([
+            'kitchen_id' => $ingredient->kitchen_id,
+            'ingredient_id' => $ingredient->id,
+            'user_id' => Auth::id() ?? $purchase->created_by,
+            'quantity_change' => $normalizedQuantity,
+            'action' => 'purchase_approved',
+            'stock_before' => $currentStock,
+            'stock_after' => $newStock,
+            'reason' => 'Purchase Approved (Auto/Manual). Vendor: ' . ($purchase->vendor->name ?? $purchase->vendor_name ?? 'Unknown') . '. Invoice: ' . $purchase->id,
+        ]);
     }
 
     public function bulkApprove(Request $request, string $kitchen_slug)

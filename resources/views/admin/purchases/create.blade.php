@@ -44,7 +44,7 @@
                         <div class="flex gap-2 items-center">
                             <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 border border-subtle hover:bg-white/5 transition-all" style="border: 1px solid var(--border-subtle);">
                                 <i data-lucide="folder-open" class="w-4 h-4 text-muted"></i>
-                                <span class="text-sm text-muted" id="invoice_photo_label">Choose File</span>
+                                <span class="text-sm text-muted" id="invoice_photo_label">Upload Invoice Photo</span>
                                 <input type="file" name="invoice_photo" id="invoice_photo" accept="image/*" required class="hidden"
                                     onchange="handleFileSelect(this, 'invoice_preview', 'invoice_photo_label')">
                             </label>
@@ -66,7 +66,7 @@
                         <div class="flex gap-2 items-center">
                             <label class="flex-1 cursor-pointer flex items-center gap-2 px-4 py-2 border border-subtle hover:bg-white/5 transition-all" style="border: 1px solid var(--border-subtle);">
                                 <i data-lucide="folder-open" class="w-4 h-4 text-muted"></i>
-                                <span class="text-sm text-muted" id="goods_photo_label">Choose Files (Multiple)</span>
+                                <span class="text-sm text-muted" id="goods_photo_label">Upload Goods Photos</span>
                                 <input type="file" name="goods_photo[]" id="goods_photo" accept="image/*" multiple required class="hidden"
                                     onchange="handleMultipleFileSelect(this, 'goods_preview_grid', 'goods_photo_label')">
                             </label>
@@ -182,7 +182,7 @@
 
                 <div class="flex gap-4">
                     <button type="submit" class="btn btn-primary w-full py-4 text-lg">
-                        <i data-lucide="save"></i> Save Purchases
+                        <i data-lucide="save"></i> Record Purchase
                     </button>
                 </div>
             </form>
@@ -852,7 +852,7 @@
                 
                 input.files = dt.files;
                 renderGoodsGrid(input);
-                document.getElementById('goods_photo_label').textContent = input.files.length > 0 ? input.files.length + ' files selected' : 'Choose Files (Multiple)';
+                document.getElementById('goods_photo_label').textContent = input.files.length > 0 ? input.files.length + ' files selected' : 'Upload Goods Photos';
             }
 
             function handleFileSelect(input, previewId, labelId) {
@@ -873,7 +873,7 @@
                 const div = document.getElementById(previewId);
                 div.querySelector('img').src = '';
                 div.classList.add('hidden');
-                document.getElementById(labelId).textContent = 'Choose File';
+                document.getElementById(labelId).textContent = 'Upload Invoice Photo';
             }
         </script>
     @endpush

@@ -30,7 +30,8 @@ class PayrollController extends Controller
             'year' => 'required|integer',
         ]);
 
-        $results = $payrollService->generatePayroll($request->month, $request->year);
+        $kitchen = app('current_kitchen');
+        $results = $payrollService->generatePayroll($request->month, $request->year, $kitchen);
 
         if (count($results['errors']) > 0) {
             return redirect()->route('admin.payroll.index', ['month' => $request->month, 'year' => $request->year])

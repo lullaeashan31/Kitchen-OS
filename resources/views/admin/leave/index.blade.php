@@ -2,7 +2,7 @@
 
 @section('header')
     <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Leave Approvals</h1>
+        <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Staff Leave Requests</h1>
         <p class="text-gray-500 mt-1">Review and manage staff time-off requests.</p>
     </div>
 @endsection

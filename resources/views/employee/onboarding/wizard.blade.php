@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Onboarding | Mischief Food Pvt Ltd</title>
+    <title>Welcome to Traverse Inc.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style type="text/tailwindcss">
@@ -111,7 +111,7 @@
                     <i data-lucide="utensils" class="w-6 h-6 md:w-7 md:h-7"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg md:text-xl font-black text-slate-900 leading-none tracking-tight uppercase">{{ $user->kitchen ? $user->kitchen->name : 'Mischief Food' }}</h1>
+                    <h1 class="text-lg md:text-xl font-black text-slate-900 leading-none tracking-tight uppercase">{{ $user->kitchen ? $user->kitchen->name : 'Traverse Inc.' }}</h1>
                     <p class="text-[9px] md:text-[10px] text-rose-500 font-black tracking-[0.2em] mt-1 md:mt-1.5 uppercase opacity-80">Onboarding portal</p>
                 </div>
             </div>
@@ -818,7 +818,7 @@
                         <h3 class="text-lg md:text-xl font-black mb-4 md:mb-6">Asset Responsibility Acknowledgment</h3>
                         <div class="bg-white/5 border border-white/10 p-5 md:p-6 rounded-2xl md:rounded-3xl mb-6 md:mb-8 space-y-3 opacity-80">
                             @foreach([
-                                'All uniform and equipment remain property of Mischief Food Pvt Ltd.',
+                                'All uniform and equipment remain property of Traverse Inc.',
                                 'I am responsible for laundry and maintenance of my uniform.',
                                 'Any loss of assets (ID Card, Equipment) will be reported in 24h.',
                                 'Damaged assets due to negligence may be deducted from final settlement.'

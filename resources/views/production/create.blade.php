@@ -60,7 +60,7 @@
                     <div class="space-y-4">
                         <label class="form-label text-[10px] uppercase">Select Recipe <span class="text-red-500">*</span></label>
                         <select name="recipe_id" id="recipe_id" class="form-control" required>
-                            <option value="">-- Choose Approved Recipe --</option>
+                            <option value="">Select a recipe...</option>
                             @foreach($recipes as $recipe)
                                 @php $yieldValue = $recipe->yield_portions ?? $recipe->yields ?? 1; @endphp
                                 <option value="{{ $recipe->id }}" data-yields="{{ $yieldValue }}">
@@ -68,7 +68,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p class="text-[10px] font-bold text-muted uppercase tracking-widest opacity-60">Only approved recipes are available</p>
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-widest opacity-60">Only approved recipes can be used for production</p>
                     </div>
 
                     {{-- Quantity Control --}}

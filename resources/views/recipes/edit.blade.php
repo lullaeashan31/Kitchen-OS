@@ -7,7 +7,7 @@
     </a>
     <div>
         <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Edit Recipe</h1>
-        <p class="text-xs md:text-sm text-muted font-medium mt-1 uppercase tracking-widest">Refining <span class="text-accent">{{ $recipe->name }}</span></p>
+        <p class="text-xs md:text-sm text-muted font-medium mt-1 uppercase tracking-widest">Editing <span class="text-accent">{{ $recipe->name }}</span></p>
     </div>
 </div>
 @endsection

@@ -3,7 +3,7 @@
 @section('header')
     <div class="mb-8">
         <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary">Admin Dashboard</h1>
-        <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Kitchen OS <span class="text-accent">Management Console</span></p>
+        <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Good morning — here's what needs your attention today.</p>
     </div>
 @endsection
 
@@ -17,7 +17,7 @@
                     <div class="p-3 bg-accent text-primary rounded-xl transition-all group-hover:scale-110">
                         <i data-lucide="users" class="w-5 h-5"></i>
                     </div>
-                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Personnel</h3>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Staff</h3>
                 </div>
                 <div class="text-4xl font-black text-primary">{{ $stats['total_staff'] }}</div>
                 <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Total Registered Staff</p>
@@ -31,7 +31,7 @@
                     <div class="p-3 bg-white/5 text-accent rounded-xl border border-subtle">
                         <i data-lucide="activity" class="w-5 h-5"></i>
                     </div>
-                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Operations</h3>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">On Shift</h3>
                 </div>
                 <div class="flex items-baseline gap-3">
                     <div class="text-4xl font-black text-primary">{{ $stats['active_staff'] }}</div>
@@ -67,7 +67,7 @@
                     <div class="p-3 bg-white/5 text-muted rounded-xl border border-subtle">
                         <i data-lucide="chef-hat" class="w-5 h-5"></i>
                     </div>
-                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">R&D</h3>
+                    <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Recipes</h3>
                 </div>
                 <div class="text-4xl font-black text-primary">{{ $stats['total_recipes'] }}</div>
                 @if($stats['pending_ingredients'] > 0)
@@ -75,7 +75,7 @@
                         {{ $stats['pending_ingredients'] }} Ingredients Pending
                     </p>
                 @else
-                    <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">Global Library Synced</p>
+                    <p class="text-[9px] font-bold text-muted uppercase tracking-tight mt-1">All ingredients approved</p>
                 @endif
             </div>
         </a>
@@ -85,9 +85,9 @@
     <div class="mb-10">
         <h2 class="text-[11px] font-black text-accent uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
             <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-            Command Centre
+            Today's Overview
         </h2>
-        
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {{-- SOP Status --}}
             <a href="{{ route('admin.sop.reviews.index') }}" class="card p-6 group hover:border-accent/40">
@@ -95,14 +95,14 @@
                     <div class="p-2 bg-white/5 text-accent rounded-lg border border-subtle">
                         <i data-lucide="clipboard-check" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">SOP Status</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">Checklists</span>
                 </div>
                 <div class="flex items-end justify-between">
                     <div>
                         <div class="text-2xl font-black text-primary">
                             {{ $stats['completed_checklists'] }}/{{ $stats['total_checklists'] }}
                         </div>
-                        <p class="text-[9px] font-bold text-muted uppercase">Execution Rate</p>
+                        <p class="text-[9px] font-bold text-muted uppercase">Done today</p>
                     </div>
                     @php $sopPercent = $stats['total_checklists'] > 0 ? ($stats['completed_checklists'] / $stats['total_checklists']) * 100 : 0; @endphp
                     <div class="w-10 h-10 relative flex items-center justify-center">
@@ -121,10 +121,10 @@
                     <div class="p-2 bg-red-500/10 text-red-500 rounded-lg">
                         <i data-lucide="clock-alert" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-[9px] font-black text-red-500/60 uppercase tracking-widest">High Risk</span>
+                    <span class="text-[9px] font-black text-red-500/60 uppercase tracking-widest">Overdue</span>
                 </div>
                 <div class="text-2xl font-black text-red-500">{{ $stats['overdue_sop_count'] }}</div>
-                <p class="text-[9px] font-bold text-red-500/40 uppercase">Overdue Checklists</p>
+                <p class="text-[9px] font-bold text-red-500/40 uppercase">Checklists overdue</p>
             </a>
 
             {{-- Inventory --}}
@@ -159,12 +159,12 @@
                     <div class="p-2 {{ $stats['pos_synced_today'] ? 'bg-accent/10 text-accent' : 'bg-red-500/10 text-red-500' }} rounded-lg">
                         <i data-lucide="{{ $stats['pos_synced_today'] ? 'refresh-cw' : 'alert-circle' }}" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">System Sync</span>
+                    <span class="text-[9px] font-black text-muted uppercase tracking-widest">Sales Data</span>
                 </div>
                 <div class="text-lg font-black {{ $stats['pos_synced_today'] ? 'text-accent' : 'text-red-500' }} uppercase tracking-tighter">
                     {{ $stats['pos_synced_today'] ? 'Synced' : 'Required' }}
                 </div>
-                <p class="text-[9px] font-bold text-muted uppercase">{{ $stats['pos_synced_today'] ? 'Sales Data OK' : 'Manual CSV Required' }}</p>
+                <p class="text-[9px] font-bold text-muted uppercase">{{ $stats['pos_synced_today'] ? 'Up to date' : 'Upload today\'s sales' }}</p>
             </a>
         </div>
     </div>
@@ -195,12 +195,12 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <div class="grid grid-cols-1 gap-10">
         {{-- Quick Actions Panel --}}
-        <div class="lg:col-span-2 card p-8">
+        <div class="card p-8">
             <h2 class="text-[11px] font-black text-accent uppercase tracking-widest mb-8 flex items-center gap-3">
                 <i data-lucide="zap" class="w-4 h-4"></i>
-                Operational Shortcuts
+                Quick Actions
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -209,8 +209,8 @@
                         <i data-lucide="clipboard-list" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Attendance Flow</h4>
-                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Override logs & shifts</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Attendance</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">View and manage logs</p>
                     </div>
                 </a>
 
@@ -219,8 +219,8 @@
                         <i data-lucide="plus" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">New Formulation</h4>
-                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Initialize recipe build</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">New Recipe</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Write a new recipe</p>
                     </div>
                 </a>
 
@@ -229,8 +229,8 @@
                         <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Bulk Import</h4>
-                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Sync master Excel data</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Import Data</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Upload from Excel</p>
                     </div>
                 </a>
 
@@ -239,49 +239,54 @@
                         <i data-lucide="user-cog" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Staff Registry</h4>
-                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Manage personnel & roles</p>
+                        <h4 class="font-bold text-primary uppercase text-xs tracking-widest">Staff</h4>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-1">Manage your team</p>
                     </div>
                 </a>
             </div>
         </div>
 
-        {{-- System Health --}}
+        {{-- Today's Summary --}}
         <div class="card bg-primary p-8 border-subtle">
             <h2 class="text-[11px] font-black text-accent uppercase tracking-widest mb-8 flex items-center gap-3">
-                <i data-lucide="shield-check" class="w-4 h-4"></i>
-                Engine Status
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                Today's Date
             </h2>
 
-            <div class="space-y-8">
-                <div class="flex items-start gap-4">
-                    <div class="w-2 h-2 mt-1.5 rounded-full bg-accent shadow-[0_0_12px_rgba(181,151,90,0.6)]"></div>
-                    <div>
-                        <h4 class="text-xs font-black text-primary uppercase tracking-tight">Database Cluster</h4>
-                        <p class="text-[9px] font-bold text-muted uppercase mt-0.5">High availability active</p>
-                    </div>
-                </div>
+            <div class="text-3xl font-black text-primary tracking-tight mb-8">{{ now()->format('l, d F Y') }}</div>
 
-                <div class="flex items-start gap-4">
-                    <div class="w-2 h-2 mt-1.5 rounded-full bg-accent shadow-[0_0_12px_rgba(181,151,90,0.6)]"></div>
-                    <div>
-                        <h4 class="text-xs font-black text-primary uppercase tracking-tight">Cloud Backbone</h4>
-                        <p class="text-[9px] font-bold text-muted uppercase mt-0.5">S3 + Drive Synced</p>
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-black text-muted uppercase tracking-widest">Pending Actions</h3>
+                @if($stats['overdue_sop_count'] > 0)
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                        <p class="text-xs font-bold text-primary">{{ $stats['overdue_sop_count'] }} checklist(s) overdue</p>
                     </div>
-                </div>
-
-                <div class="flex items-start gap-4">
-                    <div class="w-2 h-2 mt-1.5 rounded-full bg-accent shadow-[0_0_12px_rgba(181,151,90,0.6)]"></div>
-                    <div>
-                        <h4 class="text-xs font-black text-primary uppercase tracking-tight">Node Access</h4>
-                        <p class="text-[9px] font-bold text-muted uppercase mt-0.5">Tablet/POS Gateway Up</p>
+                @endif
+                @if($stats['low_stock_count'] > 0)
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-accent"></div>
+                        <p class="text-xs font-bold text-primary">{{ $stats['low_stock_count'] }} low stock alert(s)</p>
                     </div>
-                </div>
-            </div>
-
-            <div class="mt-12 pt-8 border-t border-subtle">
-                <div class="text-[9px] font-black text-muted uppercase tracking-[0.3em] mb-2">Build Identifier</div>
-                <div class="text-3xl font-black text-primary tracking-tighter italic">v2.1.0-tra</div>
+                @endif
+                @if($stats['pending_purchases_count'] > 0)
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-accent"></div>
+                        <p class="text-xs font-bold text-primary">{{ $stats['pending_purchases_count'] }} purchase(s) awaiting approval</p>
+                    </div>
+                @endif
+                @if(!$stats['pos_synced_today'])
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                        <p class="text-xs font-bold text-primary">Sales data not uploaded today</p>
+                    </div>
+                @endif
+                @if($stats['overdue_sop_count'] == 0 && $stats['low_stock_count'] == 0 && $stats['pending_purchases_count'] == 0 && $stats['pos_synced_today'])
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-accent shadow-[0_0_12px_rgba(181,151,90,0.6)]"></div>
+                        <p class="text-xs font-bold text-primary">All clear — nothing pending</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

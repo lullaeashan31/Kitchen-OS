@@ -174,7 +174,7 @@
 
             @if($recipe->method)
                 <div class="card">
-                    <h3 class="mb-4 text-accent uppercase tracking-widest text-[11px] font-black">Recipe Narrative</h3>
+                    <h3 class="mb-4 text-accent uppercase tracking-widest text-[11px] font-black">Method Notes</h3>
                     <div class="text-lg leading-relaxed text-primary italic font-serif whitespace-pre-wrap opacity-90">"{{ $recipe->method }}"</div>
                 </div>
             @endif
@@ -183,7 +183,7 @@
                 <div class="card border-l-4 border-l-red-500 bg-red-500/5">
                     <div class="flex items-center gap-3 mb-4">
                         <i data-lucide="alert-triangle" class="text-red-500"></i>
-                        <h4 class="text-[11px] font-black text-red-500 uppercase tracking-widest">Allergen Protocol</h4>
+                        <h4 class="text-[11px] font-black text-red-500 uppercase tracking-widest">Allergens</h4>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         @foreach($recipe->allergens as $allergen)
@@ -248,7 +248,7 @@
                         <input type="hidden" name="yield_type" value="portions">
                         <input type="hidden" name="new_yield" id="formNewYield" value="{{ $recipe->yield_portions ?? $recipe->yields }}">
                         <button type="submit" class="btn btn-primary w-full py-4 text-[10px] uppercase tracking-widest">
-                            <i data-lucide="copy"></i> Branch New Version
+                            <i data-lucide="copy"></i> Save New Version
                         </button>
                     </form>
                 </div>
@@ -260,9 +260,8 @@
                     <div>
                         <h3 class="flex items-center gap-2 mb-1">
                             <i data-lucide="paperclip" class="w-5 h-5 text-accent"></i>
-                            Files
+                            Attached Files
                         </h3>
-                        <p class="text-[10px] font-bold text-muted uppercase tracking-widest">Recipe Artifacts</p>
                     </div>
                 </div>
 
@@ -307,9 +306,8 @@
                 <div class="mb-6">
                     <h3 class="flex items-center gap-2 mb-1">
                         <i data-lucide="history" class="w-5 h-5 text-accent"></i>
-                        Lineage
+                        Version History
                     </h3>
-                    <p class="text-[10px] font-bold text-muted uppercase tracking-widest">Version History</p>
                 </div>
 
                 <div class="space-y-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">

@@ -3,7 +3,7 @@
 @section('header')
     <div>
         <h1>Recipe Book</h1>
-        <p class="text-muted text-sm">Manage kitchen recipes and approvals</p>
+        <p class="text-muted text-sm">Your recipe book — view, create, and approve recipes</p>
     </div>
 @endsection
 
@@ -74,7 +74,7 @@
                     <label class="form-label">Status</label>
                     <select name="status" class="form-control">
                         <option value="">All Statuses</option>
-                        <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Pending (Draft)</option>
+                        <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Awaiting Approval (Draft)</option>
                         <option value="permanent" {{ request('status') == 'permanent' ? 'selected' : '' }}>Approved</option>
                         <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                     </select>
@@ -124,7 +124,7 @@
                                 @if($recipe->status->value === 'permanent')
                                     <span class="badge badge-success">Approved</span>
                                 @elseif($recipe->status->value === 'draft')
-                                    <span class="badge badge-warning">Pending</span>
+                                    <span class="badge badge-warning">Awaiting Approval</span>
                                 @else
                                     <span class="badge badge-danger">Rejected</span>
                                 @endif

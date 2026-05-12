@@ -138,8 +138,11 @@ class ProductionService
         ]);
 
         // Also update the ingredient's main stock table for general visibility
+        $stockBefore = $producedIngredient->current_stock;
         $producedIngredient->increment('current_stock', $quantity);
-        
+        $producedIngredient->refresh();
+        $stockAfter = $producedIngredient->current_stock;
+
         // Log the addition
         \App\Models\InventoryLog::create([
             'kitchen_id' => $item->kitchen_id,
@@ -147,8 +150,8 @@ class ProductionService
             'user_id' => auth()->id(),
             'quantity_change' => $quantity,
             'action' => 'RECIPE_PRODUCTION',
-            'stock_before' => $producedIngredient->current_stock - $quantity,
-            'stock_after' => $producedIngredient->current_stock,
+            'stock_before' => $stockBefore,
+            'stock_after' => $stockAfter,
             'reason' => "Production of sub-recipe: {$recipe->name}",
         ]);
     }

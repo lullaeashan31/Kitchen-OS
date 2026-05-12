@@ -87,30 +87,27 @@ class ProductionController extends Controller
             $portions = $validated['quantity'] * $yieldValue;
         }
 
-        // Check Stock Availability First
-        $missingStock = [];
-        foreach ($recipe->ingredients as $ingredient) {
-            $requiredQtyInRecipeUnit = ($ingredient->pivot->quantity * $portions) / $yieldValue;
-            
-            $recipeUnit = Unit::tryFrom($ingredient->pivot->unit);
-            $stockUnit = Unit::tryFrom($ingredient->measurement_unit);
+        try {
+        DB::transaction(function () use ($recipe, $portions, $request, $yieldValue) {
+            // Check Stock Availability Inside Transaction (with lock to prevent race conditions)
+            $missingStock = [];
+            foreach ($recipe->ingredients as $ingredient) {
+                $lockedIngredient = \App\Models\Ingredient::lockForUpdate()->findOrFail($ingredient->id);
+                $requiredQtyInRecipeUnit = ($ingredient->pivot->quantity * $portions) / $yieldValue;
 
-            if ($recipeUnit && $stockUnit && $recipeUnit->canConvertTo($stockUnit)) {
-                $requiredQty = $recipeUnit->convertTo($requiredQtyInRecipeUnit, $stockUnit);
-            } else {
-                $requiredQty = $requiredQtyInRecipeUnit;
+                $recipeUnit = Unit::tryFrom($ingredient->pivot->unit);
+                $stockUnit = Unit::tryFrom($lockedIngredient->measurement_unit);
+
+                if ($recipeUnit && $stockUnit && $recipeUnit->canConvertTo($stockUnit)) {
+                    $requiredQty = $recipeUnit->convertTo($requiredQtyInRecipeUnit, $stockUnit);
+                } else {
+                    $requiredQty = $requiredQtyInRecipeUnit;
+                }
+
+                if ($lockedIngredient->current_stock < $requiredQty) {
+                    throw new \Exception('Insufficient stock for ' . $lockedIngredient->name . ' (Need: ' . number_format($requiredQty, 3) . ' ' . $lockedIngredient->measurement_unit . ', Have: ' . number_format($lockedIngredient->current_stock, 3) . ')');
+                }
             }
-
-            if ($ingredient->current_stock < $requiredQty) {
-                $missingStock[] = $ingredient->name . " (Need: " . number_format($requiredQty, 3) . " " . $ingredient->measurement_unit . ", Have: " . number_format($ingredient->current_stock, 3) . ")";
-            }
-        }
-
-        if (!empty($missingStock)) {
-            return back()->with('error', 'Insufficient Stock: ' . implode(', ', $missingStock));
-        }
-
-        DB::transaction(function () use ($recipe, $portions, $request) {
             // 1. Initialize costs and create placeholder log
             $totalProductionCost = 0;
             $log = ProductionLog::create([
@@ -300,6 +297,9 @@ class ProductionController extends Controller
                 ]);
             }
         });
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         // Build success message with inventory deduction details
         $deductedDetails = [];

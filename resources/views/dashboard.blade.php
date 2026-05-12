@@ -22,7 +22,7 @@
                 </a>
             @else
                 <div class="card flex-1 min-w-[300px]" style="border-style: dashed;">
-                    <h3 style="margin: 0;">No Production Today</h3>
+                    <h3 style="margin: 0;">Nothing scheduled for today</h3>
                 </div>
             @endif
 

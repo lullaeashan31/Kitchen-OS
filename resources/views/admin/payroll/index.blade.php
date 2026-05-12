@@ -24,7 +24,7 @@
                 @csrf
                 <input type="hidden" name="month" value="{{ $month }}">
                 <input type="hidden" name="year" value="{{ $year }}">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all text-xs flex items-center gap-2" title="Recalculate base salary from Staff Monthly Salary. Run again after editing staff salary.">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all text-xs flex items-center gap-2" title="Regenerate this month's payroll based on current staff salaries and attendance. Run this again if you've changed a staff member's salary.">
                     <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                     Generate Payroll
                 </button>
@@ -77,7 +77,7 @@
                                 </span>
                             @else
                                 <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase flex items-center gap-1 w-fit">
-                                    <i data-lucide="clock" class="w-3 h-3"></i> Pending
+                                    <i data-lucide="clock" class="w-3 h-3"></i> Not Paid
                                 </span>
                             @endif
                         </td>

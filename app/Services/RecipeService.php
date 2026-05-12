@@ -278,6 +278,7 @@ class RecipeService
                             'name' => $nameString,
                             'status' => 'pending',
                             'price' => 0,
+                            'kitchen_id' => app()->has('current_kitchen') ? app('current_kitchen')->id : null,
                         ];
                         $newIng = \App\Models\Ingredient::create($newDetails);
                         $ingredientId = $newIng->id;
@@ -371,42 +372,42 @@ class RecipeService
         }
 
         try {
-            // 1. Recalculate Costs using Latest Avg Cost
-            $recipe->load('recipeIngredients.ingredient');
+            DB::transaction(function () use ($recipe, $user) {
+                // 1. Recalculate Costs using Latest Avg Cost
+                $recipe->load('recipeIngredients.ingredient');
 
-            foreach ($recipe->recipeIngredients as $recipeIngredient) {
-                $ingredient = $recipeIngredient->ingredient;
-                if (!$ingredient) {
-                    continue;
-                }
-
-                $baseUnit = $this->fifoService->resolveUnit($ingredient->measurement_unit);
-                $recipeUnit = $this->fifoService->resolveUnit($recipeIngredient->unit);
-                $quantityToCost = (float)$recipeIngredient->quantity;
-
-                try {
-                    if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
-                        $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
-                        $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
-                    } else {
-                        $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                foreach ($recipe->recipeIngredients as $recipeIngredient) {
+                    $ingredient = $recipeIngredient->ingredient;
+                    if (!$ingredient) {
+                        continue;
                     }
-                } catch (\Exception $e) {
-                    $fallback = (float)($ingredient->avg_cost ?? $ingredient->price ?? 0);
-                    $cost = $fallback * $quantityToCost;
-                    Log::warning("approve: FIFO cost fallback for '{$ingredient->name}': " . $e->getMessage());
+
+                    $baseUnit = $this->fifoService->resolveUnit($ingredient->measurement_unit);
+                    $recipeUnit = $this->fifoService->resolveUnit($recipeIngredient->unit);
+                    $quantityToCost = (float)$recipeIngredient->quantity;
+
+                    try {
+                        if ($recipeUnit && $baseUnit && $recipeUnit->canConvertTo($baseUnit)) {
+                            $quantityInBaseUnit = $recipeUnit->convertTo($quantityToCost, $baseUnit);
+                            $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityInBaseUnit);
+                        } else {
+                            $cost = $this->fifoService->calculateFIFOCost($ingredient, $quantityToCost);
+                        }
+                    } catch (\Exception $e) {
+                        $fallback = (float)($ingredient->avg_cost ?? $ingredient->price ?? 0);
+                        $cost = $fallback * $quantityToCost;
+                        Log::warning("approve: FIFO cost fallback for '{$ingredient->name}': " . $e->getMessage());
+                    }
+
+                    // Update cost
+                    $recipeIngredient->update(['cost' => $cost]);
                 }
 
-                // Update cost
-                $recipeIngredient->update(['cost' => $cost]);
-            }
+                // 2. Final Summation
+                $recipe->refresh();
+                $totalCost = $recipe->recipeIngredients()->sum('cost');
+                $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
 
-            // 2. Final Summation
-            $recipe->refresh();
-            $totalCost = $recipe->recipeIngredients()->sum('cost');
-            $costPerPortion = $recipe->yields > 0 ? ($totalCost / $recipe->yields) : 0;
-
-            DB::transaction(function () use ($recipe, $user, $totalCost, $costPerPortion) {
                 $recipe->update([
                     'status' => RecipeStatus::Permanent,
                     'approved_by' => $user->id,
@@ -508,6 +509,7 @@ class RecipeService
             $newRecipe->save();
 
             // 3. Duplicate Stages & Scale Ingredients
+            $recipe->loadMissing(['stages.ingredients.ingredient']);
             foreach ($recipe->stages as $stage) {
                 $newStage = $stage->replicate();
                 $newStage->recipe_id = $newRecipe->id;

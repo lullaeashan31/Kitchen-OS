@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
+use App\Models\Kitchen;
 use App\Models\User;
 use App\Models\PerformanceReview;
 use App\Models\PayrollRecord;
@@ -21,9 +22,9 @@ class PayrollService
     /**
      * Generate payroll for all staff for a given month and year.
      */
-    public function generatePayroll($month, $year)
+    public function generatePayroll($month, $year, Kitchen $kitchen)
     {
-        $staff = User::where('role', UserRole::Staff)->where('onboarding_status', 'active')->get();
+        $staff = User::where('role', UserRole::Staff)->where('onboarding_status', 'active')->where('kitchen_id', $kitchen->id)->get();
         $results = [
             'total_processed' => 0,
             'errors' => []
