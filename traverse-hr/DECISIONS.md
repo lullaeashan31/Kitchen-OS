@@ -149,6 +149,37 @@ dropdown to choose which variant a role gets. Built exactly that:
   This slice only covers the admin-side "what document, which variant,
   for which role" configuration the owner asked for by name.
 
+## HR Policy Manual — editable placeholder (owner instruction)
+
+Owner: the HR policy keeps getting updated, and Super Admin should be able
+to edit it directly whenever, rather than re-uploading a file each time.
+Built a second content path on `document_template_versions` alongside file
+upload: `DocumentTemplateController::storeTextVersion` lets an admin write/
+edit `body_html` directly from Admin → Document Types, with a textarea
+pre-filled with the current text. Saving still creates a new version
+(never mutates one already shown to an employee) — the UI just reloads
+with the new text so it *feels* like editing in place. Seeded a new
+document type "HR Policy Manual" (distinct from "HR Handbook & Code of
+Conduct — Receipt", which is the signed acknowledgement that the manual
+was received) with placeholder text pointing the admin at where to edit it.
+
+This same text-editing path is available on every document type, not only
+the HR Policy Manual — useful for any other frequently-revised policy
+later, without a schema change.
+
+## Signing is in-person on a pad, confirmed by owner
+
+Owner confirmed: onboarding signing happens in person, on a USB signature
+pad at the restaurant, at the point of joining — not primarily by sending
+staff a remote link to sign on their own phone (§3.4 describes both paths;
+the owner is prioritizing the on-site kiosk path). After signing, the
+document becomes readable any time via the employee's document locker
+link, per §3.4's "permanent read-only document locker" requirement — no
+change needed there, just confirms which capture path (`CanvasDriver` /
+on-site kiosk) to build and demo first when the signature-capture slice of
+M2 is built. Remote signing stays in scope as the fallback described in
+the brief, just not the primary flow to design around.
+
 ## Permission matrix open question
 
 Flagged in `PERMISSION_MATRIX.md`: whether HR can self-approve an offer

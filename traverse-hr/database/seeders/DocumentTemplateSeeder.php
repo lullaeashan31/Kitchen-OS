@@ -21,6 +21,14 @@ use Illuminate\Support\Facades\Storage;
  *  - "Stores & Inventory Custody Accountability Undertaking (if
  *    applicable)" — referenced in the kit's checklist but no such
  *    document was actually included in the PDF provided.
+ *
+ * Also seeds one placeholder text-authored type, "HR Policy Manual" — the
+ * owner asked for this specifically: the policy keeps changing, so its
+ * content is edited directly from Admin → Document Types (see
+ * DocumentTemplateController::storeTextVersion) rather than uploaded as a
+ * file. This is distinct from "HR Handbook & Code of Conduct — Receipt"
+ * above, which is the signed acknowledgement THAT the manual was received
+ * — the manual's actual text lives here.
  */
 class DocumentTemplateSeeder extends Seeder
 {
@@ -28,13 +36,13 @@ class DocumentTemplateSeeder extends Seeder
 
     public function run(): void
     {
-        if (! is_dir(self::SOURCE_DIR)) {
-            return;
+        if (is_dir(self::SOURCE_DIR)) {
+            foreach ($this->definitions() as $definition) {
+                $this->seedOne($definition);
+            }
         }
 
-        foreach ($this->definitions() as $definition) {
-            $this->seedOne($definition);
-        }
+        $this->seedHrPolicyManualPlaceholder();
     }
 
     private function definitions(): array
@@ -190,6 +198,36 @@ class DocumentTemplateSeeder extends Seeder
             'source_file_path' => $storedPath,
             'source_file_original_name' => $definition['file'],
             'field_schema' => $definition['field_schema'] ?? null,
+            'active' => true,
+        ]);
+    }
+
+    private function seedHrPolicyManualPlaceholder(): void
+    {
+        $template = DocumentTemplate::firstOrCreate(
+            ['name' => 'HR Policy Manual'],
+            [
+                'kind' => 'acknowledge_only',
+                'category' => 'Onboarding',
+                'conditional' => false,
+                'active' => true,
+            ]
+        );
+
+        $variant = $template->variants()->firstOrCreate(['label' => 'Default'], ['is_default' => true]);
+
+        if ($variant->versions()->exists()) {
+            return; // already seeded / already edited by an admin
+        }
+
+        $variant->versions()->create([
+            'language' => 'en',
+            'version' => 1,
+            'body_html' => '<p><em>Placeholder — the HR Policy Manual has not been added yet.</em></p>'
+                .'<p>Super Admin: replace this text from Admin → Document Types → HR Policy Manual. '
+                .'Saving there creates a new version, so anyone who has already signed against an earlier '
+                .'version keeps a record of exactly what they read and signed — this is safe to edit '
+                .'whenever the policy changes.</p>',
             'active' => true,
         ]);
     }

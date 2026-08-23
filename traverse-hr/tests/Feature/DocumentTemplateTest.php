@@ -70,6 +70,29 @@ class DocumentTemplateTest extends TestCase
         $this->assertEquals(2, $versions[1]->version);
     }
 
+    public function test_editing_text_content_creates_a_new_version_and_keeps_the_old_one(): void
+    {
+        $admin = $this->admin();
+        $template = DocumentTemplate::factory()->create();
+        $variant = $template->variants()->create(['label' => 'Default', 'is_default' => true]);
+
+        $this->actingAs($admin)->post("/document-template-variants/{$variant->id}/text-versions", [
+            'language' => 'en',
+            'body_html' => '<p>First draft of the policy.</p>',
+        ])->assertRedirect();
+
+        $this->actingAs($admin)->post("/document-template-variants/{$variant->id}/text-versions", [
+            'language' => 'en',
+            'body_html' => '<p>Updated policy text.</p>',
+        ])->assertRedirect();
+
+        $versions = $variant->versions()->where('language', 'en')->orderBy('version')->get();
+        $this->assertCount(2, $versions);
+        $this->assertEquals('<p>First draft of the policy.</p>', $versions[0]->body_html);
+        $this->assertEquals('<p>Updated policy text.</p>', $versions[1]->body_html);
+        $this->assertNull($versions[1]->source_file_path);
+    }
+
     public function test_job_role_gets_default_variant_when_no_override_is_set(): void
     {
         $template = DocumentTemplate::factory()->create();

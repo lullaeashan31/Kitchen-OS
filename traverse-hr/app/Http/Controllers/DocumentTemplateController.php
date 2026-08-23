@@ -124,4 +124,37 @@ class DocumentTemplateController extends Controller
 
         return back()->with('status', 'New version uploaded.');
     }
+
+    /**
+     * Author/edit content directly in the app instead of uploading a file —
+     * for policies like the HR Policy Manual that "keep getting updated"
+     * and need a Super Admin to change them on the fly. Saving always
+     * creates a new version (never mutates one already sent to an
+     * employee); the edit box just reloads with the new current text so
+     * it feels like editing in place.
+     */
+    public function storeTextVersion(Request $request, DocumentTemplateVariant $variant)
+    {
+        abort_unless($request->user()->can('document.manage'), 403);
+
+        $request->validate([
+            'language' => ['required', Rule::in(['en', 'hi', 'mr'])],
+            'body_html' => ['required', 'string'],
+        ]);
+
+        $nextVersion = 1 + (int) $variant->versions()->where('language', $request->input('language'))->max('version');
+
+        $version = DocumentTemplateVersion::create([
+            'document_template_variant_id' => $variant->id,
+            'language' => $request->input('language'),
+            'version' => $nextVersion,
+            'body_html' => $request->input('body_html'),
+            'active' => true,
+            'uploaded_by' => $request->user()->id,
+        ]);
+
+        AuditLogger::log('document_template_version_edited', $version);
+
+        return back()->with('status', 'Policy content saved (v'.$nextVersion.').');
+    }
 }

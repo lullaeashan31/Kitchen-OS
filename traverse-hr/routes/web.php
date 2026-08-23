@@ -40,6 +40,7 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
         Route::post('/document-templates/{documentTemplate}/variants', [DocumentTemplateController::class, 'storeVariant'])->name('document-templates.variants.store');
         Route::post('/document-template-variants/{variant}/make-default', [DocumentTemplateController::class, 'makeVariantDefault'])->name('document-template-variants.make-default');
         Route::post('/document-template-variants/{variant}/versions', [DocumentTemplateController::class, 'storeVersion'])->name('document-template-variants.versions.store');
+        Route::post('/document-template-variants/{variant}/text-versions', [DocumentTemplateController::class, 'storeTextVersion'])->name('document-template-variants.text-versions.store');
 
         Route::get('/job-roles/{jobRole}/documents', [JobRoleDocumentController::class, 'edit'])->name('job-roles.documents.edit');
         Route::put('/job-roles/{jobRole}/documents', [JobRoleDocumentController::class, 'update'])->name('job-roles.documents.update');

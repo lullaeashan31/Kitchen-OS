@@ -42,20 +42,29 @@
         @endunless
     </div>
     <table style="margin-top:.5rem;">
-        <thead><tr><th>Language</th><th>Version</th><th>File</th><th>Uploaded</th></tr></thead>
+        <thead><tr><th>Language</th><th>Version</th><th>Content</th><th>Saved</th></tr></thead>
         <tbody>
         @forelse ($variant->versions as $version)
             <tr>
                 <td data-label="Language">{{ strtoupper($version->language) }}</td>
                 <td data-label="Version">v{{ $version->version }}</td>
-                <td data-label="File"><a href="{{ route('document-template-versions.download', $version) }}">{{ $version->source_file_original_name }}</a></td>
-                <td data-label="Uploaded">{{ $version->created_at->format('d M Y') }}</td>
+                <td data-label="Content">
+                    @if ($version->source_file_path)
+                        <a href="{{ route('document-template-versions.download', $version) }}">{{ $version->source_file_original_name }}</a>
+                    @elseif ($version->body_html)
+                        <span class="muted">Written content ({{ \Illuminate\Support\Str::words(strip_tags($version->body_html), 8) }})</span>
+                    @else
+                        <span class="muted">—</span>
+                    @endif
+                </td>
+                <td data-label="Saved">{{ $version->created_at->format('d M Y, H:i') }}</td>
             </tr>
         @empty
-            <tr><td colspan="4" class="muted">No content uploaded yet.</td></tr>
+            <tr><td colspan="4" class="muted">No content yet — placeholder. Upload a file or write the policy content below.</td></tr>
         @endforelse
         </tbody>
     </table>
+
     <form method="POST" action="{{ route('document-template-variants.versions.store', $variant) }}" enctype="multipart/form-data" style="margin-top:.6rem; display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
         @csrf
         <div>
@@ -67,11 +76,23 @@
             </select>
         </div>
         <div style="flex:1; min-width:200px;">
-            <label for="file-{{ $variant->id }}">File (PDF/DOCX)</label>
+            <label for="file-{{ $variant->id }}">Upload a file (PDF/DOCX)</label>
             <input id="file-{{ $variant->id }}" type="file" name="file" accept=".pdf,.doc,.docx" required>
         </div>
         <button type="submit" class="btn" style="height:2.4rem;">Upload version</button>
     </form>
+
+    @php $latestEn = $variant->versions->where('language', 'en')->sortByDesc('version')->first(); @endphp
+    <details style="margin-top:.8rem;" @if(!$variant->versions->count()) open @endif>
+        <summary style="cursor:pointer; font-size:.9rem; color:var(--muted);">Or write / edit the content directly (English) — for policies that change often, like the HR Policy Manual</summary>
+        <form method="POST" action="{{ route('document-template-variants.text-versions.store', $variant) }}" style="margin-top:.6rem;">
+            @csrf
+            <input type="hidden" name="language" value="en">
+            <label for="body_html-{{ $variant->id }}">Policy content</label>
+            <textarea id="body_html-{{ $variant->id }}" name="body_html" rows="8" placeholder="Paste or write the current policy text here. Saving creates a new version — staff who already signed an earlier version keep seeing what they actually signed.">{{ old('body_html', $latestEn->body_html ?? '') }}</textarea>
+            <button type="submit" class="btn" style="margin-top:.6rem;">Save content{{ $latestEn ? ' as new version' : '' }}</button>
+        </form>
+    </details>
 </div>
 @endforeach
 
