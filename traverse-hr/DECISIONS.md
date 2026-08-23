@@ -180,6 +180,42 @@ on-site kiosk) to build and demo first when the signature-capture slice of
 M2 is built. Remote signing stays in scope as the fallback described in
 the brief, just not the primary flow to design around.
 
+## Signing simplified to typed-name acceptance (owner instruction)
+
+Owner: "the signing session will just be like a classic one... people can
+just digitally accept it by... writing their name down." Explicit
+simplification of §3.4's signature capture — no canvas/pointer-event
+drawing, no stroke-data capture, no signature pad integration needed for
+now. Built accordingly:
+
+- New `employee_documents` table: one row per (employee, document type),
+  pinned to the exact `document_template_version` shown, with
+  `signer_typed_name`, `signed_at`, `signed_ip`, `signed_user_agent`, and
+  `recorded_by` (the HR/manager running the session). This is
+  deliberately a leaner shape than the ERD's
+  `employee_document_instances` + `signatures` split — no token/expiry
+  (this flow is in-person, not a remote tokenised link) and no
+  `signature_type` enum (only "typed" exists today). These rows migrate
+  forward without loss whenever a pad or remote-phone signing path is
+  actually built — same idea as the brief's requirement that `drawn` /
+  `aadhaar_esign` can be added later without a schema rewrite, just
+  starting from `typed` instead of `drawn` as the first type.
+- Flow: Employees → "Documents" → pick a pending document → HR opens it
+  with the employee (file download link, or the written policy text
+  inline) → employee types their own name in the box → "Record
+  acceptance." Every view and every acceptance is audit-logged
+  (`document_viewed`, `document_signed`).
+- Accepting a document twice updates the same row rather than creating a
+  duplicate — treated as a correction during the same session, not a
+  re-signature event. If that's wrong (e.g. you want every acceptance
+  attempt kept), say so and I'll change it to append instead.
+- PDF finalization (rendering a signed copy with the audit footer/hash)
+  and the employee's own read-anytime document locker link are still not
+  built — this slice only covers the HR-side "classic session" recording.
+  Confirm whether staff need their own copy/link at all given signing is
+  fully in-person and HR is the one opening the document, or whether the
+  locker is still wanted so they can re-read it later on their own phone.
+
 ## Permission matrix open question
 
 Flagged in `PERMISSION_MATRIX.md`: whether HR can self-approve an offer

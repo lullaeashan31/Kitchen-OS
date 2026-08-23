@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\DocumentTemplateVersionController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\JobRoleController;
 use App\Http\Controllers\JobRoleDocumentController;
 use App\Http\Controllers\OutletController;
@@ -55,6 +56,12 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
         Route::post('/employees/{employee}/reveal/{field}', [EmployeeController::class, 'reveal'])
             ->middleware(['password.confirm', 'permission:employee.view-unmasked'])
             ->name('employees.reveal');
+    });
+
+    Route::middleware('permission:document.manage')->group(function () {
+        Route::get('/employees/{employee}/documents', [EmployeeDocumentController::class, 'index'])->name('employees.documents.index');
+        Route::get('/employees/{employee}/documents/{documentTemplate}', [EmployeeDocumentController::class, 'show'])->name('employees.documents.show');
+        Route::post('/employees/{employee}/documents/{documentTemplate}/accept', [EmployeeDocumentController::class, 'accept'])->name('employees.documents.accept');
     });
 
     Route::middleware('permission:audit-log.view')->group(function () {

@@ -16,7 +16,10 @@
                 <td data-label="Outlet">{{ $employee->outlet->name }}</td>
                 <td data-label="Job role">{{ $employee->jobRole->name }}</td>
                 <td data-label="Status">{{ $employee->status }}</td>
-                <td data-label="Edit"><a href="{{ route('employees.edit', $employee) }}">Edit</a></td>
+                <td data-label="Edit">
+                    <a href="{{ route('employees.edit', $employee) }}">Edit</a> &middot;
+                    @can('document.manage')<a href="{{ route('employees.documents.index', $employee) }}">Documents</a>@endcan
+                </td>
             </tr>
         @endforeach
         </tbody>
