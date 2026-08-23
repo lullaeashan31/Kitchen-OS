@@ -246,6 +246,25 @@ their whole signed document set. Built exactly this:
   text-authored (body_html) documents render directly in a small
   mobile-first page (usable at 360px per §2).
 
+## DEPLOY.md written — go-live scope confirmed by owner
+
+Owner confirmed: deploy what's built now (M1 + the document/locker slice
+of M2) for real use, rather than waiting for payroll/recruitment. Wrote
+`DEPLOY.md` covering both an SSH/Terminal cPanel path and a File-Manager
+-only fallback, since it wasn't yet confirmed which the owner's cPanel
+plan offers alongside the existing Kitchen-OS hosting. Open items before
+it's actually executed:
+
+- Confirm whether cPanel has a Terminal/SSH option (look for a
+  "Terminal" icon) — decides which path in DEPLOY.md to follow.
+- Pick the subdomain to use (DEPLOY.md uses `hr.traverseinc.in` as a
+  placeholder, matched to Kitchen-OS's presumed subdomain pattern —
+  confirm or correct).
+- No automated backups exist yet (§7 not implemented) — flagged in
+  DEPLOY.md as a known gap; database is not durably backed up until that
+  system is built. Offered a manual/cron interim mysqldump if that risk
+  matters before then.
+
 ## Before go-live — open items I need from the owner
 
 Collected in one place since this was asked directly. None of these
