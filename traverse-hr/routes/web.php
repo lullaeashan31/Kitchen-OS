@@ -4,8 +4,11 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentTemplateController;
+use App\Http\Controllers\DocumentTemplateVersionController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\JobRoleController;
+use App\Http\Controllers\JobRoleDocumentController;
 use App\Http\Controllers\OutletController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +34,20 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
 
     Route::resource('outlets', OutletController::class)->except('show')->middleware('permission:admin.settings.manage');
     Route::resource('job-roles', JobRoleController::class)->except('show')->middleware('permission:admin.settings.manage');
+
+    Route::middleware('permission:admin.settings.manage')->group(function () {
+        Route::resource('document-templates', DocumentTemplateController::class)->except('show');
+        Route::post('/document-templates/{documentTemplate}/variants', [DocumentTemplateController::class, 'storeVariant'])->name('document-templates.variants.store');
+        Route::post('/document-template-variants/{variant}/make-default', [DocumentTemplateController::class, 'makeVariantDefault'])->name('document-template-variants.make-default');
+        Route::post('/document-template-variants/{variant}/versions', [DocumentTemplateController::class, 'storeVersion'])->name('document-template-variants.versions.store');
+
+        Route::get('/job-roles/{jobRole}/documents', [JobRoleDocumentController::class, 'edit'])->name('job-roles.documents.edit');
+        Route::put('/job-roles/{jobRole}/documents', [JobRoleDocumentController::class, 'update'])->name('job-roles.documents.update');
+    });
+
+    Route::middleware('permission:document.view')->group(function () {
+        Route::get('/document-template-versions/{version}/download', [DocumentTemplateVersionController::class, 'download'])->name('document-template-versions.download');
+    });
 
     Route::middleware('permission:employee.view')->group(function () {
         Route::resource('employees', EmployeeController::class)->except('show');

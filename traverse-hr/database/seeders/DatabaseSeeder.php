@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             OutletAndJobRoleSeeder::class,
             RetentionPolicySeeder::class,
+            DocumentTemplateSeeder::class,
         ]);
     }
 }

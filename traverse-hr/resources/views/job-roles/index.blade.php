@@ -17,7 +17,8 @@
                 <td data-label="Probation">{{ $role->probation_months }} mo</td>
                 <td data-label="Active">{{ $role->active ? 'Yes' : 'No' }}</td>
                 <td data-label="Edit">
-                    <a href="{{ route('job-roles.edit', $role) }}">Edit</a>
+                    <a href="{{ route('job-roles.edit', $role) }}">Edit</a> &middot;
+                    <a href="{{ route('job-roles.documents.edit', $role) }}">Documents</a>
                     @if ($role->active)
                         <form method="POST" action="{{ route('job-roles.destroy', $role) }}" style="display:inline" onsubmit="return confirm('Deactivate this role?');">
                             @csrf @method('DELETE')

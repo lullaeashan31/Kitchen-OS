@@ -92,6 +92,63 @@ them would mean throwing away guessed content:
    Captain, Bartender, Host, Steward, Manager — taken directly from the
    examples in §3.6.1 of the brief) until you confirm the real list.
 
+## M2 slice: document types, variants, per-role assignment
+
+Owner sent the real "Manager Onboarding Kit" PDF and gave explicit direction:
+use it for all roles for now; support multiple uploaded variants per
+document type (e.g. Manager vs Housekeeping) later; provide a per-job-role
+dropdown to choose which variant a role gets. Built exactly that:
+
+- `document_templates` = a document *type* (e.g. "POSH Policy").
+  `document_template_variants` = named uploads under a type (e.g.
+  "Default", "Manager"); exactly one is `is_default`.
+  `document_template_versions` = the actual uploaded file, versioned —
+  a new upload is always a new version row, never an overwrite, so a
+  version already sent to an employee never changes under them.
+- `job_role_document_variant_map` is the dropdown itself: one row per
+  (job role, document type) that deviates from the type's default variant.
+  No row = default variant. `DocumentVariantResolver` implements the
+  lookup. Admin UI: Job roles → "Documents" (per-role dropdown grid),
+  Document types → per-type variant/version management with file upload.
+- The kit's own 16 documents were split one-PDF-per-document with `qpdf`
+  (page ranges taken from the extracted text) and committed as real seed
+  data under `database/seed-documents/manager-onboarding-kit/`, seeded by
+  `DocumentTemplateSeeder` into a single "Default" variant, English, for
+  each of the 16 types — all applicable to every role for now, per the
+  owner's instruction. Uploaded files are stored on the `local` disk
+  (`storage/app/private`, outside the public web root) and served only
+  through `DocumentTemplateVersionController::download`, which requires
+  `document.view` and logs every download.
+- **Two items from the kit's own checklist page were deliberately NOT
+  seeded as document types:**
+  - **"Letter of Appointment"** — this is the appointment/offer letter
+    itself, which belongs to the separate Offer module (§3.2, still
+    blocked on that source document), not the onboarding document pack.
+    Don't seed it here when the real offer letter arrives — build it as
+    part of M4's offer-template engine instead.
+  - **"Stores & Inventory Custody Accountability Undertaking (if
+    applicable)"** — referenced in the kit's own checklist table but no
+    such document was actually included in the PDF provided. Flagging in
+    case the owner has it separately.
+- Kind classification per document (acknowledge_only vs sign_with_fields)
+  was inferred from what's actually fillable by a person versus what's
+  pre-filled from employee-master data (name/designation/date, which are
+  merge tokens, not "fields" in the brief's sense). Where a document has a
+  genuine blank for someone to fill in, it's `sign_with_fields` with a
+  `field_schema` entry — e.g. Cash & Float's float amount, Conflict of
+  Interest's declared interests, Media Consent's consent choice, Company
+  Property's items-issued detail, Food Handler's existing-certificate
+  checkbox. Everything else (POSH, Drug & Alcohol, Confidentiality,
+  Non-Solicitation, IT Acceptable-Use, HR Handbook receipt, Background
+  Check consent, Trial/Probation terms, Acceptance of Appointment) is
+  `acknowledge_only`.
+- **Not built yet, deliberately deferred to the next M2 slice**: sending a
+  pack to a specific employee (`employee_document_instances`), the
+  tokenised link + QR delivery, the signature capture screens, PDF
+  finalization with the audit footer, and the employee document locker.
+  This slice only covers the admin-side "what document, which variant,
+  for which role" configuration the owner asked for by name.
+
 ## Permission matrix open question
 
 Flagged in `PERMISSION_MATRIX.md`: whether HR can self-approve an offer
