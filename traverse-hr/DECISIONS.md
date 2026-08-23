@@ -264,6 +264,46 @@ it's actually executed:
   DEPLOY.md as a known gap; database is not durably backed up until that
   system is built. Offered a manual/cron interim mysqldump if that risk
   matters before then.
+- Subdomain confirmed as `hr.traverseinc.in`.
+
+## Browser-based installer (`public/install.php`) — owner has no terminal confirmed
+
+Owner asked directly: "is there no file I can just copy and paste onto my
+cPanel like I did for operations.php?" — meaning they want a plain
+upload-and-go deploy, not a git/composer/artisan workflow. Built exactly
+that as a new **Path C** in DEPLOY.md:
+
+- `public/install.php`: a one-time, browser-facing setup page. Boots
+  Laravel manually (no routing/CSRF — it's outside the framework's normal
+  request cycle by design, since it has to run *before* `.env` exists),
+  takes DB credentials + admin details from a plain HTML form, writes
+  `.env`, runs migrations + all seeders, creates the Super Admin, then
+  writes `storage/installed.lock` so it can never run again without that
+  file being deleted by hand first. Gated by a random 24-byte token baked
+  into the file at package-build time (`__SETUP_TOKEN__` placeholder in
+  the committed source — the real value only ever exists in the ZIP
+  handed to the owner, never in git history).
+- Packaged as `traverse-hr.zip`: the app with `vendor/` already installed
+  via `composer install --no-dev` (stripped of the `.git` directories and
+  test/docs folders that composer's git-clone-from-cache install leaves
+  behind, which otherwise bloat vendor/ to ~3.8GB down to a real ~80MB,
+  ~24MB zipped) — upload, extract, visit one URL, done.
+- **Actually tested against real MySQL** (MariaDB installed in the build
+  sandbox, not just SQLite) before handing it over, both via the dev
+  copy and via the exact stripped bundle running under `php -S` (closer
+  to a real shared-hosting PHP setup than `artisan serve`). This caught
+  a real bug: two migrations had auto-generated index/foreign-key names
+  exceeding MySQL's 64-character identifier limit
+  (`document_template_versions`'s unique constraint at 79 chars, and
+  `job_role_document_variant_map`'s FK at 66) — SQLite doesn't enforce
+  this limit so it was invisible in all prior local testing and the full
+  test suite. Fixed with explicit short names on both. Worth remembering
+  for any future migration with long table/column name combinations —
+  SQLite-only testing will not catch this class of bug.
+- DEPLOY.md restructured so Path C is the lead recommendation; Path A
+  (SSH) and Path B (manual File Manager) remain for those who want them,
+  with explicit "skip to §N" notes so Path C users aren't made to read
+  steps `install.php` already did for them.
 
 ## Before go-live — open items I need from the owner
 

@@ -8,17 +8,24 @@ working deployment of the onboarding-paperwork part of the system, not a
 placeholder.
 
 This guide assumes a standard cPanel account (the kind Kitchen-OS is
-already hosted on). It covers **two paths** — pick whichever matches what
-you actually have:
+already hosted on). It covers **three paths** — pick whichever matches
+what you actually have or want:
 
-- **Path A — Terminal/SSH available.** Faster, fewer moving parts. Look
-  for a "Terminal" icon in cPanel (under "Advanced"), or ask your host if
-  SSH is enabled for your account.
-- **Path B — No terminal, File Manager only.** More manual, but doesn't
-  need SSH. Covered in §6 below.
+- **Path C — Upload a ZIP, visit one page. No terminal, no commands.**
+  The closest thing to "copy-paste a file like `operations.php`" this app
+  has. Everything (code + dependencies) is pre-built into one ZIP; you
+  upload it via File Manager, extract it, point the subdomain at it, and
+  fill in one form in your browser. This is the recommended path if you
+  don't have or don't want to use a terminal. **Covered in §3 Path C.**
+- **Path A — Terminal/SSH available.** For if you'd rather run the
+  commands yourself, or want git-based updates going forward. Look for a
+  "Terminal" icon in cPanel (under "Advanced").
+- **Path B — File Manager only, doing the steps by hand.** The manual
+  version of what Path C automates — useful if you want to understand or
+  customize each step. Most people should use Path C instead.
 
-If you're not sure which you have: log into cPanel and look for a
-**Terminal** icon. If it's there, use Path A.
+**If you don't know which to pick: use Path C.** It needs nothing beyond
+cPanel's File Manager and a web browser.
 
 ---
 
@@ -94,31 +101,62 @@ meant to overlap on disk. Once you're happy with this, we can also split
 `traverse-hr` into its own repository so this step becomes a plain
 `git clone` — see DECISIONS.md.)
 
-### Path B (File Manager, no terminal)
+### Path C (upload a ZIP, no terminal needed at all) — tested end to end
 
-Composer and `artisan` need a command line to run — File Manager alone
-can't execute them. Do this instead:
+This is the file I built and tested for you: `traverse-hr.zip` — the app
+code **with** all dependencies (`vendor/`) already installed, plus a
+one-time setup page (`install.php`) that does everything `artisan` would
+normally do — write `.env`, run migrations, seed the base data, create
+your Super Admin account — from your browser, no command line at all.
+I ran this exact ZIP through a full install against a real MySQL database
+before handing it to you, so it's not a guess.
 
-1. Tell me when you're at this step and I'll build a deployment ZIP
-   locally (app code **with** the `vendor/` dependencies already
-   installed, so nothing needs to run composer on the server) and hand it
-   to you as a file to download.
-2. In cPanel File Manager, upload that ZIP to `/home/<youraccount>/`,
-   right-click → **Extract**.
-3. Rename the extracted folder to `traverse-hr`.
+1. In cPanel **File Manager**, navigate to your account's home directory
+   (one level above `public_html`).
+2. **Upload** `traverse-hr.zip` there, then right-click it → **Extract**.
+   This creates a `traverse-hr/` folder.
+3. Do step 2 above (create the subdomain, document root
+   `.../traverse-hr/public`) if you haven't already.
+4. In File Manager, right-click the `traverse-hr` folder → **Permissions**,
+   and make sure `storage` and `bootstrap/cache` (and everything inside
+   them) are writable — 775 is a safe setting for directories. If File
+   Manager offers "Apply to subdirectories," use it, scoped to just those
+   two folders.
+5. Visit `https://hr.traverseinc.in/install.php?token=<the token I gave
+   you separately>` in your browser.
+6. Fill in the form: the database name/username/password from step 1, the
+   site URL, and your own name/email/password for the Super Admin
+   account. Submit.
+7. You'll land on a "You're live" page. **Delete `install.php`** via File
+   Manager right after (it locks itself against re-running, but there's
+   no reason to leave it reachable).
+8. Log in at `https://hr.traverseinc.in/login` and set up 2FA immediately
+   — save the recovery codes shown, they're shown once.
 
-Either way, artisan commands (migrations, key generation) still need to
-run somehow. Check cPanel for a **"Setup Python App"** or **"Setup Node.js
-App"**-style tool — many cPanel installs have an equivalent for PHP
-("MultiPHP" / "Application Manager") that includes a *"Enter to the
-virtual environment"* command giving you a one-off shell. If nothing like
-that exists on your plan, tell your host you need either SSH access or a
-way to run one-off PHP CLI commands (`php artisan migrate`) — this is a
-completely standard hosting request, not unusual.
+That's the entire deployment. Skip straight to **§8 — smoke test** below;
+sections 4–7 describe what `install.php` just did for you automatically,
+useful only if something needs troubleshooting or you'd rather do it by
+hand.
+
+### Path B (File Manager, doing it by hand)
+
+If you want to understand or customize what Path C automated: upload and
+extract the same ZIP as Path C, but instead of visiting `install.php`,
+follow steps 4–6 below manually, editing `.env` directly through File
+Manager's text editor. You'll need *some* way to run `php artisan
+migrate` once — check cPanel for a **"Setup Python App"** or **"Setup
+Node.js App"**-style tool; many plans have a PHP equivalent
+("MultiPHP"/"Application Manager") with an *"Enter to the virtual
+environment"* command giving a one-off shell. If nothing like that
+exists, Path C's `install.php` already does this step without needing
+one — there's rarely a reason to do this path instead.
 
 ---
 
 ## 4. Configure `.env`
+
+*(Path C already did this for you — skip to §8. This section is for Path
+A/B.)*
 
 ```bash
 cd ~/traverse-hr
@@ -167,6 +205,9 @@ it, nothing else on the server can.
 
 ## 5. Run migrations, seed the essentials, create your account
 
+*(Path C already did this for you — skip to §6, which is still worth
+doing on every path. This section is for Path A/B.)*
+
 ```bash
 php artisan migrate --force
 php artisan db:seed --class=RolesAndPermissionsSeeder --force
@@ -189,8 +230,12 @@ you're prompted. **Save the recovery codes shown** — they're shown once.
 
 ## 6. Storage permissions and the web root check
 
+*(Path C: permissions were covered in Path C step 4. Do the browser check
+below regardless of path — it's the single most important thing to
+verify before calling this live.)*
+
 ```bash
-chmod -R 775 storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache   # Path A/B only
 ```
 
 Then verify from a browser (not the server) that these both come back

@@ -19,10 +19,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('job_role_id')->constrained()->cascadeOnDelete();
             $table->foreignId('document_template_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('document_template_variant_id')->constrained()->cascadeOnDelete();
+            // Explicit short FK name — the auto-generated one exceeds
+            // MySQL's 64-character identifier limit.
+            $table->foreignId('document_template_variant_id')
+                ->constrained(indexName: 'job_role_doc_variant_map_variant_foreign')
+                ->cascadeOnDelete();
             $table->timestamps();
 
-            $table->unique(['job_role_id', 'document_template_id']);
+            // Explicit short name — the auto-generated one exceeds MySQL's
+            // 64-character identifier limit.
+            $table->unique(['job_role_id', 'document_template_id'], 'job_role_document_variant_map_role_template_unique');
         });
     }
 

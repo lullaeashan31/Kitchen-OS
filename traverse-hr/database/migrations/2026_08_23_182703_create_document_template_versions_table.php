@@ -35,7 +35,10 @@ return new class extends Migration
             $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->unique(['document_template_variant_id', 'language', 'version']);
+            // Explicit short name — the auto-generated one exceeds MySQL's
+            // 64-character identifier limit (SQLite doesn't enforce this,
+            // so this only surfaces against real MySQL — test against it).
+            $table->unique(['document_template_variant_id', 'language', 'version'], 'doc_template_version_variant_lang_ver_unique');
         });
     }
 
