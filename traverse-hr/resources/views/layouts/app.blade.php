@@ -33,11 +33,21 @@
 <header class="top">
     <a href="{{ route('dashboard') }}">{{ config('app.name') }}</a>
     <nav class="main">
-        @can('employee.view')<a href="{{ route('employees.index') }}">Employees</a>@endcan
-        @can('admin.settings.manage')<a href="{{ route('outlets.index') }}">Outlets</a>
-        <a href="{{ route('job-roles.index') }}">Job roles</a>
-        <a href="{{ route('document-templates.index') }}">Document types</a>@endcan
-        @can('audit-log.view')<a href="{{ route('audit-log.index') }}">Audit log</a>@endcan
+        @php
+            // Don't show links to protected pages while a required 2FA
+            // enrollment/challenge is still pending — they'd just bounce
+            // straight back here anyway (RequireTwoFactorVerified), and
+            // showing them is confusing mid-challenge.
+            $twoFactorPending = auth()->user()->hasAnyRole(['super_admin', 'hr_manager', 'accounts'])
+                && (! auth()->user()->twoFactorEnabled() || ! session('2fa_verified'));
+        @endphp
+        @unless ($twoFactorPending)
+            @can('employee.view')<a href="{{ route('employees.index') }}">Employees</a>@endcan
+            @can('admin.settings.manage')<a href="{{ route('outlets.index') }}">Outlets</a>
+            <a href="{{ route('job-roles.index') }}">Job roles</a>
+            <a href="{{ route('document-templates.index') }}">Document types</a>@endcan
+            @can('audit-log.view')<a href="{{ route('audit-log.index') }}">Audit log</a>@endcan
+        @endunless
         <form method="POST" action="{{ route('logout') }}" style="display:inline">
             @csrf
             <button type="submit" class="btn secondary" style="padding:.2rem .6rem;">Log out</button>
