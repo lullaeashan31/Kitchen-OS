@@ -216,6 +216,77 @@ now. Built accordingly:
   fully in-person and HR is the one opening the document, or whether the
   locker is still wanted so they can re-read it later on their own phone.
 
+## Employee document locker — QR + link (owner instruction)
+
+Owner: staff should always have access to what they've signed; after
+onboarding they get a QR code or a link (sent on WhatsApp) that shows
+their whole signed document set. Built exactly this:
+
+- `employee_document_locker_tokens`: one standing token per employee,
+  32+ random bytes (`Str::random(48)`), permanent by default (no
+  expiry — matches §3.4's "permanent read-only document locker"),
+  revocable and regenerable from Admin. `EmployeeLockerService::
+  getOrCreate` is idempotent (visiting the admin page again doesn't
+  silently break a link already sent); `regenerate` deliberately revokes
+  the old one and issues a new one.
+- Admin → Employees → "Locker": shows the link, an inline SVG QR code
+  (rendered server-side via `bacon/bacon-qr-code`, no external service),
+  and a "Open in WhatsApp" button that pre-fills a message with the link
+  via a `wa.me` deep link — copied/sent manually, no WhatsApp Business
+  API integration, per §3.4's explicit non-goal for this phase.
+- Public route `GET /d/{token}` (and `/d/{token}/documents/{id}`) is
+  intentionally outside the `auth`/`2fa.verified` groups — staff have no
+  login in this phase (§3.6.2), so the token itself is the access
+  control. Rate-limited (`throttle:30,1`) per §6. A token only ever
+  unlocks documents actually signed by *that* employee — verified
+  server-side on every request, not just filtered in the list view.
+  Every locker view and every document open is audit-logged.
+- File-backed documents stream inline (`Content-Disposition: inline`,
+  not a forced download) so they open readably in a phone browser;
+  text-authored (body_html) documents render directly in a small
+  mobile-first page (usable at 360px per §2).
+
+## Before go-live — open items I need from the owner
+
+Collected in one place since this was asked directly. None of these
+block continuing to build, but each blocks *trusting* what's already
+built for real payroll/employee data:
+
+1. **PF / ESIC / PT rates** — `PAYROLL_SPEC.md`'s worked examples use
+   illustrative current figures, explicitly not CA-confirmed. Confirm
+   applicability and exact rates before the first live payroll run.
+2. **Salary component split** — real structure (Basic/HRA/etc. percentages
+   or flat amounts) per role, so `salary_component_definitions` can be
+   seeded with real data instead of the spec's placeholder split.
+3. **Bank transfer file spec** — the exact HDFC bulk-upload CSV format,
+   needed before M3's bank-file exporter can be built (the interface will
+   be driver-based so other banks slot in later).
+4. **Outlet / job-role list beyond Alinea** — currently seeded with just
+   Alinea and the 9 example roles from the brief; confirm the real list
+   (and any other outlets coming) before this becomes the actual
+   production role list.
+5. **HR policy manual real text** — currently a placeholder (see above);
+   paste the real content in whenever it's ready, no rebuild needed.
+6. **Remaining role document sets** — the Manager Onboarding Kit is
+   seeded and applied to all roles for now; if housekeeping/servers/etc.
+   need a different subset or a different variant of any document, send
+   those and I'll add them as named variants + role assignments (the
+   mechanism is already built).
+7. **Two items referenced in the kit's own checklist but not seeded**:
+   Letter of Appointment (belongs to the still-pending Offer Letter
+   module) and Stores & Inventory Custody Accountability Undertaking
+   (not actually included in the PDF you sent).
+8. **Deployment target details** — actual PHP version on the cPanel
+   hosting account (Laravel 11 needs 8.2+), and whether backups/off-host
+   storage (§7) are already something you have, or need setting up from
+   scratch — this affects how soon `DEPLOY.md`/`RESTORE.md` can be
+   written for real rather than generically.
+
+Nothing above blocks continuing to build M2 (document packs proper,
+offer letters once you send that document) or starting M3 (payroll
+schema) — just flagging what needs a real answer before this is safe to
+run against actual staff and money.
+
 ## Permission matrix open question
 
 Flagged in `PERMISSION_MATRIX.md`: whether HR can self-approve an offer

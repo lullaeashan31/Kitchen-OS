@@ -8,9 +8,11 @@ use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\DocumentTemplateVersionController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDocumentController;
+use App\Http\Controllers\EmployeeLockerController;
 use App\Http\Controllers\JobRoleController;
 use App\Http\Controllers\JobRoleDocumentController;
 use App\Http\Controllers\OutletController;
+use App\Http\Controllers\Public\EmployeeLockerPublicController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'));
@@ -62,10 +64,27 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
         Route::get('/employees/{employee}/documents', [EmployeeDocumentController::class, 'index'])->name('employees.documents.index');
         Route::get('/employees/{employee}/documents/{documentTemplate}', [EmployeeDocumentController::class, 'show'])->name('employees.documents.show');
         Route::post('/employees/{employee}/documents/{documentTemplate}/accept', [EmployeeDocumentController::class, 'accept'])->name('employees.documents.accept');
+
+        Route::get('/employees/{employee}/locker', [EmployeeLockerController::class, 'show'])->name('employees.locker.show');
+        Route::post('/employees/{employee}/locker/regenerate', [EmployeeLockerController::class, 'regenerate'])->name('employees.locker.regenerate');
     });
 
     Route::middleware('permission:audit-log.view')->group(function () {
         Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
         Route::get('/audit-log/export', [AuditLogController::class, 'export'])->name('audit-log.export');
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Staff document locker — unauthenticated, token-gated
+|--------------------------------------------------------------------------
+| Reached by scanning a QR code or opening a WhatsApp link. No staff login
+| exists in this phase (§3.6.2) — the token IS the access control. Kept
+| outside the `auth`/`2fa.verified` groups deliberately, and rate-limited
+| per §6 ("rate-limited, expiring, revocable").
+*/
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/d/{token}', [EmployeeLockerPublicController::class, 'show'])->name('locker.show');
+    Route::get('/d/{token}/documents/{employeeDocument}', [EmployeeLockerPublicController::class, 'document'])->name('locker.document');
 });

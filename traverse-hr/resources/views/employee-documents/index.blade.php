@@ -3,6 +3,7 @@
 @section('content')
 <h1 style="font-size:1.3rem;">Onboarding documents — {{ $employee->name }}</h1>
 <p class="muted">Classic in-person session: open each document with the employee, they read it, then type their name to accept. No signature pad needed.</p>
+<p><a href="{{ route('employees.locker.show', $employee) }}">View their document locker link / QR &rarr;</a></p>
 <div class="card">
     <table>
         <thead><tr><th>Document</th><th>Status</th><th>Accepted by / on</th><th></th></tr></thead>

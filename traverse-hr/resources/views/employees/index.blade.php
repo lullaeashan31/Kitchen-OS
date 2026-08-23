@@ -18,7 +18,8 @@
                 <td data-label="Status">{{ $employee->status }}</td>
                 <td data-label="Edit">
                     <a href="{{ route('employees.edit', $employee) }}">Edit</a> &middot;
-                    @can('document.manage')<a href="{{ route('employees.documents.index', $employee) }}">Documents</a>@endcan
+                    @can('document.manage')<a href="{{ route('employees.documents.index', $employee) }}">Documents</a> &middot;
+                    <a href="{{ route('employees.locker.show', $employee) }}">Locker</a>@endcan
                 </td>
             </tr>
         @endforeach
