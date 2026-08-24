@@ -50,24 +50,35 @@ class Employee extends Model
         static::addGlobalScope(new OutletScope);
     }
 
+    /**
+     * withTrashed: deactivating an outlet or job role must never break the
+     * employee list or any historical record that points at it. Losing the
+     * name of the outlet someone worked at is a data-integrity failure, not
+     * a tidy-up.
+     */
     public function outlet()
     {
-        return $this->belongsTo(Outlet::class);
+        return $this->belongsTo(Outlet::class)->withTrashed();
     }
 
     public function jobRole()
     {
-        return $this->belongsTo(JobRole::class);
+        return $this->belongsTo(JobRole::class)->withTrashed();
     }
 
     public function department()
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(Department::class)->withTrashed();
     }
 
     public function reportingManager()
     {
         return $this->belongsTo(Employee::class, 'reporting_manager_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(EmployeeDocument::class);
     }
 
     public function aadhaarVerifiedBy()

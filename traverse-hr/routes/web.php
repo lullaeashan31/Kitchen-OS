@@ -13,6 +13,8 @@ use App\Http\Controllers\JobRoleController;
 use App\Http\Controllers\JobRoleDocumentController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\Public\EmployeeLockerPublicController;
+use App\Http\Controllers\SignedDocumentController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'));
@@ -55,6 +57,7 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
 
     Route::middleware('permission:employee.view')->group(function () {
         Route::resource('employees', EmployeeController::class)->except('show');
+        Route::get('/employees/{employee}/photo', [EmployeeController::class, 'photo'])->name('employees.photo');
         Route::post('/employees/{employee}/reveal/{field}', [EmployeeController::class, 'reveal'])
             ->middleware(['password.confirm', 'permission:employee.view-unmasked'])
             ->name('employees.reveal');
@@ -65,8 +68,17 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
         Route::get('/employees/{employee}/documents/{documentTemplate}', [EmployeeDocumentController::class, 'show'])->name('employees.documents.show');
         Route::post('/employees/{employee}/documents/{documentTemplate}/accept', [EmployeeDocumentController::class, 'accept'])->name('employees.documents.accept');
 
+        Route::get('/signed-documents/{employeeDocument}/download', [SignedDocumentController::class, 'download'])->name('signed-documents.download');
+        Route::post('/signed-documents/{employeeDocument}/regenerate', [SignedDocumentController::class, 'regenerate'])->name('signed-documents.regenerate');
+
         Route::get('/employees/{employee}/locker', [EmployeeLockerController::class, 'show'])->name('employees.locker.show');
         Route::post('/employees/{employee}/locker/regenerate', [EmployeeLockerController::class, 'regenerate'])->name('employees.locker.regenerate');
+    });
+
+    // Creating HR / Accounts / Outlet Manager logins from the browser.
+    Route::middleware('permission:user.manage')->group(function () {
+        Route::resource('users', UserController::class)->except('show');
+        Route::post('/users/{user}/reset-2fa', [UserController::class, 'resetTwoFactor'])->name('users.reset-2fa');
     });
 
     Route::middleware('permission:audit-log.view')->group(function () {
@@ -87,4 +99,5 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
 Route::middleware('throttle:30,1')->group(function () {
     Route::get('/d/{token}', [EmployeeLockerPublicController::class, 'show'])->name('locker.show');
     Route::get('/d/{token}/documents/{employeeDocument}', [EmployeeLockerPublicController::class, 'document'])->name('locker.document');
+    Route::get('/d/{token}/documents/{employeeDocument}/verify', [EmployeeLockerPublicController::class, 'verify'])->name('locker.verify');
 });

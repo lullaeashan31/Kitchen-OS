@@ -39,6 +39,9 @@ class EmployeeRequest extends FormRequest
             'esic_number' => ['nullable', 'string', 'max:20'],
             'bank_account' => ['nullable', 'string', 'max:34'],
             'ifsc' => ['nullable', 'string', 'max:11'],
+            // Onboarding photo: webcam capture (data URL) or file upload.
+            'photo' => ['nullable', 'image', 'max:4096'],
+            'photo_capture' => ['nullable', 'string'],
         ];
     }
 }

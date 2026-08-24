@@ -46,6 +46,7 @@
             @can('admin.settings.manage')<a href="{{ route('outlets.index') }}">Outlets</a>
             <a href="{{ route('job-roles.index') }}">Job roles</a>
             <a href="{{ route('document-templates.index') }}">Document types</a>@endcan
+            @can('user.manage')<a href="{{ route('users.index') }}">Users</a>@endcan
             @can('audit-log.view')<a href="{{ route('audit-log.index') }}">Audit log</a>@endcan
         @endunless
         <form method="POST" action="{{ route('logout') }}" style="display:inline">
@@ -70,5 +71,6 @@
     @endif
     @yield('content')
 </main>
+@stack("scripts")
 </body>
 </html>

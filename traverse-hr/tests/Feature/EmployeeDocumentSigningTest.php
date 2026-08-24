@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\DocumentTemplate;
 use App\Models\Employee;
+use App\Models\EmployeeDocument;
 use App\Models\JobRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,7 +64,13 @@ class EmployeeDocumentSigningTest extends TestCase
         ]);
     }
 
-    public function test_accepting_twice_updates_the_same_record_not_a_duplicate(): void
+    /**
+     * Superseded by design: this originally asserted that re-accepting
+     * OVERWROTE the first signature. That was a defect — an updated policy
+     * would silently erase what the employee previously agreed to. The
+     * prior acceptance is now retained and marked superseded.
+     */
+    public function test_accepting_twice_retains_the_first_signature_as_superseded(): void
     {
         $admin = $this->admin();
         $role = JobRole::factory()->create();
@@ -76,7 +83,14 @@ class EmployeeDocumentSigningTest extends TestCase
         $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept", ['signer_typed_name' => 'First Try']);
         $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept", ['signer_typed_name' => 'Corrected Name']);
 
-        $this->assertDatabaseCount('employee_documents', 1);
-        $this->assertDatabaseHas('employee_documents', ['signer_typed_name' => 'Corrected Name']);
+        $this->assertDatabaseCount('employee_documents', 2);
+
+        $first = EmployeeDocument::orderBy('id')->first();
+        $second = EmployeeDocument::orderByDesc('id')->first();
+
+        $this->assertSame('First Try', $first->signer_typed_name);
+        $this->assertNotNull($first->superseded_at, 'The earlier acceptance must be kept, not deleted.');
+        $this->assertSame('Corrected Name', $second->signer_typed_name);
+        $this->assertNull($second->superseded_at);
     }
 }

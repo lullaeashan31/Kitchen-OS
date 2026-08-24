@@ -305,6 +305,76 @@ that as a new **Path C** in DEPLOY.md:
   with explicit "skip to §N" notes so Path C users aren't made to read
   steps `install.php` already did for them.
 
+## Post-go-live audit + fixes (build 2)
+
+The owner reported that a downloaded document showed no proof of signing.
+Audit confirmed it and found more. What changed:
+
+**Signed PDFs are now real artefacts.** Dompdf was installed but never
+referenced — downloads served the blank source file. Now, on acceptance:
+uploaded PDFs are imported with FPDI, stamped along the footer of *every*
+page (so no page can be detached and shown as unsigned), and an Electronic
+Signature Certificate page is appended; authored-HTML documents render the
+same certificate via Dompdf. Every signed file is SHA-256 hashed at
+generation and the hash stored, giving tamper-evidence. `setasign/fpdi` +
+`setasign/fpdf` added — verified they parse the owner's PDF-1.7 kit files
+despite FPDI's documented 1.4 limit (tested, not assumed).
+
+**Known limitation, stated honestly:** the blanks printed on the original
+documents ("Employee Name: ____", "Float / Till Assigned: ____") are not
+filled in place. Doing so needs per-document coordinate mapping, which
+breaks the moment the owner uploads a differently-laid-out PDF. Instead
+every captured value — including field answers that were previously stored
+but never displayed anywhere — is printed on the certificate page, and the
+per-page footer binds the certificate to the document. If in-place filling
+is wanted later, it needs a visual field-placement UI, which is its own
+piece of work.
+
+**Location:** real GPS was requested. Not obtainable without prompting each
+employee for browser geolocation and a third-party IP-lookup service
+(against the no-SaaS rule), and IP geolocation is city-accurate at best —
+false precision on a legal document. Recording the outlet the session ran
+at instead, alongside IP, device, IST timestamp, witness, document version
+and hash.
+
+**Re-signing no longer destroys history.** `updateOrCreate` plus a unique
+constraint meant re-acknowledging an updated policy overwrote the original
+acceptance. The unique constraint is dropped; prior signatures are retained
+and marked `superseded_at`/`superseded_by_id`. Both admin and the employee's
+own locker show the full chain.
+
+**Two verified crashes fixed.** A soft-deleted outlet or job role 500'd the
+whole employee list; a soft-deleted employee 500'd their locker page. Both
+reproduced before fixing. Relations now use `withTrashed()` — losing the
+name of the outlet someone worked at is a data-integrity failure, not a
+tidy-up — and a removed employee's locker returns 410, not a stack trace.
+
+**User management existed only as an artisan command** — unusable on
+hosting without a terminal, so the owner could not create an HR login at
+all. Added Admin → Users (create/edit/deactivate, role assignment, 2FA
+reset for a lost phone), with a guard preventing the last Super Admin from
+demoting or deactivating themselves out of the system. Users are
+deactivated, never deleted, so the witness on a signed document stays
+resolvable forever.
+
+**Also:** employee list rebuilt with search/filter/sort, headcounts, photo
+thumbnails and per-employee paperwork progress; onboarding photo capture
+(webcam via getUserMedia with file-upload fallback, stored on the private
+disk and served through an authorising route); admin-authored HTML is now
+sanitised before rendering on the public locker page and in PDFs; HTTPS
+forced in production.
+
+**Laravel security advisories — deliberately not patched yet.** `composer
+audit` reports a high-severity CRLF-injection advisory in the framework's
+default email rule. The fix only exists in Laravel 12.60+; this app is on
+11.x, so clearing it means a major-version upgrade. Exposure was checked
+rather than assumed: the app uses no temporary signed URLs (so that
+advisory does not apply), and no user-supplied address reaches a mail
+header. A defensive control-character rule was added to user-email
+validation as interim mitigation. **A planned Laravel 12 upgrade should be
+scheduled** — it was not bundled into a hotfix for a system that went live
+the same week.
+
 ## Before go-live — open items I need from the owner
 
 Collected in one place since this was asked directly. None of these
