@@ -421,3 +421,130 @@ run against actual staff and money.
 Flagged in `PERMISSION_MATRIX.md`: whether HR can self-approve an offer
 they drafted, or a second approver is always required. Defaulted to
 self-approval allowed, Super Admin can always override — confirm.
+
+---
+
+# Build 3 — handwritten signatures, countersignatories, optional 2FA
+
+Requested after the first live run: *"they can just sign on that [a
+signature pad with a stylus], and that could translate to a signature,
+which automatically gets replicated on all the files… as super admin I
+should be able to change who's signing on the company's behalf… I don't
+think I require two-factor authentication for the admin people."*
+
+## 1. Signatures are now drawn, not typed
+
+The typed-name acceptance is replaced by a real captured signature.
+
+- **Any pad works.** Capture uses the browser's Pointer Events API, so a
+  USB signature pad, a stylus, a touchscreen or a plain mouse all feed
+  the same code path. No vendor SDK, no driver, nothing to install — the
+  pad from Amazon presents itself as a pointing device and just works.
+- **The pen path is stored, not only the picture.** `signature_strokes`
+  keeps each stroke's points with timestamps (and pressure where the
+  device reports it). That is materially stronger evidence than a flat
+  image: it shows a hand drew the signature in real time rather than a
+  file being pasted in. The certificate states the stroke count.
+- **An empty pad is refused.** A blank canvas cannot produce a signed
+  document — the acceptance is rejected and nothing is recorded.
+- **The image is trimmed to the ink** before placement, so a small
+  squiggle in the middle of a large canvas still lands on the signature
+  line at a sensible size.
+- **Existing typed acceptances are left alone.** They were validly
+  accepted under the previous flow, so they keep `signature_type =
+  'typed'` and their certificates say "Typed-name electronic signature,
+  in person". Rewriting them as handwritten would be a false record.
+
+## 2. Who signs for the company
+
+New Admin → **Signatories** screen. Add the people who countersign
+(founder, a senior manager, the admin person), each with their own
+signature — uploaded as a file or drawn on the same pad. One is the
+default; the signing screen has a dropdown to pick a different one, so a
+junior can run an onboarding session without the founder present.
+
+- The name, designation and image are **snapshotted onto each document**
+  at signing time. Renaming or retiring a signatory later cannot rewrite
+  what a document already says.
+- A retired (inactive) signatory cannot be selected for new documents.
+- Deactivating the default promotes another active signatory, so
+  documents never quietly go out with no countersignature.
+- A signature image that any signed document still references is **never
+  deleted**, even when that person uploads a replacement.
+- If no signatory has been set up yet, signing still works — the document
+  records the employee's signature alone rather than blocking onboarding.
+
+Both signatures appear side by side above ruled lines on the certificate
+page, over the full audit table (who, when, where, method, witness, IP,
+device, reference, and any recorded field values).
+
+## 3. Two-factor authentication is now optional
+
+Per the owner's decision, sign-in is password-only for every role,
+including Super Admin. The lockout protections are unchanged: exponential
+backoff, account lock after repeated failures, and an email alert to the
+Super Admin.
+
+The 2FA machinery is **retained, not deleted** — `REQUIRE_2FA=true` in
+`.env` turns it back on for Super Admin / HR / Accounts without a code
+change, and anyone who enrols voluntarily is always challenged (opting in
+must never be weaker than opting out).
+
+**Stated plainly, since this is the owner's call and not a default we
+chose:** this system holds bank account numbers, PAN and UAN. A password
+alone is the only thing between a stolen or reused password and that
+data. `REQUIRE_2FA=true` is a one-line change whenever you want it.
+
+## 4. Bugs found and fixed in this pass
+
+1. **An empty signature pad was accepted.** `SignatureImage::fromRequest`
+   fell back to the untrimmed blank image when it found no ink, so a
+   document could be recorded as signed with nothing on it. "No ink" and
+   "could not read the image" are now distinguished.
+2. **The upgrade migration failed on MySQL/MariaDB** — the unique index
+   being dropped was the index backing the `employee_id` foreign key, and
+   MySQL refuses to drop it (errno 1553). The replacement index is now
+   created first. **This would have broken the upgrade on the live site**;
+   it was invisible under SQLite, which has no such rule. Caught by
+   running the full migration set against a real MariaDB server.
+3. **The rollback had the same fault mirrored**, dropping the plain index
+   before restoring the unique. Both directions are now order-correct and
+   safe to re-run.
+4. **`upgrade.php` cleared only config and views.** This build adds new
+   routes; a cached route table would have made Signatories 404 on a site
+   that had been optimised. It now runs `optimize:clear`.
+5. **A failed signature upload was silent.** Uploading an unreadable or
+   blank signature saved the signatory with no signature and said
+   "added". It now says what happened.
+6. **The certificate could overflow its page.** It is laid out with
+   absolute coordinates on a single page, so a document with many
+   recorded fields ran off the bottom. It now paginates with a
+   "(continued)" header. Verified with a 40-field document.
+7. **Re-uploading a signature deleted the old image** that already-signed
+   documents pointed at, stripping the countersignature from them on any
+   regeneration.
+8. **"1 pen strokes."** The two PDF renderers (FPDI for uploaded PDFs,
+   Dompdf for authored ones) each had their own copy of the method
+   description. Both now read one method on the model, so they cannot
+   drift apart again.
+
+## 5. Verification
+
+- 49 tests pass against **both** SQLite and a real MariaDB server.
+- The full migration set runs clean on MariaDB, fresh **and** as an
+  in-place upgrade of a populated database carrying an existing signed
+  acceptance (which survives intact and keeps its typed-name method).
+- The signing session was driven end to end in a real browser at **360px**:
+  an empty pad is blocked, a drawn signature is accepted, the
+  countersignatory dropdown works, and the resulting PDF was rendered to
+  an image and read back to confirm both signatures and the audit table.
+
+## 6. Still open (unchanged from build 2)
+
+**In-document blanks are not filled in place.** Where the Manager
+Onboarding Kit has a printed blank line, the value is recorded on the
+certificate page rather than typed onto the line itself. Doing it
+properly needs a coordinate map per document, which is a visual
+field-placement tool — a real piece of work, worth doing only if you want
+the filled-in look on the page itself. Everything is legally recorded
+either way.

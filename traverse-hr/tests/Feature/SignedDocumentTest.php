@@ -55,9 +55,7 @@ class SignedDocumentTest extends TestCase
         [$employee, $template] = $this->scenario();
 
         $this->actingAs($this->admin())
-            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", [
-                'signer_typed_name' => 'Rajesh Kumar',
-            ])->assertRedirect();
+            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", $this->signingPayload('Rajesh Kumar'))->assertRedirect();
 
         $doc = EmployeeDocument::firstOrFail();
 
@@ -76,9 +74,9 @@ class SignedDocumentTest extends TestCase
         $admin = $this->admin();
 
         $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept",
-            ['signer_typed_name' => 'Rajesh Kumar']);
+            $this->signingPayload('Rajesh Kumar'));
         $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept",
-            ['signer_typed_name' => 'Rajesh K Kumar']);
+            $this->signingPayload('Rajesh K Kumar'));
 
         $this->assertSame(2, EmployeeDocument::count(), 'The original acceptance must be retained.');
 
@@ -95,7 +93,7 @@ class SignedDocumentTest extends TestCase
     {
         [$employee, $template] = $this->scenario();
         $this->actingAs($this->admin())
-            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", ['signer_typed_name' => 'Rajesh Kumar']);
+            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", $this->signingPayload('Rajesh Kumar'));
 
         $doc = EmployeeDocument::firstOrFail();
         $token = EmployeeLockerService::getOrCreate($employee);
@@ -109,7 +107,7 @@ class SignedDocumentTest extends TestCase
     {
         [$employee, $template] = $this->scenario();
         $this->actingAs($this->admin())
-            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", ['signer_typed_name' => 'Rajesh Kumar']);
+            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", $this->signingPayload('Rajesh Kumar'));
 
         $doc = EmployeeDocument::firstOrFail();
         $doc->forceFill(['signed_pdf_path' => null])->save();
@@ -124,7 +122,7 @@ class SignedDocumentTest extends TestCase
     {
         [$employee, $template] = $this->scenario();
         $this->actingAs($this->admin())
-            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", ['signer_typed_name' => 'Rajesh Kumar']);
+            ->post("/employees/{$employee->id}/documents/{$template->id}/accept", $this->signingPayload('Rajesh Kumar'));
 
         EmployeeDocument::query()->update(['signed_pdf_path' => null, 'signed_pdf_sha256' => null]);
 

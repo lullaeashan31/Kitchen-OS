@@ -65,19 +65,21 @@ class LoginController extends Controller
         RateLimiter::clear($throttleKey);
         $user->forceFill(['failed_login_count' => 0, 'locked_until' => null])->save();
 
-        // Requires TOTP for Super Admin / HR / Accounts (§6) before session is fully trusted.
-        if ($user->hasAnyRole(['super_admin', 'hr_manager', 'accounts']) && ! $user->twoFactorEnabled()) {
-            Auth::login($user);
-            $request->session()->put('needs_2fa_enrollment', true);
-
-            return redirect()->route('two-factor.setup');
-        }
-
-        if ($user->hasAnyRole(['super_admin', 'hr_manager', 'accounts'])) {
+        // Two-factor is opt-in (see config/security.php). Users who have
+        // enrolled are always challenged; enrolment is only *forced* when
+        // the mandatory setting is switched on for their role.
+        if ($user->twoFactorEnabled()) {
             Auth::login($user);
             $request->session()->put('needs_2fa_challenge', true);
 
             return redirect()->route('two-factor.challenge');
+        }
+
+        if ($user->requiresTwoFactor()) {
+            Auth::login($user);
+            $request->session()->put('needs_2fa_enrollment', true);
+
+            return redirect()->route('two-factor.setup');
         }
 
         Auth::login($user, $request->boolean('remember'));

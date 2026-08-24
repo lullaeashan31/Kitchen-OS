@@ -90,8 +90,11 @@ try {
     Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\RolesAndPermissionsSeeder', '--force' => true]);
     $log .= trim(Artisan::output())."\n";
 
-    Artisan::call('config:clear');
-    Artisan::call('view:clear');
+    // Clear every cache, not just config: this build adds new routes
+    // (Signatories) and new views, and a stale cached route table would
+    // make those pages 404 on a site that had been optimised.
+    Artisan::call('optimize:clear');
+    $log .= trim(Artisan::output())."\n";
 } catch (\Throwable $e) {
     page('Upgrade failed', '<p>'.htmlspecialchars($e->getMessage(), ENT_QUOTES).'</p><pre>'
         .htmlspecialchars($log, ENT_QUOTES).'</pre>', 'error');

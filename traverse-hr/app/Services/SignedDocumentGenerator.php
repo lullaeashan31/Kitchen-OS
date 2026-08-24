@@ -27,7 +27,7 @@ class SignedDocumentGenerator
 {
     public static function generate(EmployeeDocument $doc): EmployeeDocument
     {
-        $doc->loadMissing('employee.outlet', 'employee.jobRole', 'documentTemplate', 'version', 'recordedBy', 'signingOutlet');
+        $doc->loadMissing('employee.outlet', 'employee.jobRole', 'documentTemplate', 'version', 'recordedBy', 'signingOutlet', 'companySignatory');
 
         $pdfBytes = $doc->version->source_file_path
             ? self::stampExistingPdf($doc)
@@ -88,7 +88,7 @@ class SignedDocumentGenerator
 
         // Certificate page, same size as the last imported page.
         $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-        self::drawCertificate($pdf, $doc, $size['width']);
+        self::drawCertificate($pdf, $doc, $size['width'], $size['height'], $size['orientation']);
 
         return $pdf->Output('S');
     }
@@ -103,7 +103,18 @@ class SignedDocumentGenerator
         ])->setPaper('a4')->output();
     }
 
-    private static function drawCertificate(Fpdi $pdf, EmployeeDocument $doc, float $w): void
+    /**
+     * The certificate is laid out with absolute coordinates rather than
+     * flowing text, so it has to manage its own page breaks: a document with
+     * many recorded fields would otherwise run off the bottom of the page.
+     */
+    private static function drawCertificate(
+        Fpdi $pdf,
+        EmployeeDocument $doc,
+        float $w,
+        float $h = 297,
+        string $orientation = 'P'
+    ): void
     {
         $ist = fn ($d) => $d ? $d->timezone('Asia/Kolkata')->format('d M Y, H:i:s').' IST' : '—';
         $emp = $doc->employee;
@@ -120,6 +131,11 @@ class SignedDocumentGenerator
             'This certificate forms part of, and is issued with, the document it is attached to. '.
             'It records an electronic signature made under the Information Technology Act, 2000.'), 0, 'L');
 
+        // Signature block first — this is the part a person actually looks
+        // at to satisfy themselves the document was signed.
+        $blockTop = 60;
+        $sigH = self::drawSignatureBlock($pdf, $doc, $w, $blockTop);
+
         $rows = [
             ['Document', $doc->documentTemplate->name],
             ['Document version', 'v'.$doc->version->version.'  ('.strtoupper($doc->language).')'],
@@ -128,7 +144,7 @@ class SignedDocumentGenerator
             ['Designation', $emp->designation ?: ($emp->jobRole->name ?? '—')],
             ['Date & time', $ist($doc->signed_at)],
             ['Place of signing', $doc->signing_place ?: ($doc->signingOutlet->name ?? $emp->outlet->name ?? '—')],
-            ['Method', 'Typed-name electronic signature, in person'],
+            ['Method', $doc->signatureMethodLabel()],
             ['Witnessed by', $doc->recordedBy->name ?? '—'],
             ['IP address', $doc->signed_ip ?: '—'],
             ['Device', \Illuminate\Support\Str::limit($doc->signed_user_agent ?: '—', 78)],
@@ -139,8 +155,23 @@ class SignedDocumentGenerator
             $rows[] = [$label, $value];
         }
 
-        $y = 42;
+        $bottomLimit = $h - 25;
+        $newPage = function () use ($pdf, $orientation, $w, $h): float {
+            $pdf->AddPage($orientation, [$w, $h]);
+            $pdf->SetFont('Helvetica', 'B', 9);
+            $pdf->SetTextColor(90, 95, 105);
+            $pdf->SetXY(15, 15);
+            $pdf->Cell($w - 30, 6, self::latin1('Electronic Signature Certificate (continued)'), 0, 1, 'L');
+
+            return 26;
+        };
+
+        $y = $blockTop + $sigH + 8;
         foreach ($rows as [$label, $value]) {
+            if ($y > $bottomLimit) {
+                $y = $newPage();
+            }
+
             $pdf->SetFont('Helvetica', 'B', 8.5);
             $pdf->SetTextColor(90, 95, 105);
             $pdf->SetXY(15, $y);
@@ -157,6 +188,10 @@ class SignedDocumentGenerator
         }
 
         $y += 5;
+        // Keep the integrity note and the closing line together on one page.
+        if ($y > $bottomLimit - 22) {
+            $y = $newPage();
+        }
         $pdf->SetFont('Helvetica', 'B', 8.5);
         $pdf->SetTextColor(90, 95, 105);
         $pdf->SetXY(15, $y);
@@ -214,6 +249,72 @@ class SignedDocumentGenerator
      * as mojibake ("a<>"). Transliterate the characters we actually emit
      * rather than silently corrupting money amounts on a legal document.
      */
+    /**
+     * Draws the employee's signature and the company countersignature side
+     * by side, on ruled lines, the way the paper document does it.
+     * Returns the height consumed so the detail table starts below it.
+     */
+    private static function drawSignatureBlock(Fpdi $pdf, EmployeeDocument $doc, float $w, float $top): float
+    {
+        $colW = ($w - 30 - 10) / 2;
+        $lineY = $top + 26;
+        $boxes = [
+            [15, 'Signature of Employee', $doc->signature_image_path,
+                $doc->signer_typed_name, $doc->employee->designation ?: ($doc->employee->jobRole->name ?? '')],
+            [15 + $colW + 10, 'For Traverse Inc.', $doc->company_signature_image_path,
+                $doc->company_signatory_name ?: '', $doc->company_signatory_designation ?: ''],
+        ];
+
+        foreach ($boxes as [$x, $caption, $imagePath, $name, $designation]) {
+            if ($imagePath && Storage::disk('local')->exists($imagePath)) {
+                self::placeSignature($pdf, Storage::disk('local')->path($imagePath), $x, $top, $colW, 22);
+            }
+
+            $pdf->SetDrawColor(120, 125, 135);
+            $pdf->SetLineWidth(0.25);
+            $pdf->Line($x, $lineY, $x + $colW, $lineY);
+
+            $pdf->SetFont('Helvetica', 'B', 8);
+            $pdf->SetTextColor(20, 25, 40);
+            $pdf->SetXY($x, $lineY + 1.2);
+            $pdf->Cell($colW, 4, self::latin1($caption), 0, 2, 'L');
+
+            $pdf->SetFont('Helvetica', '', 8.5);
+            $pdf->SetX($x);
+            $pdf->Cell($colW, 4.2, self::latin1($name ?: '—'), 0, 2, 'L');
+
+            if ($designation) {
+                $pdf->SetFont('Helvetica', 'I', 7.5);
+                $pdf->SetTextColor(90, 95, 105);
+                $pdf->SetX($x);
+                $pdf->Cell($colW, 3.8, self::latin1($designation), 0, 2, 'L');
+            }
+        }
+
+        return 40;
+    }
+
+    /** Fit a signature image inside a box without distorting its aspect ratio. */
+    private static function placeSignature(Fpdi $pdf, string $file, float $x, float $top, float $maxW, float $maxH): void
+    {
+        $size = @getimagesize($file);
+        if (! $size || ! $size[0] || ! $size[1]) {
+            return;
+        }
+
+        $scale = min($maxW / $size[0], $maxH / $size[1]);
+        $drawW = $size[0] * $scale;
+        $drawH = $size[1] * $scale;
+
+        try {
+            $pdf->Image($file, $x, $top + ($maxH - $drawH), $drawW, $drawH, 'PNG');
+        } catch (\Throwable $e) {
+            // A signature that will not render must never take the whole
+            // document down — the certificate still carries the full record.
+            report($e);
+        }
+    }
+
     private static function latin1(string $text): string
     {
         $text = strtr($text, [

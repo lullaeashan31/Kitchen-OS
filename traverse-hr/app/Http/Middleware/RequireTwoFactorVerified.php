@@ -21,13 +21,14 @@ class RequireTwoFactorVerified
             return $next($request);
         }
 
-        $requires2fa = $user->hasAnyRole(['super_admin', 'hr_manager', 'accounts']);
-
-        if ($requires2fa && ! $user->twoFactorEnabled()) {
+        // Enrolment is only forced when mandatory 2FA is switched on.
+        if ($user->requiresTwoFactor() && ! $user->twoFactorEnabled()) {
             return redirect()->route('two-factor.setup');
         }
 
-        if ($requires2fa && ! $request->session()->get('2fa_verified')) {
+        // Anyone who HAS enrolled must still pass the challenge, whether or
+        // not it is mandatory — opting in must not be weaker than opting out.
+        if ($user->twoFactorEnabled() && ! $request->session()->get('2fa_verified')) {
             return redirect()->route('two-factor.challenge');
         }
 

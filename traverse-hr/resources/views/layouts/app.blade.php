@@ -38,14 +38,16 @@
             // enrollment/challenge is still pending — they'd just bounce
             // straight back here anyway (RequireTwoFactorVerified), and
             // showing them is confusing mid-challenge.
-            $twoFactorPending = auth()->user()->hasAnyRole(['super_admin', 'hr_manager', 'accounts'])
-                && (! auth()->user()->twoFactorEnabled() || ! session('2fa_verified'));
+            $u = auth()->user();
+            $twoFactorPending = ($u->requiresTwoFactor() && ! $u->twoFactorEnabled())
+                || ($u->twoFactorEnabled() && ! session('2fa_verified'));
         @endphp
         @unless ($twoFactorPending)
             @can('employee.view')<a href="{{ route('employees.index') }}">Employees</a>@endcan
             @can('admin.settings.manage')<a href="{{ route('outlets.index') }}">Outlets</a>
             <a href="{{ route('job-roles.index') }}">Job roles</a>
-            <a href="{{ route('document-templates.index') }}">Document types</a>@endcan
+            <a href="{{ route('document-templates.index') }}">Document types</a>
+            <a href="{{ route('company-signatories.index') }}">Signatories</a>@endcan
             @can('user.manage')<a href="{{ route('users.index') }}">Users</a>@endcan
             @can('audit-log.view')<a href="{{ route('audit-log.index') }}">Audit log</a>@endcan
         @endunless

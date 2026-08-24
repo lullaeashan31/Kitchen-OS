@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\CompanySignatoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\DocumentTemplateVersionController;
@@ -47,11 +48,15 @@ Route::middleware(['auth', '2fa.verified'])->group(function () {
         Route::post('/document-template-variants/{variant}/versions', [DocumentTemplateController::class, 'storeVersion'])->name('document-template-variants.versions.store');
         Route::post('/document-template-variants/{variant}/text-versions', [DocumentTemplateController::class, 'storeTextVersion'])->name('document-template-variants.text-versions.store');
 
+        Route::resource('company-signatories', CompanySignatoryController::class)->except('show', 'destroy');
+        Route::post('/company-signatories/{companySignatory}/make-default', [CompanySignatoryController::class, 'makeDefault'])->name('company-signatories.make-default');
+
         Route::get('/job-roles/{jobRole}/documents', [JobRoleDocumentController::class, 'edit'])->name('job-roles.documents.edit');
         Route::put('/job-roles/{jobRole}/documents', [JobRoleDocumentController::class, 'update'])->name('job-roles.documents.update');
     });
 
     Route::middleware('permission:document.view')->group(function () {
+        Route::get('/company-signatories/{companySignatory}/image', [CompanySignatoryController::class, 'image'])->name('company-signatories.image');
         Route::get('/document-template-versions/{version}/download', [DocumentTemplateVersionController::class, 'download'])->name('document-template-versions.download');
     });
 

@@ -30,7 +30,7 @@ class EmployeeDocumentSigningTest extends TestCase
         return $user;
     }
 
-    public function test_typing_a_name_records_acceptance_without_any_signature_pad(): void
+    public function test_signing_on_the_pad_records_the_acceptance(): void
     {
         $admin = $this->admin();
         $role = JobRole::factory()->create();
@@ -47,7 +47,7 @@ class EmployeeDocumentSigningTest extends TestCase
 
         $response = $this->actingAs($admin)->post(
             "/employees/{$employee->id}/documents/{$template->id}/accept",
-            ['signer_typed_name' => 'Priya Shah']
+            $this->signingPayload('Priya Shah')
         );
 
         $response->assertRedirect(route('employees.documents.index', $employee));
@@ -80,8 +80,8 @@ class EmployeeDocumentSigningTest extends TestCase
         $variant = $template->variants()->create(['label' => 'Default', 'is_default' => true]);
         $variant->versions()->create(['language' => 'en', 'version' => 1, 'body_html' => '<p>Policy</p>', 'active' => true]);
 
-        $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept", ['signer_typed_name' => 'First Try']);
-        $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept", ['signer_typed_name' => 'Corrected Name']);
+        $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept", $this->signingPayload('First Try'));
+        $this->actingAs($admin)->post("/employees/{$employee->id}/documents/{$template->id}/accept", $this->signingPayload('Corrected Name'));
 
         $this->assertDatabaseCount('employee_documents', 2);
 

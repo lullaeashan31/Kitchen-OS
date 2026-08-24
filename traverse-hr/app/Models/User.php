@@ -53,6 +53,13 @@ class User extends Authenticatable
         return $this->belongsTo(Outlet::class);
     }
 
+    /** Whether this user is *obliged* to use 2FA (see config/security.php). */
+    public function requiresTwoFactor(): bool
+    {
+        return config('security.require_two_factor', false)
+            && $this->hasAnyRole(config('security.two_factor_roles', []));
+    }
+
     public function twoFactorEnabled(): bool
     {
         return ! is_null($this->two_factor_enabled_at);

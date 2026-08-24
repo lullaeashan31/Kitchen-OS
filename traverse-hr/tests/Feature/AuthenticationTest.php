@@ -17,20 +17,57 @@ class AuthenticationTest extends TestCase
         Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
     }
 
-    public function test_super_admin_must_enroll_2fa_before_reaching_dashboard(): void
+    /**
+     * The owner's decision: password-only sign-in is the default for every
+     * role, including Super Admin. Two-factor remains available but is no
+     * longer imposed (config/security.php, REQUIRE_2FA).
+     */
+    public function test_super_admin_signs_in_with_password_alone_by_default(): void
     {
         $user = User::factory()->create(['password' => bcrypt('correct-password-123')]);
         $user->assignRole('super_admin');
 
-        $response = $this->post('/login', [
+        $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct-password-123',
-        ]);
+        ])->assertRedirect('/dashboard');
 
-        $response->assertRedirect(route('two-factor.setup'));
+        $this->get('/dashboard')->assertOk();
+    }
 
-        // Dashboard must stay unreachable until 2FA is actually enrolled.
+    /** The mandatory-2FA machinery is retained and still works when enabled. */
+    public function test_two_factor_can_be_made_mandatory_again_by_configuration(): void
+    {
+        config()->set('security.require_two_factor', true);
+        config()->set('security.two_factor_roles', ['super_admin']);
+
+        $user = User::factory()->create(['password' => bcrypt('correct-password-123')]);
+        $user->assignRole('super_admin');
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'correct-password-123',
+        ])->assertRedirect(route('two-factor.setup'));
+
         $this->get('/dashboard')->assertRedirect(route('two-factor.setup'));
+    }
+
+    /**
+     * Opting in must never be weaker than opting out: a user who has
+     * enrolled is challenged even though 2FA is not mandatory.
+     */
+    public function test_a_user_who_enrolled_voluntarily_is_still_challenged(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('correct-password-123')]);
+        $user->assignRole('hr_manager');
+        $user->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_enabled_at' => now()])->save();
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'correct-password-123',
+        ])->assertRedirect(route('two-factor.challenge'));
+
+        $this->get('/dashboard')->assertRedirect(route('two-factor.challenge'));
     }
 
     public function test_outlet_manager_with_no_2fa_requirement_reaches_dashboard_directly(): void

@@ -95,8 +95,28 @@
             @endif
         @endforeach
 
-        <label for="signer_typed_name">Employee's typed name (this is their acceptance)</label>
+        <label for="signer_typed_name">Name in block letters</label>
         <input id="signer_typed_name" name="signer_typed_name" required autocomplete="off" value="{{ old('signer_typed_name', $employee->name) }}">
+
+        <div style="margin-top:.8rem;">
+            @include('partials.signature-pad', ['label' => "Employee's signature", 'required' => true])
+        </div>
+
+        @if ($signatories->isNotEmpty())
+            <label for="company_signatory_id">Signing on behalf of Traverse Inc.</label>
+            <select id="company_signatory_id" name="company_signatory_id">
+                @foreach ($signatories as $s)
+                    <option value="{{ $s->id }}" @selected($s->is_default)>{{ $s->name }} — {{ $s->designation }}</option>
+                @endforeach
+            </select>
+            <p class="muted">Their signature is placed on the document automatically.</p>
+        @else
+            <p class="muted" style="margin-top:.6rem;">
+                No company signatory set up yet — the document will record the employee's signature only.
+                @can('admin.settings.manage')<a href="{{ route('company-signatories.index') }}">Add one</a>.@endcan
+            </p>
+        @endif
+
         <button type="submit" class="btn" style="margin-top:1rem;">Record acceptance</button>
     </form>
 </div>

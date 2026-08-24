@@ -12,12 +12,16 @@ class EmployeeDocument extends Model
         'signed_ip', 'signed_user_agent', 'recorded_by',
         'signed_pdf_path', 'signed_pdf_sha256', 'signing_outlet_id', 'signing_place',
         'superseded_at', 'superseded_by_id',
+        'signature_type', 'signature_image_path', 'signature_strokes',
+        'company_signatory_id', 'company_signatory_name',
+        'company_signatory_designation', 'company_signature_image_path',
     ];
 
     protected $casts = [
         'field_values' => 'array',
         'signed_at' => 'datetime',
         'superseded_at' => 'datetime',
+        'signature_strokes' => 'array',
     ];
 
     public function employee()
@@ -38,6 +42,34 @@ class EmployeeDocument extends Model
     public function recordedBy()
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    public function companySignatory()
+    {
+        return $this->belongsTo(CompanySignatory::class, 'company_signatory_id');
+    }
+
+    /** How many pen strokes were captured — evidence the pad was actually used. */
+    public function strokeCount(): int
+    {
+        return count($this->signature_strokes['strokes'] ?? []);
+    }
+
+    /**
+     * How this document was signed, as it appears on the certificate.
+     * Lives here so the FPDI and Dompdf renderers cannot describe the same
+     * signature differently.
+     */
+    public function signatureMethodLabel(): string
+    {
+        if ($this->signature_type !== 'drawn') {
+            return 'Typed-name electronic signature, in person';
+        }
+
+        $strokes = $this->strokeCount();
+
+        return 'Handwritten electronic signature captured in person'
+            .($strokes ? sprintf(' (%d pen stroke%s recorded)', $strokes, $strokes === 1 ? '' : 's') : '');
     }
 
     public function signingOutlet()
