@@ -89,6 +89,37 @@ class UserManagementTest extends TestCase
         $this->assertFalse($target->fresh()->twoFactorEnabled());
     }
 
+    /**
+     * With 2FA optional, clearing an enrolment must actually switch it off —
+     * the user signs in with their password alone afterwards, rather than
+     * being pushed back into setting it up again.
+     */
+    public function test_turning_off_two_factor_leaves_the_user_on_password_only(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $target = User::factory()->create(['password' => bcrypt('correct-password-123')]);
+        $target->assignRole('hr_manager');
+        $target->forceFill([
+            'two_factor_secret' => 'JBSWY3DPEHPK3PXP',
+            'two_factor_enabled_at' => now(),
+        ])->save();
+
+        // Enrolled, so still challenged.
+        $this->post('/login', ['email' => $target->email, 'password' => 'correct-password-123'])
+            ->assertRedirect(route('two-factor.challenge'));
+
+        $this->actingAs($admin)->post(route('users.reset-2fa', $target))->assertRedirect();
+
+        $this->assertFalse($target->fresh()->twoFactorEnabled());
+        $this->assertNull($target->fresh()->two_factor_secret);
+
+        $this->post('/logout');
+        $this->post('/login', ['email' => $target->email, 'password' => 'correct-password-123'])
+            ->assertRedirect('/dashboard');
+    }
+
     public function test_deactivated_user_cannot_log_in(): void
     {
         $user = User::factory()->create(['password' => bcrypt('correct-password-123'), 'active' => false]);

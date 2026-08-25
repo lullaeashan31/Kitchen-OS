@@ -107,6 +107,10 @@ class UserController extends Controller
     {
         $this->authorizeManage($request);
 
+        // Whether this is a reset or an outright switch-off depends on the
+        // 2FA policy, so work it out BEFORE clearing the enrolment.
+        $willReEnrol = $user->requiresTwoFactor();
+
         $user->forceFill([
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
@@ -115,7 +119,9 @@ class UserController extends Controller
 
         AuditLogger::log('user_2fa_reset', $user);
 
-        return back()->with('status', "Two-factor reset for {$user->name}. They'll be asked to enrol again at next login.");
+        return back()->with('status', $willReEnrol
+            ? "Two-factor reset for {$user->name}. They'll be asked to set it up again at next login."
+            : "Two-factor turned off for {$user->name}. They'll sign in with just their password from now on.");
     }
 
     /**

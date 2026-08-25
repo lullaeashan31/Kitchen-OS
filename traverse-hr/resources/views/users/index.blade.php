@@ -24,11 +24,21 @@
                 <td data-label="Actions">
                     <a href="{{ route('users.edit', $u) }}">Edit</a>
                     @if ($u->twoFactorEnabled())
+                        @php
+                            // What this button does depends on whether 2FA is
+                            // still required for them: it either clears the
+                            // enrolment for good, or forces a fresh one.
+                            $willReEnrol = $u->requiresTwoFactor();
+                            $label = $willReEnrol ? 'Reset 2FA' : 'Turn off 2FA';
+                            $confirm = $willReEnrol
+                                ? "Reset two-factor for {$u->name}? They will set it up again at next login."
+                                : "Turn off two-factor for {$u->name}? They will sign in with just their password after this.";
+                        @endphp
                         &middot;
                         <form method="POST" action="{{ route('users.reset-2fa', $u) }}" style="display:inline"
-                              onsubmit="return confirm('Reset two-factor for {{ $u->name }}? They will re-enrol at next login.');">
+                              onsubmit="return confirm('{{ $confirm }}');">
                             @csrf
-                            <button type="submit" style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font:inherit;">Reset 2FA</button>
+                            <button type="submit" style="background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font:inherit;">{{ $label }}</button>
                         </form>
                     @endif
                 </td>
