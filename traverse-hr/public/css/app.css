@@ -1,0 +1,559 @@
+/* ==========================================================================
+   Traverse HR — interface design system
+   --------------------------------------------------------------------------
+   Served as a static file: no build step, no Node, nothing to compile on the
+   shared host. Cache-busted by ?v= in the layout.
+
+   The vocabulary is deliberately small — surfaces, rows, controls, type —
+   so a screen is assembled from a few well-behaved pieces rather than
+   per-page inline styles.
+   ========================================================================== */
+
+/* --- Tokens ------------------------------------------------------------- */
+
+:root {
+    /* Neutrals. A true scale, so contrast decisions are principled rather
+       than picked by eye each time. */
+    --gray-0:  #ffffff;
+    --gray-1:  #fbfbfd;
+    --gray-2:  #f5f5f7;
+    --gray-3:  #ececee;
+    --gray-4:  #d2d2d7;
+    --gray-5:  #a1a1a6;
+    --gray-6:  #6e6e73;
+    --gray-7:  #424245;
+    --gray-8:  #1d1d1f;
+
+    --bg:          var(--gray-2);
+    --surface:     var(--gray-0);
+    --surface-sunk: var(--gray-1);
+    --ink:         var(--gray-8);
+    --ink-soft:    var(--gray-6);
+    --ink-faint:   var(--gray-5);
+
+    /* Hairlines, not borders. A 1px solid gray line reads as a box; a
+       translucent line reads as a fold in the paper. */
+    --line:        rgba(0, 0, 0, .09);
+    --line-strong: rgba(0, 0, 0, .16);
+
+    --accent:      #0071e3;
+    --accent-ink:  #ffffff;
+    --accent-soft: rgba(0, 113, 227, .10);
+    --accent-line: rgba(0, 113, 227, .35);
+
+    --green:     #1d8a4e;
+    --green-bg:  #e8f6ed;
+    --red:       #c8322b;
+    --red-bg:    #fdeceb;
+    --amber:     #8a5a00;
+    --amber-bg:  #fdf3e0;
+
+    --radius-lg: 18px;
+    --radius:    12px;
+    --radius-sm: 9px;
+    --radius-pill: 999px;
+
+    /* Layered, low-opacity shadows — depth you notice only if you look. */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 1px 1px rgba(0,0,0,.03);
+    --shadow:    0 1px 3px rgba(0,0,0,.05), 0 6px 16px -6px rgba(0,0,0,.08);
+    --shadow-lg: 0 2px 6px rgba(0,0,0,.06), 0 18px 40px -12px rgba(0,0,0,.16);
+
+    --tap: 44px;               /* never smaller than a fingertip */
+    --ease: cubic-bezier(.4, 0, .2, 1);
+
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+            Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg:           #000000;
+        --surface:      #1c1c1e;
+        --surface-sunk: #141416;
+        --ink:          #f5f5f7;
+        --ink-soft:     #a1a1a6;
+        --ink-faint:    #6e6e73;
+        --line:         rgba(255, 255, 255, .12);
+        --line-strong:  rgba(255, 255, 255, .20);
+        --accent:       #0a84ff;
+        --accent-soft:  rgba(10, 132, 255, .16);
+        --accent-line:  rgba(10, 132, 255, .45);
+        --green: #4ad07d;  --green-bg: rgba(74, 208, 125, .14);
+        --red:   #ff6961;  --red-bg:   rgba(255, 105, 97, .14);
+        --amber: #ffb340;  --amber-bg: rgba(255, 179, 64, .14);
+        --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
+        --shadow:    0 1px 3px rgba(0,0,0,.5), 0 8px 20px -8px rgba(0,0,0,.6);
+        --shadow-lg: 0 2px 8px rgba(0,0,0,.6), 0 24px 48px -16px rgba(0,0,0,.7);
+    }
+}
+
+/* --- Reset -------------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: -.01em;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -.022em; line-height: 1.2; }
+p { margin: 0 0 .75rem; }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* --- App shell ---------------------------------------------------------- */
+
+.top {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--line);
+}
+
+.top-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 max(1rem, env(safe-area-inset-left));
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.brand {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    color: var(--ink);
+    white-space: nowrap;
+}
+.brand:hover { text-decoration: none; opacity: .7; }
+
+/* Horizontal nav that scrolls rather than wraps — the header keeps one
+   clean line at every width. */
+nav.main {
+    display: flex;
+    align-items: center;
+    gap: .15rem;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+nav.main::-webkit-scrollbar { display: none; }
+
+nav.main a {
+    padding: .38rem .6rem;
+    border-radius: var(--radius-sm);
+    font-size: .82rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    transition: background .15s var(--ease), color .15s var(--ease);
+}
+nav.main a:hover { color: var(--ink); background: var(--gray-3); text-decoration: none; }
+nav.main a.is-active { color: var(--accent); background: var(--accent-soft); }
+@media (prefers-color-scheme: dark) {
+    nav.main a:hover { background: rgba(255,255,255,.08); }
+}
+
+.top form { margin-left: auto; display: flex; }
+
+main {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1.75rem max(1rem, env(safe-area-inset-left)) 4rem;
+}
+
+/* --- Page header -------------------------------------------------------- */
+
+.page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+.page-head h1 { font-size: 1.75rem; }
+.page-head .sub { margin: .3rem 0 0; color: var(--ink-soft); font-size: .9rem; }
+.page-head .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* --- Surfaces ----------------------------------------------------------- */
+
+.card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+.card > h2 { font-size: 1.05rem; margin-bottom: .2rem; }
+.card > h2 + .muted { margin-top: 0; margin-bottom: .9rem; }
+
+.card-flush { padding: 0; overflow: hidden; }
+
+.section-label {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 1.75rem 0 .5rem;
+}
+.section-label:first-child { margin-top: 0; }
+
+/* --- Buttons ------------------------------------------------------------ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: 36px;
+    padding: .5rem 1.05rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter .15s var(--ease), transform .1s var(--ease), background .15s var(--ease);
+}
+.btn:hover { filter: brightness(1.08); text-decoration: none; }
+.btn:active { transform: scale(.97); }
+
+.btn.secondary {
+    background: var(--gray-3);
+    color: var(--ink);
+}
+.btn.secondary:hover { background: var(--gray-4); filter: none; }
+@media (prefers-color-scheme: dark) {
+    .btn.secondary { background: rgba(255,255,255,.12); }
+    .btn.secondary:hover { background: rgba(255,255,255,.18); }
+}
+
+.btn.plain {
+    background: transparent;
+    color: var(--accent);
+    padding-left: .5rem;
+    padding-right: .5rem;
+}
+.btn.plain:hover { background: var(--accent-soft); filter: none; }
+
+.btn.danger { background: var(--red); color: #fff; }
+
+.btn.block { width: 100%; }
+.btn.small { min-height: 30px; padding: .3rem .75rem; font-size: .8rem; }
+
+.btn[disabled], .btn.is-disabled { opacity: .4; pointer-events: none; }
+
+/* A button that has to sit inside prose as if it were a link. */
+.linkbtn {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: var(--accent);
+    cursor: pointer;
+}
+.linkbtn:hover { text-decoration: underline; }
+.linkbtn.danger { color: var(--red); }
+
+/* --- Forms -------------------------------------------------------------- */
+
+label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin: .95rem 0 .3rem;
+}
+label:first-child { margin-top: 0; }
+
+input, select, textarea {
+    width: 100%;
+    min-height: var(--tap);
+    padding: .6rem .8rem;
+    font-family: inherit;
+    font-size: 1rem;          /* 16px — stops iOS zooming on focus */
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+    -webkit-appearance: none;
+    appearance: none;
+}
+textarea { min-height: 90px; padding-top: .7rem; resize: vertical; }
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3.5px var(--accent-soft);
+}
+input::placeholder, textarea::placeholder { color: var(--ink-faint); }
+input[disabled], select[disabled] { background: var(--gray-2); color: var(--ink-faint); }
+
+select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236e6e73' d='M1.4 1.7 6 6.3l4.6-4.6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .85rem center;
+    padding-right: 2.2rem;
+}
+
+input[type="checkbox"], input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    min-height: 0;
+    margin: 0;
+    accent-color: var(--accent);
+    -webkit-appearance: auto;
+    appearance: auto;
+}
+input[type="file"] { padding: .55rem .7rem; font-size: .88rem; }
+
+.check {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin: .9rem 0 0;
+    font-size: .92rem;
+    font-weight: 400;
+    color: var(--ink);
+    cursor: pointer;
+}
+.check input { flex: none; }
+
+.hint { margin: .35rem 0 0; font-size: .8rem; color: var(--ink-soft); }
+
+.field-row {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+.field-row > * { flex: 1 1 160px; min-width: 0; }
+.field-row > .field-narrow { flex: 0 1 130px; }
+
+fieldset { border: none; margin: 0; padding: 0; }
+
+/* --- Banners ------------------------------------------------------------ */
+
+.status, .errors, .notice {
+    display: flex;
+    gap: .6rem;
+    padding: .8rem 1rem;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    font-size: .9rem;
+}
+.status { background: var(--green-bg); color: var(--green); }
+.errors { background: var(--red-bg);   color: var(--red); }
+.notice { background: var(--amber-bg); color: var(--amber); }
+.errors ul { margin: 0; padding-left: 1.1rem; }
+
+/* --- Tables ------------------------------------------------------------- */
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+
+th {
+    text-align: left;
+    padding: .7rem 1rem;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+}
+td {
+    padding: .8rem 1rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background .12s var(--ease); }
+tbody tr:hover { background: var(--surface-sunk); }
+
+td .row-actions { display: flex; gap: .9rem; align-items: center; white-space: nowrap; }
+
+/* On a phone every row becomes its own labelled card — no sideways
+   scrolling through a grid on a 360px screen. */
+@media (max-width: 640px) {
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    tbody tr {
+        padding: .9rem 1rem;
+        border-bottom: 1px solid var(--line);
+    }
+    tbody tr:hover { background: none; }
+    td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        padding: .2rem 0;
+        border: none;
+        text-align: right;
+    }
+    td::before {
+        content: attr(data-label);
+        font-size: .8rem;
+        font-weight: 500;
+        color: var(--ink-soft);
+        text-align: left;
+        flex: none;
+    }
+    td:empty { display: none; }
+    td .row-actions { justify-content: flex-end; }
+
+    /* The first cell is the row's title, not a value: it spans the width,
+       stays left-aligned, and drops its label. */
+    td.td-primary {
+        display: block;
+        text-align: left;
+        padding-bottom: .55rem;
+        margin-bottom: .35rem;
+        border-bottom: 1px solid var(--line);
+    }
+    td.td-primary::before { display: none; }
+}
+
+/* --- Pills, badges, meta ------------------------------------------------ */
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    border-radius: var(--radius-pill);
+    font-size: .76rem;
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--gray-3);
+    color: var(--ink-soft);
+}
+.pill.ok      { background: var(--green-bg); color: var(--green); }
+.pill.warn    { background: var(--amber-bg); color: var(--amber); }
+.pill.bad     { background: var(--red-bg);   color: var(--red); }
+.pill.accent  { background: var(--accent-soft); color: var(--accent); }
+
+.muted { color: var(--ink-soft); font-size: .87rem; }
+.masked { font-family: var(--font-mono); font-size: .85rem; letter-spacing: .04em; }
+
+.avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--gray-3);
+    flex: none;
+}
+.avatar-lg { width: 104px; height: 104px; border-radius: var(--radius); }
+
+.person { display: flex; align-items: center; gap: .65rem; }
+.person .name { font-weight: 500; }
+
+/* --- Stats -------------------------------------------------------------- */
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+.stat {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    box-shadow: var(--shadow-sm);
+}
+.stat .n { font-size: 1.9rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.1; }
+.stat .k { margin-top: .15rem; font-size: .82rem; color: var(--ink-soft); }
+
+/* --- Empty state -------------------------------------------------------- */
+
+.empty {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--ink-soft);
+}
+.empty h3 { font-size: 1rem; color: var(--ink); margin-bottom: .3rem; }
+
+/* --- Narrow single-purpose pages (login, challenge) --------------------- */
+
+.slim {
+    max-width: 400px;
+    margin: 2.5rem auto;
+}
+.slim .card { padding: 1.75rem; box-shadow: var(--shadow); }
+.slim h1 { font-size: 1.4rem; margin-bottom: .3rem; }
+
+/* --- Signature pad ------------------------------------------------------ */
+
+.sigpad-canvas {
+    display: block;
+    width: 100%;
+    max-width: 480px;
+    height: 180px;
+    background: #fff;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    /* The pad must own the gesture, or a touchscreen scrolls the page
+       instead of drawing. */
+    touch-action: none;
+    cursor: crosshair;
+}
+.sigpad-canvas:focus-visible { border-color: var(--accent); }
+
+/* The ink is always dark on white, in both themes — a signature is a mark
+   on paper, and it is rendered onto white paper in the PDF. */
+@media (prefers-color-scheme: dark) {
+    .sigpad-canvas { border-color: rgba(255,255,255,.28); }
+}
+
+/* --- Utilities ---------------------------------------------------------- */
+
+.stack > * + * { margin-top: 1rem; }
+.row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+.row-end { margin-left: auto; }
+.mt { margin-top: 1rem; }
+.mt-lg { margin-top: 1.75rem; }
+.center { text-align: center; }
+.nowrap { white-space: nowrap; }
+
+@media print {
+    .top, .btn, nav.main { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+}

@@ -1,11 +1,12 @@
 @extends('layouts.app')
 @section('title', 'Documents for '.$jobRole->name)
 @section('content')
-<h1 style="font-size:1.3rem;">Documents — {{ $jobRole->name }}</h1>
+<h1>Documents — {{ $jobRole->name }}</h1>
 <p class="muted">Choose which variant of each document type this role receives at onboarding. Leave on "Default" unless this role needs a different version (e.g. a Manager-specific policy).</p>
 <div class="card" style="max-width:640px;">
     <form method="POST" action="{{ route('job-roles.documents.update', $jobRole) }}">
         @csrf @method('PUT')
+        <div class="table-wrap">
         <table>
             <thead><tr><th>Document</th><th>Variant</th></tr></thead>
             <tbody>
@@ -27,6 +28,7 @@
             @endforeach
             </tbody>
         </table>
+    </div>
         <button type="submit" class="btn" style="margin-top:1rem;">Save assignments</button>
     </form>
 </div>

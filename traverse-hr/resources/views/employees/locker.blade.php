@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Document locker — '.$employee->name)
 @section('content')
-<h1 style="font-size:1.3rem;">Document locker — {{ $employee->name }}</h1>
+<h1>Document locker — {{ $employee->name }}</h1>
 <p class="muted">Permanent link — {{ $employee->name }} can open this any time to see everything they've signed. Scan the QR code, or copy the link/WhatsApp message below and send it to them.</p>
 
 <div class="card" style="max-width:420px; text-align:center;">

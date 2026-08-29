@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $jobRole->exists ? 'Edit job role' : 'Add job role')
 @section('content')
-<h1 style="font-size:1.3rem;">{{ $jobRole->exists ? 'Edit job role' : 'Add job role' }}</h1>
+<h1>{{ $jobRole->exists ? 'Edit job role' : 'Add job role' }}</h1>
 <div class="card" style="max-width:520px;">
     <form method="POST" action="{{ $jobRole->exists ? route('job-roles.update', $jobRole) : route('job-roles.store') }}">
         @csrf

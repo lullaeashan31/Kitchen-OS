@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $signatory->exists ? 'Edit signatory' : 'Add signatory')
 @section('content')
-<h1 style="font-size:1.3rem;">{{ $signatory->exists ? 'Edit signatory' : 'Add signatory' }}</h1>
+<h1>{{ $signatory->exists ? 'Edit signatory' : 'Add signatory' }}</h1>
 <div class="card" style="max-width:560px;">
     <form method="POST" enctype="multipart/form-data"
           action="{{ $signatory->exists ? route('company-signatories.update', $signatory) : route('company-signatories.store') }}">
@@ -21,7 +21,7 @@
                  style="height:60px;max-width:100%;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff;padding:.4rem;">
         @endif
 
-        <h2 style="font-size:1rem; margin-top:1.2rem;">Signature</h2>
+        <h2>Signature</h2>
         <p class="muted">Sign on the pad below, or upload a scan/photo of your signature. Uploading works best on a plain white background.</p>
 
         @include('partials.signature-pad', ['label' => 'Draw signature'])

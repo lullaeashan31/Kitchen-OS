@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $employee->exists ? 'Edit employee' : 'Add employee')
 @section('content')
-<h1 style="font-size:1.3rem;">{{ $employee->exists ? 'Edit employee' : 'Add employee' }}</h1>
+<h1>{{ $employee->exists ? 'Edit employee' : 'Add employee' }}</h1>
 <div class="card" style="max-width:560px;">
     <form method="POST" enctype="multipart/form-data" action="{{ $employee->exists ? route('employees.update', $employee) : route('employees.store') }}">
         @csrf
@@ -59,7 +59,7 @@
         </select>
 
 
-        <h2 style="font-size:1rem; margin-top:1.2rem;">Photo</h2>
+        <h2>Photo</h2>
         <p class="muted">Take it now with the camera, or upload one. Stored privately &mdash; never a public link.</p>
 
         <div id="photo-block" style="display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap;">
@@ -89,7 +89,7 @@
         </div>
         <input type="hidden" name="photo_capture" id="photo_capture">
 
-        <h2 style="font-size:1rem; margin-top:1.2rem;">Statutory identifiers</h2>
+        <h2>Statutory identifiers</h2>
         <p class="muted">Stored encrypted. Only Admin/HR/Accounts can view these unmasked, and every unmask is logged with a reason.</p>
         @if ($employee->exists)
             <p class="masked">PAN: {{ $employee->maskedPan() ?? '—' }} &middot; Bank a/c: {{ $employee->maskedBankAccount() ?? '—' }}</p>
@@ -105,7 +105,7 @@
         <label for="ifsc">IFSC</label>
         <input id="ifsc" name="ifsc" placeholder="{{ $employee->exists ? 'Leave blank to keep current value' : '' }}">
 
-        <h2 style="font-size:1rem; margin-top:1.2rem;">Aadhaar (restricted)</h2>
+        <h2>Aadhaar (restricted)</h2>
         <p class="muted">Only the last 4 digits are stored, per the Aadhaar Act / DPDP Act constraint — no full Aadhaar number field exists in this system.</p>
         <label for="aadhaar_last_four">Aadhaar last 4 digits</label>
         <input id="aadhaar_last_four" name="aadhaar_last_four" maxlength="4" value="{{ old('aadhaar_last_four', $employee->aadhaar_last_four) }}">

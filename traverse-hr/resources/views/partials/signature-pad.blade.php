@@ -7,12 +7,10 @@
 --}}
 <div class="sigpad" data-sigpad @if($required ?? false) data-sigpad-required @endif>
     <label>{{ $label ?? 'Signature' }}</label>
-    <canvas data-sigpad-canvas
-            style="width:100%;max-width:460px;height:170px;border:1px solid var(--line);
-                   border-radius:8px;background:#fff;touch-action:none;display:block;cursor:crosshair;"></canvas>
-    <div style="display:flex;gap:.5rem;align-items:center;margin-top:.4rem;flex-wrap:wrap;">
-        <button type="button" class="btn secondary" data-sigpad-clear style="padding:.3rem .8rem;">Clear</button>
-        <span class="muted" data-sigpad-hint>Sign inside the box using the pad, stylus, finger or mouse.</span>
+    <canvas data-sigpad-canvas class="sigpad-canvas"></canvas>
+    <div class="row" style="margin-top:.5rem;">
+        <span class="muted" data-sigpad-hint>Sign inside the box — pad, stylus, finger or mouse.</span>
+        <button type="button" class="btn plain small row-end" data-sigpad-clear>Clear</button>
     </div>
     <input type="hidden" name="{{ $imageField ?? 'signature_capture' }}" data-sigpad-image>
     <input type="hidden" name="{{ $strokeField ?? 'signature_strokes' }}" data-sigpad-strokes>

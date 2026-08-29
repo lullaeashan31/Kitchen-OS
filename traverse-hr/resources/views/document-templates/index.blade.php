@@ -2,11 +2,12 @@
 @section('title', 'Document types')
 @section('content')
 <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 style="font-size:1.3rem;">Document types</h1>
+    <h1>Document types</h1>
     <a href="{{ route('document-templates.create') }}" class="btn">Add document type</a>
 </div>
 <p class="muted">Each type can have multiple variants (e.g. Default, Manager, Housekeeping) — assign which one a job role gets from that role's "Documents" tab.</p>
 <div class="card">
+    <div class="table-wrap">
     <table>
         <thead><tr><th>Name</th><th>Kind</th><th>Variants</th><th>Active</th><th></th></tr></thead>
         <tbody>
@@ -25,5 +26,6 @@
         @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 @endsection

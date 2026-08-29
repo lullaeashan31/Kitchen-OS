@@ -1,10 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Onboarding documents — '.$employee->name)
 @section('content')
-<h1 style="font-size:1.3rem;">Onboarding documents — {{ $employee->name }}</h1>
+<h1>Onboarding documents — {{ $employee->name }}</h1>
 <p class="muted">Classic in-person session: open each document with the employee, they read it, then type their name to accept. No signature pad needed.</p>
 <p><a href="{{ route('employees.locker.show', $employee) }}">View their document locker link / QR &rarr;</a></p>
 <div class="card">
+    <div class="table-wrap">
     <table>
         <thead><tr><th>Document</th><th>Status</th><th>Accepted by / on</th><th></th></tr></thead>
         <tbody>
@@ -17,7 +18,7 @@
                 </td>
                 <td data-label="Status">
                     @if ($row['record']?->status === 'signed')
-                        <span style="color:#146c43;">Accepted</span>
+                        <span style="color:var(--green);">Accepted</span>
                     @else
                         <span class="muted">Pending</span>
                     @endif
@@ -38,6 +39,7 @@
         @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 <p><a href="{{ route('employees.edit', $employee) }}">&larr; Back to employee</a></p>
 @endsection

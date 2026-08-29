@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $outlet->exists ? 'Edit outlet' : 'Add outlet')
 @section('content')
-<h1 style="font-size:1.3rem;">{{ $outlet->exists ? 'Edit outlet' : 'Add outlet' }}</h1>
+<h1>{{ $outlet->exists ? 'Edit outlet' : 'Add outlet' }}</h1>
 <div class="card" style="max-width:480px;">
     <form method="POST" action="{{ $outlet->exists ? route('outlets.update', $outlet) : route('outlets.store') }}">
         @csrf

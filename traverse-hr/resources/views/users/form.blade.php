@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $user->exists ? 'Edit user' : 'Add user')
 @section('content')
-<h1 style="font-size:1.3rem;">{{ $user->exists ? 'Edit user' : 'Add user' }}</h1>
+<h1>{{ $user->exists ? 'Edit user' : 'Add user' }}</h1>
 <div class="card" style="max-width:560px;">
     <form method="POST" action="{{ $user->exists ? route('users.update', $user) : route('users.store') }}">
         @csrf
@@ -48,7 +48,7 @@
 
 @if ($user->exists && $user->id !== auth()->id())
 <div class="card" style="max-width:560px;">
-    <h2 style="font-size:1rem; margin-top:0;">Deactivate</h2>
+    <h2>Deactivate</h2>
     <p class="muted">Removes their access. Their name stays on any document they witnessed — history is never deleted.</p>
     <form method="POST" action="{{ route('users.destroy', $user) }}" onsubmit="return confirm('Deactivate {{ $user->name }}?');">
         @csrf @method('DELETE')

@@ -2,10 +2,11 @@
 @section('title', 'Job roles')
 @section('content')
 <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 style="font-size:1.3rem;">Job roles</h1>
+    <h1>Job roles</h1>
     <a href="{{ route('job-roles.create') }}" class="btn">Add job role</a>
 </div>
 <div class="card">
+    <div class="table-wrap">
     <table>
         <thead><tr><th>Name</th><th>Outlet</th><th>Department</th><th>Probation</th><th>Active</th><th></th></tr></thead>
         <tbody>
@@ -22,7 +23,7 @@
                     @if ($role->active)
                         <form method="POST" action="{{ route('job-roles.destroy', $role) }}" style="display:inline" onsubmit="return confirm('Deactivate this role?');">
                             @csrf @method('DELETE')
-                            <button type="submit" style="background:none;border:none;color:#a12622;cursor:pointer;padding:0;">Deactivate</button>
+                            <button type="submit" style="background:none;border:none;color:var(--red);cursor:pointer;padding:0;">Deactivate</button>
                         </form>
                     @endif
                 </td>
@@ -30,6 +31,7 @@
         @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 {{ $jobRoles->links() }}
 @endsection

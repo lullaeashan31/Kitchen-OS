@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $documentTemplate->exists ? 'Edit document type' : 'Add document type')
 @section('content')
-<h1 style="font-size:1.3rem;">{{ $documentTemplate->exists ? 'Edit document type' : 'Add document type' }}</h1>
+<h1>{{ $documentTemplate->exists ? 'Edit document type' : 'Add document type' }}</h1>
 <div class="card" style="max-width:560px;">
     <form method="POST" action="{{ $documentTemplate->exists ? route('document-templates.update', $documentTemplate) : route('document-templates.store') }}">
         @csrf
@@ -27,7 +27,7 @@
 </div>
 
 @if ($documentTemplate->exists)
-<h2 style="font-size:1.1rem; margin-top:1.5rem;">Variants & content</h2>
+<h2>Variants & content</h2>
 <p class="muted">Upload the actual document (PDF/DOCX) for each variant and language. A new upload creates a new version — it never overwrites what was already sent to an employee.</p>
 
 @foreach ($documentTemplate->variants as $variant)
@@ -64,6 +64,7 @@
         @endforelse
         </tbody>
     </table>
+    </div>
 
     <form method="POST" action="{{ route('document-template-variants.versions.store', $variant) }}" enctype="multipart/form-data" style="margin-top:.6rem; display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
         @csrf

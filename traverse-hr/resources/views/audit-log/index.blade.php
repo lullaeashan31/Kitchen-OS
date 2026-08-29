@@ -2,11 +2,12 @@
 @section('title', 'Audit log')
 @section('content')
 <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 style="font-size:1.3rem;">Audit log</h1>
+    <h1>Audit log</h1>
     <a href="{{ route('audit-log.export') }}" class="btn">Export CSV</a>
 </div>
 <p class="muted">Append-only. Nothing here can be edited or deleted through the UI.</p>
 <div class="card">
+    <div class="table-wrap">
     <table>
         <thead><tr><th>When</th><th>User</th><th>Action</th><th>Record</th><th>Reason</th><th>IP</th></tr></thead>
         <tbody>
@@ -22,6 +23,7 @@
         @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 {{ $logs->links() }}
 @endsection

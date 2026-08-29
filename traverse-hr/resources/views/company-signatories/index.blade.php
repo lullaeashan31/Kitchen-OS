@@ -2,12 +2,13 @@
 @section('title', 'Company signatories')
 @section('content')
 <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
-    <h1 style="font-size:1.3rem;">Company signatories</h1>
+    <h1>Company signatories</h1>
     <a href="{{ route('company-signatories.create') }}" class="btn">Add signatory</a>
 </div>
 <p class="muted">People who sign on behalf of Traverse Inc. Their signature is placed on the document automatically when an employee signs. The default is used unless another is chosen during the session.</p>
 
 <div class="card">
+    <div class="table-wrap">
     <table>
         <thead><tr><th>Signature</th><th>Name</th><th>Designation</th><th>Default</th><th>Status</th><th></th></tr></thead>
         <tbody>
@@ -25,7 +26,7 @@
                 <td data-label="Designation">{{ $s->designation }}</td>
                 <td data-label="Default">
                     @if ($s->is_default)
-                        <span style="color:#146c43;">Default</span>
+                        <span style="color:var(--green);">Default</span>
                     @else
                         <form method="POST" action="{{ route('company-signatories.make-default', $s) }}">
                             @csrf
@@ -41,5 +42,6 @@
         @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 @endsection

@@ -2,10 +2,11 @@
 @section('title', 'Outlets')
 @section('content')
 <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 style="font-size:1.3rem;">Outlets</h1>
+    <h1>Outlets</h1>
     <a href="{{ route('outlets.create') }}" class="btn">Add outlet</a>
 </div>
 <div class="card">
+    <div class="table-wrap">
     <table>
         <thead><tr><th>Name</th><th>Code</th><th>Divisor</th><th>Active</th><th></th></tr></thead>
         <tbody>
@@ -20,6 +21,7 @@
         @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 {{ $outlets->links() }}
 @endsection
